@@ -418,20 +418,20 @@ export function BackgroundDialog({ open, onOpenChange }: BackgroundDialogProps) 
                 <label className="text-sm font-semibold text-gray-700">Upload Background Image</label>
                 <div
                   {...getBgRootProps()}
-                  className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ${
+                  className={`border-2 border-dashed rounded-xl p-10 cursor-pointer transition-all duration-200 flex flex-col items-center justify-center ${
                     isBgDragActive
                       ? "border-blue-500 bg-blue-50/50 scale-[1.02]"
                       : "border-gray-200 hover:border-blue-400 hover:bg-gray-50/50"
                   }`}
                 >
                   <input {...getBgInputProps()} />
-                  <div className={`mx-auto mb-3 transition-colors ${isBgDragActive ? "text-blue-500" : "text-gray-400"}`}>
-                    <ImageIcon size={44} weight="duotone" />
+                  <div className={`mb-4 transition-colors flex items-center justify-center w-full ${isBgDragActive ? "text-blue-500" : "text-gray-400"}`}>
+                    <ImageIcon size={56} weight="duotone" />
                   </div>
                   {isBgDragActive ? (
-                    <p className="text-sm font-medium text-blue-600">Drop the image here...</p>
+                    <p className="text-sm font-medium text-blue-600 text-center">Drop the image here...</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-center">
                       <p className="text-sm font-semibold text-gray-700">
                         Drag & drop an image here
                       </p>
