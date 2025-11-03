@@ -95,13 +95,18 @@ export function BackgroundDialog({ open, onOpenChange }: BackgroundDialogProps) 
         bgRect.fillLinearGradientColorStops([]);
         bgRect.fillRadialGradientColorStops([]);
         bgRect.fill(prefs.backgroundColor);
+        bgRect.fillPriority('color');
         layer.batchDraw();
       }
     } else if (prefs.type === "gradient" && prefs.gradientColors && prefs.gradientType) {
       const bgRect = layer.findOne((node: any) => node.id() === "canvas-background") as Konva.Rect;
       if (bgRect && bgRect instanceof Konva.Rect) {
-        bgRect.fillPatternImage(null);
-        bgRect.fill(null);
+        // Clear all previous fills first
+        bgRect.fill(null); // Clear solid color fill
+        bgRect.fillPatternImage(null); // Clear image pattern
+        bgRect.fillLinearGradientColorStops([]); // Clear linear gradient
+        bgRect.fillRadialGradientColorStops([]); // Clear radial gradient
+        
         const colorStopsArray: (number | string)[] = [];
         prefs.gradientColors.forEach((color, index) => {
           const offset = prefs.gradientColors!.length === 1 ? 0 : index / Math.max(1, prefs.gradientColors!.length - 1);
@@ -114,6 +119,9 @@ export function BackgroundDialog({ open, onOpenChange }: BackgroundDialogProps) 
           bgRect.fillLinearGradientStartPoint({ x: 0, y: 0 });
           bgRect.fillLinearGradientEndPoint({ x: stage.width(), y: stage.height() });
           bgRect.fillRadialGradientColorStops([]);
+          bgRect.fillRadialGradientStartRadius(0);
+          bgRect.fillRadialGradientEndRadius(0);
+          bgRect.fillPriority('linear-gradient');
         } else {
           const centerX = stage.width() / 2;
           const centerY = stage.height() / 2;
@@ -121,9 +129,10 @@ export function BackgroundDialog({ open, onOpenChange }: BackgroundDialogProps) 
           bgRect.fillRadialGradientColorStops(colorStopsArray);
           bgRect.fillRadialGradientStartPoint({ x: centerX, y: centerY });
           bgRect.fillRadialGradientStartRadius(0);
-          bgRect.fillRadialGradientEndPoint({ x: centerX, y: centerY });
+          bgRect.fillRadialGradientEndPoint({ x: centerX, y: centerY }); // End point at center
           bgRect.fillRadialGradientEndRadius(radius);
           bgRect.fillLinearGradientColorStops([]);
+          bgRect.fillPriority('radial-gradient');
         }
         layer.batchDraw();
       }
@@ -157,10 +166,14 @@ export function BackgroundDialog({ open, onOpenChange }: BackgroundDialogProps) 
     if (layer) {
       const bgRect = layer.findOne((node: any) => node.id() === "canvas-background") as Konva.Rect;
       if (bgRect && bgRect instanceof Konva.Rect) {
+        // Clear all previous fills and gradients
         bgRect.fillPatternImage(null);
         bgRect.fillLinearGradientColorStops([]);
         bgRect.fillRadialGradientColorStops([]);
-        bgRect.fill(color);
+        bgRect.fill(null); // Clear any gradient fills
+        bgRect.fill(color); // Set solid color
+        // Set fill priority to color to ensure solid fill is used
+        bgRect.fillPriority('color');
         layer.batchDraw();
       }
     }
@@ -170,8 +183,12 @@ export function BackgroundDialog({ open, onOpenChange }: BackgroundDialogProps) 
     if (layer && stage) {
       const bgRect = layer.findOne((node: any) => node.id() === "canvas-background") as Konva.Rect;
       if (bgRect && bgRect instanceof Konva.Rect) {
-        bgRect.fillPatternImage(null);
-        bgRect.fill(null);
+        // Clear all previous fills first - this is crucial for proper transition
+        bgRect.fill(null); // Clear solid color fill
+        bgRect.fillPatternImage(null); // Clear image pattern
+        bgRect.fillLinearGradientColorStops([]); // Clear linear gradient
+        bgRect.fillRadialGradientColorStops([]); // Clear radial gradient
+        
         const colorStopsArray: (number | string)[] = [];
         colors.forEach((color, index) => {
           const offset = colors.length === 1 ? 0 : index / Math.max(1, colors.length - 1);
@@ -180,20 +197,34 @@ export function BackgroundDialog({ open, onOpenChange }: BackgroundDialogProps) 
         });
         
         if (type === "linear") {
+          // Set linear gradient
           bgRect.fillLinearGradientColorStops(colorStopsArray);
           bgRect.fillLinearGradientStartPoint({ x: 0, y: 0 });
           bgRect.fillLinearGradientEndPoint({ x: stage.width(), y: stage.height() });
+          // Ensure radial is cleared
           bgRect.fillRadialGradientColorStops([]);
+          bgRect.fillRadialGradientStartRadius(0);
+          bgRect.fillRadialGradientEndRadius(0);
+          // Set fill priority to linear-gradient - THIS IS CRITICAL!
+          bgRect.fillPriority('linear-gradient');
         } else {
+          // Set radial gradient - both start and end points should be at center for circular gradient
           const centerX = stage.width() / 2;
           const centerY = stage.height() / 2;
           const radius = Math.max(stage.width(), stage.height()) / 2;
+          
+          // Clear linear gradient first
+          bgRect.fillLinearGradientColorStops([]);
+          
+          // Set radial gradient properties
+          // For radial gradient in Konva, both start and end points should be at the center
+          // The radius difference between start and end defines the gradient
           bgRect.fillRadialGradientColorStops(colorStopsArray);
           bgRect.fillRadialGradientStartPoint({ x: centerX, y: centerY });
           bgRect.fillRadialGradientStartRadius(0);
-          bgRect.fillRadialGradientEndPoint({ x: centerX, y: centerY });
+          bgRect.fillRadialGradientEndPoint({ x: centerX, y: centerY }); // End point at center too
           bgRect.fillRadialGradientEndRadius(radius);
-          bgRect.fillLinearGradientColorStops([]);
+          bgRect.fillPriority('radial-gradient');
         }
         
         layer.batchDraw();
@@ -248,6 +279,7 @@ export function BackgroundDialog({ open, onOpenChange }: BackgroundDialogProps) 
           const scaleY = stage.height() / img.height;
           bgRect.fillPatternScale({ x: scaleX, y: scaleY });
           bgRect.fillPatternOffset({ x: 0, y: 0 });
+          bgRect.fillPriority('pattern');
           
           layer.batchDraw();
           setBackgroundImageUrl(imageUrl);
@@ -480,26 +512,84 @@ export function BackgroundDialog({ open, onOpenChange }: BackgroundDialogProps) 
                 </Button>
               </div>
 
+              {/* Random Gradient Generator */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-700">Generate Random Gradient</label>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-11 border-gray-200 hover:bg-gray-50"
+                    onClick={() => {
+                      // Generate random colors
+                      const generateRandomColor = () => {
+                        const letters = '0123456789ABCDEF';
+                        let color = '#';
+                        for (let i = 0; i < 6; i++) {
+                          color += letters[Math.floor(Math.random() * 16)];
+                        }
+                        return color;
+                      };
+                      
+                      const numColors = Math.random() > 0.5 ? 2 : 3; // 2 or 3 colors
+                      const randomColors = Array.from({ length: numColors }, () => generateRandomColor());
+                      const randomType = Math.random() > 0.5 ? "linear" : "radial";
+                      
+                      setGradientColors(randomColors);
+                      setGradientType(randomType);
+                      updateCanvasGradient(randomColors, randomType);
+                      setBackgroundType("gradient");
+                    }}
+                  >
+                    Random Gradient
+                  </Button>
+                </div>
+              </div>
+
               {/* Preset Gradients */}
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Preset Gradients</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { colors: ["#667eea", "#764ba2"], type: "linear" as const },
-                    { colors: ["#f093fb", "#f5576c"], type: "linear" as const },
-                    { colors: ["#4facfe", "#00f2fe"], type: "linear" as const },
-                    { colors: ["#43e97b", "#38f9d7"], type: "linear" as const },
-                    { colors: ["#fa709a", "#fee140"], type: "linear" as const },
-                    { colors: ["#30cfd0", "#330867"], type: "linear" as const },
-                    { colors: ["#a8edea", "#fed6e3"], type: "linear" as const },
-                    { colors: ["#ff9a9e", "#fecfef"], type: "linear" as const },
-                    { colors: ["#ffecd2", "#fcb69f"], type: "linear" as const },
-                  ].map((preset, idx) => (
+                    // Linear Gradients
+                    { colors: ["#667eea", "#764ba2"], type: "linear" as const, name: "Purple Dream" },
+                    { colors: ["#f093fb", "#f5576c"], type: "linear" as const, name: "Pink Sunset" },
+                    { colors: ["#4facfe", "#00f2fe"], type: "linear" as const, name: "Ocean Breeze" },
+                    { colors: ["#43e97b", "#38f9d7"], type: "linear" as const, name: "Mint Fresh" },
+                    { colors: ["#fa709a", "#fee140"], type: "linear" as const, name: "Sunset Glow" },
+                    { colors: ["#30cfd0", "#330867"], type: "linear" as const, name: "Deep Ocean" },
+                    { colors: ["#a8edea", "#fed6e3"], type: "linear" as const, name: "Soft Pastel" },
+                    { colors: ["#ff9a9e", "#fecfef"], type: "linear" as const, name: "Rose Petals" },
+                    { colors: ["#ffecd2", "#fcb69f"], type: "linear" as const, name: "Peach Cream" },
+                    { colors: ["#ff6e7f", "#bfe9ff"], type: "linear" as const, name: "Coral Sky" },
+                    { colors: ["#c471ed", "#f64f59"], type: "linear" as const, name: "Vibrant" },
+                    { colors: ["#12c2e9", "#c471ed", "#f64f59"], type: "linear" as const, name: "Rainbow" },
+                    { colors: ["#0f0c29", "#302b63", "#24243e"], type: "linear" as const, name: "Midnight" },
+                    { colors: ["#fc466b", "#3f5efb"], type: "linear" as const, name: "Bold" },
+                    { colors: ["#3b2c85", "#352255"], type: "linear" as const, name: "Deep Purple" },
+                    { colors: ["#ee0979", "#ff6a00"], type: "linear" as const, name: "Hot Pink" },
+                    { colors: ["#00c9ff", "#92fe9d"], type: "linear" as const, name: "Turquoise" },
+                    { colors: ["#fad961", "#f76b1c"], type: "linear" as const, name: "Golden Hour" },
+                    // Radial Gradients
+                    { colors: ["#667eea", "#764ba2"], type: "radial" as const, name: "Purple Burst" },
+                    { colors: ["#f093fb", "#f5576c"], type: "radial" as const, name: "Pink Burst" },
+                    { colors: ["#4facfe", "#00f2fe"], type: "radial" as const, name: "Blue Burst" },
+                    { colors: ["#43e97b", "#38f9d7"], type: "radial" as const, name: "Green Burst" },
+                    { colors: ["#fa709a", "#fee140"], type: "radial" as const, name: "Yellow Burst" },
+                    { colors: ["#30cfd0", "#330867"], type: "radial" as const, name: "Ocean Burst" },
+                    { colors: ["#ee0979", "#ff6a00"], type: "radial" as const, name: "Orange Burst" },
+                    { colors: ["#0f0c29", "#302b63", "#24243e"], type: "radial" as const, name: "Dark Burst" },
+                    { colors: ["#ff9a9e", "#fecfef"], type: "radial" as const, name: "Rose Burst" },
+                    { colors: ["#00c9ff", "#92fe9d"], type: "radial" as const, name: "Turquoise Burst" },
+                  ]
+                    .filter(preset => preset.type === gradientType)
+                    .map((preset, idx) => (
                     <button
                       key={idx}
-                      className="h-14 rounded-lg border-2 border-gray-200 hover:border-blue-400 hover:scale-105 transition-all duration-200 relative overflow-hidden shadow-sm hover:shadow-md"
+                      className="h-14 rounded-lg border-2 border-gray-200 hover:border-blue-400 hover:scale-105 transition-all duration-200 relative overflow-hidden shadow-sm hover:shadow-md group"
                       style={{
-                        background: `linear-gradient(to right, ${preset.colors.join(", ")})`,
+                        background: preset.type === "radial" 
+                          ? `radial-gradient(circle, ${preset.colors.join(", ")})`
+                          : `linear-gradient(to right, ${preset.colors.join(", ")})`,
                       }}
                       onClick={() => {
                         setGradientColors(preset.colors);
@@ -507,8 +597,13 @@ export function BackgroundDialog({ open, onOpenChange }: BackgroundDialogProps) 
                         updateCanvasGradient(preset.colors, preset.type);
                         setBackgroundType("gradient");
                       }}
-                      title={preset.colors.join(" → ")}
-                    />
+                      title={preset.name || `${preset.type} - ${preset.colors.join(" → ")}`}
+                    >
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                      <div className="absolute bottom-0 left-0 right-0 p-1 bg-black/40 text-white text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                        {preset.name || preset.type}
+                      </div>
+                    </button>
                   ))}
                 </div>
               </div>
