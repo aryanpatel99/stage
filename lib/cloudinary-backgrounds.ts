@@ -26,9 +26,19 @@ export const backgroundImageMapping: Record<string, string> = {
 };
 
 export const cloudinaryPublicIds: string[] = [
+  // Mac assets first
+  "backgrounds/mac-asset-1",
+  "backgrounds/mac-assest-2",
+  "backgrounds/mac-asset-3",
+  "backgrounds/mac-asset-4",
+  "backgrounds/mac-asset-5",
+  "backgrounds/mac-asset-6",
+  "backgrounds/mac-asset-7",
+  "backgrounds/mac-asset-8",
+  "backgrounds/mac-asset-9",
+  "backgrounds/mac-asset-10",
+  // Other assets
   "backgrounds/asset-1",
-  "backgrounds/asset-10",
-  "backgrounds/asset-11",
   "backgrounds/asset-2",
   "backgrounds/asset-3",
   "backgrounds/asset-4",
@@ -37,16 +47,8 @@ export const cloudinaryPublicIds: string[] = [
   "backgrounds/asset-7",
   "backgrounds/asset-8",
   "backgrounds/asset-9",
-  "backgrounds/mac-assest-2",
-  "backgrounds/mac-asset-1",
-  "backgrounds/mac-asset-10",
-  "backgrounds/mac-asset-3",
-  "backgrounds/mac-asset-4",
-  "backgrounds/mac-asset-5",
-  "backgrounds/mac-asset-6",
-  "backgrounds/mac-asset-7",
-  "backgrounds/mac-asset-8",
-  "backgrounds/mac-asset-9",
+  "backgrounds/asset-10",
+  "backgrounds/asset-11",
 ];
 
 // Public ID for sign-in page background
