@@ -14,7 +14,7 @@ import { getCldImageUrl } from '@/lib/cloudinary';
 import { cloudinaryPublicIds } from '@/lib/cloudinary-backgrounds';
 import { useDropzone } from 'react-dropzone';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/lib/constants';
-import { ImageSquare as ImageIcon, Crop, PaintBrush, TextT } from '@phosphor-icons/react';
+import { ImageSquare as ImageIcon, Crop, PaintBrush, TextT, X } from '@phosphor-icons/react';
 import { aspectRatios } from '@/lib/constants/aspect-ratios';
 import { BorderControls } from '@/components/controls/BorderControls';
 import { ShadowControls } from '@/components/controls/ShadowControls';
@@ -247,6 +247,69 @@ export function StyleTabs() {
 
           {backgroundConfig.type === 'image' && (
             <div className="space-y-4">
+              {/* Current Background Preview */}
+              {backgroundConfig.value && 
+               (backgroundConfig.value.startsWith('blob:') || 
+                backgroundConfig.value.startsWith('http') || 
+                backgroundConfig.value.startsWith('data:') ||
+                cloudinaryPublicIds.includes(backgroundConfig.value)) && (
+                <div className="space-y-3">
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Current Background</Label>
+                  <div className="relative rounded-lg overflow-hidden border border-border aspect-video bg-gray-50">
+                    {(() => {
+                      // Check if it's a Cloudinary public ID
+                      const isCloudinaryPublicId = typeof backgroundConfig.value === 'string' && 
+                        !backgroundConfig.value.startsWith('blob:') && 
+                        !backgroundConfig.value.startsWith('http') && 
+                        !backgroundConfig.value.startsWith('data:') &&
+                        cloudinaryPublicIds.includes(backgroundConfig.value);
+                      
+                      let imageUrl = backgroundConfig.value as string;
+                      
+                      // If it's a Cloudinary public ID, get the optimized URL
+                      if (isCloudinaryPublicId) {
+                        imageUrl = getCldImageUrl({
+                          src: backgroundConfig.value as string,
+                          width: 600,
+                          height: 400,
+                          quality: 'auto',
+                          format: 'auto',
+                          crop: 'fill',
+                          gravity: 'auto',
+                        });
+                      }
+                      
+                      return (
+                        <>
+                          <img
+                            src={imageUrl}
+                            alt="Current background"
+                            className="w-full h-full object-cover"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2 flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white border-0 shadow-md px-3 py-1.5 h-auto"
+                            onClick={() => {
+                              // Reset to default gradient
+                              setBackgroundType('gradient');
+                              setBackgroundValue('primary_gradient');
+                              // If it's a blob URL, revoke it
+                              if (backgroundConfig.value.startsWith('blob:')) {
+                                URL.revokeObjectURL(backgroundConfig.value);
+                              }
+                            }}
+                          >
+                            <X size={14} weight="bold" />
+                            <span className="text-xs font-medium">Remove</span>
+                          </Button>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+
               {cloudinaryPublicIds.length > 0 && (
                 <div className="space-y-3">
                   <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preset Backgrounds</Label>
