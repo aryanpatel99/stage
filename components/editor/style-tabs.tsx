@@ -14,7 +14,7 @@ import { getCldImageUrl } from '@/lib/cloudinary';
 import { cloudinaryPublicIds } from '@/lib/cloudinary-backgrounds';
 import { useDropzone } from 'react-dropzone';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/lib/constants';
-import { ImageSquare as ImageIcon } from '@phosphor-icons/react';
+import { ImageSquare as ImageIcon, Crop, PaintBrush, TextT } from '@phosphor-icons/react';
 import { aspectRatios } from '@/lib/constants/aspect-ratios';
 
 export function StyleTabs() {
@@ -77,28 +77,32 @@ export function StyleTabs() {
 
   return (
     <Tabs defaultValue="aspect" className="w-full">
-      <TabsList className="grid w-full grid-cols-4 gap-1 bg-blue-50/50 p-1">
+      <TabsList className="grid w-full grid-cols-4 gap-1.5 bg-blue-50/50 p-1.5 rounded-lg">
         <TabsTrigger 
           value="aspect" 
-          className="text-xs px-2 py-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors"
+          className="flex items-center justify-center gap-1.5 text-xs font-medium px-2.5 py-2.5 rounded-md transition-all duration-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-600/20 data-[state=inactive]:hover:bg-blue-100/70 data-[state=inactive]:hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 text-gray-700"
+          aria-label="Aspect Ratio"
         >
           Aspect
         </TabsTrigger>
         <TabsTrigger 
           value="background" 
-          className="text-xs px-2 py-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors"
+          className="flex items-center justify-center gap-1.5 text-xs font-medium px-2.5 py-2.5 rounded-md transition-all duration-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-600/20 data-[state=inactive]:hover:bg-blue-100/70 data-[state=inactive]:hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 text-gray-700"
+          aria-label="Background"
         >
           Background
         </TabsTrigger>
         <TabsTrigger 
           value="image" 
-          className="text-xs px-2 py-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors"
+          className="flex items-center justify-center gap-1.5 text-xs font-medium px-2.5 py-2.5 rounded-md transition-all duration-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-600/20 data-[state=inactive]:hover:bg-blue-100/70 data-[state=inactive]:hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 text-gray-700"
+          aria-label="Image"
         >
           Image
         </TabsTrigger>
         <TabsTrigger 
           value="text" 
-          className="text-xs px-2 py-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-colors"
+          className="flex items-center justify-center gap-1.5 text-xs font-medium px-2.5 py-2.5 rounded-md transition-all duration-200 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-blue-600/20 data-[state=inactive]:hover:bg-blue-100/70 data-[state=inactive]:hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 text-gray-700"
+          aria-label="Text"
         >
           Text
         </TabsTrigger>

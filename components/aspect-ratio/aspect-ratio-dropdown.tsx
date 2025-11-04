@@ -24,7 +24,7 @@ export const AspectRatioDropdown = () => {
         >
           <span className="flex items-center gap-2">
             <span
-              className="bg-primary rounded border shrink-0"
+              className="bg-blue-600 rounded border shrink-0"
               style={{
                 width: '20px',
                 height: `${20 * (current?.ratio || 1)}px`,
