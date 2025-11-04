@@ -26,27 +26,43 @@ interface FAQProps {
 const defaultFAQs: FAQItem[] = [
   {
     question: "What is Stage?",
-    answer: "A canvas editor for creating visual designs. Add images, text, and backgrounds, then export your work.",
+    answer: "Stage is a modern web-based canvas editor for creating stunning visual designs. Upload images, add text overlays, customize backgrounds, and export high-quality graphics—all in your browser.",
   },
   {
     question: "Do I need an account?",
-    answer: "Yes. Sign up with Google to access the editor. It's free and takes seconds.",
+    answer: "Yes. Sign up with Google to access the editor and save your designs. It's free and takes just seconds.",
   },
   {
     question: "Is it free?",
-    answer: "Yes. Create unlimited designs and export without restrictions.",
+    answer: "Yes! Stage is completely free. Create unlimited designs, save them to your account, and export without any restrictions.",
+  },
+  {
+    question: "What can I create with Stage?",
+    answer: "Create social media graphics, image showcases, and visual designs. Upload images, add custom text overlays, choose from gradients or solid backgrounds, apply presets for instant styling, and export in high quality.",
   },
   {
     question: "What formats can I export?",
-    answer: "PNG (with transparency) or JPG. Adjust quality settings for JPG exports.",
+    answer: "Export as PNG (with transparency) or JPG. Adjust quality (for JPG) and scale (up to 5x) for your needs. Exported images include a Stage watermark.",
   },
   {
-    question: "Can I change the canvas size?",
-    answer: "Yes. Choose presets for social media or set custom dimensions.",
+    question: "What aspect ratios are available?",
+    answer: "Choose from Instagram formats (Square, Portrait, Story/Reel), social media formats (Landscape, Portrait), and standard photo formats. All presets are optimized for their respective platforms.",
+  },
+  {
+    question: "Can I use presets?",
+    answer: "Yes! Stage includes 5 ready-made presets: Social Ready, Story Style, Minimal Clean, Bold Gradient, and Dark Elegant. Apply them instantly to get professional-looking designs.",
   },
   {
     question: "What image formats are supported?",
-    answer: "PNG, JPG, JPEG, and WEBP. Max file size is 10MB.",
+    answer: "Upload PNG, JPG, JPEG, or WEBP images. Maximum file size is 10MB per image.",
+  },
+  {
+    question: "Can I save my designs?",
+    answer: "Yes! Save your designs with custom names and descriptions. Access them anytime from your designs gallery to continue editing or export again.",
+  },
+  {
+    question: "What customization options do I have?",
+    answer: "Control image size, opacity, borders, shadows, and border radius. Add multiple text overlays with custom fonts, colors, sizes, positions, and text shadows. Choose from gradients, solid colors, or upload your own background images.",
   },
 ];
 
