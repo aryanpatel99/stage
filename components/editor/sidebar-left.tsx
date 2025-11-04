@@ -19,7 +19,7 @@ export function SidebarLeft({
   const { uploadedImageUrl } = useImageStore();
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
 
-  const handleExport = async (format: 'png' | 'jpg', quality: number): Promise<string> => {
+  const handleExport = async (format: 'png' | 'jpg', quality: number, scale: number = 3): Promise<{ dataURL: string; blob: Blob }> => {
     // Wait a bit to ensure DOM is ready
     await new Promise(resolve => setTimeout(resolve, 200));
     
@@ -51,79 +51,56 @@ export function SidebarLeft({
     // Use html2canvas directly with format options
     const html2canvas = (await import('html2canvas')).default;
     
-    // Helper function to convert oklch/rgb to hex
-    const convertColorToHex = (color: string): string => {
-      if (!color || color === 'transparent' || color === 'none') return color;
-      
-      // If it's already a hex color, return it
-      if (color.startsWith('#')) return color;
-      
-      // If it's rgb/rgba, convert to hex
-      if (color.startsWith('rgb')) {
-        const match = color.match(/\d+/g);
-        if (match && match.length >= 3) {
-          const r = parseInt(match[0]);
-          const g = parseInt(match[1]);
-          const b = parseInt(match[2]);
-          const a = match[3] ? parseFloat(match[3]) : 1;
-          if (a < 1) {
-            return `rgba(${r}, ${g}, ${b}, ${a})`;
-          }
-          return `#${[r, g, b].map(x => {
-            const hex = x.toString(16);
-            return hex.length === 1 ? '0' + hex : hex;
-          }).join('')}`;
-        }
-      }
-      
-      // For oklch or other formats, try to get computed style
-      const tempDiv = document.createElement('div');
-      tempDiv.style.color = color;
-      document.body.appendChild(tempDiv);
-      const computed = window.getComputedStyle(tempDiv).color;
-      document.body.removeChild(tempDiv);
-      
-      // Convert rgb/rgba to hex
-      const rgbMatch = computed.match(/\d+/g);
-      if (rgbMatch && rgbMatch.length >= 3) {
-        const r = parseInt(rgbMatch[0]);
-        const g = parseInt(rgbMatch[1]);
-        const b = parseInt(rgbMatch[2]);
-        return `#${[r, g, b].map(x => {
-          const hex = x.toString(16);
-          return hex.length === 1 ? '0' + hex : hex;
-        }).join('')}`;
-      }
-      
-      return color;
-    };
-    
     // Function to convert CSS variables and computed styles to RGB
     const convertStylesToRGB = (element: HTMLElement, doc: Document) => {
       // Get computed style from the cloned document's window
       const win = doc.defaultView || (doc as any).parentWindow;
       if (!win) return;
       
-      const computedStyle = win.getComputedStyle(element);
-      const stylesToConvert = [
-        'color', 'backgroundColor', 'borderColor', 'borderTopColor',
-        'borderRightColor', 'borderBottomColor', 'borderLeftColor',
-        'outlineColor', 'boxShadow', 'textShadow'
-      ];
-      
-      stylesToConvert.forEach(prop => {
-        const value = computedStyle.getPropertyValue(prop);
-        if (value && (value.includes('oklch') || value.includes('var('))) {
+      try {
+        const computedStyle = win.getComputedStyle(element);
+        const allProps = [
+          'color', 'backgroundColor', 'borderColor', 'borderTopColor',
+          'borderRightColor', 'borderBottomColor', 'borderLeftColor',
+          'outlineColor', 'boxShadow', 'textShadow', 'background',
+          'backgroundImage', 'backgroundColor', 'fill', 'stroke'
+        ];
+        
+        // Convert all relevant CSS properties
+        allProps.forEach(prop => {
           try {
-            const computed = (computedStyle as any)[prop];
-            if (computed && computed !== 'rgba(0, 0, 0, 0)' && computed !== 'transparent' && computed !== 'none') {
-              element.style.setProperty(prop, computed, 'important');
+            const value = computedStyle.getPropertyValue(prop);
+            if (value && (value.includes('oklch') || value.includes('var('))) {
+              const computed = (computedStyle as any)[prop];
+              if (computed && computed !== 'rgba(0, 0, 0, 0)' && computed !== 'transparent' && computed !== 'none' && !computed.includes('oklch')) {
+                element.style.setProperty(prop, computed, 'important');
+              }
             }
           } catch (e) {
-            // Ignore errors
+            // Ignore errors for individual properties
+          }
+        });
+        
+        // Also check inline styles
+        if (element.style && element.style.cssText) {
+          const cssText = element.style.cssText;
+          if (cssText.includes('oklch') || cssText.includes('var(')) {
+            // Re-apply computed styles
+            allProps.forEach(prop => {
+              try {
+                const computed = (computedStyle as any)[prop];
+                if (computed && !computed.includes('oklch')) {
+                  element.style.setProperty(prop, computed, 'important');
+                }
+              } catch (e) {
+                // Ignore
+              }
+            });
           }
         }
-      });
+      } catch (e) {
+        // Ignore errors
+      }
       
       // Convert all children recursively
       Array.from(element.children).forEach(child => {
@@ -133,10 +110,74 @@ export function SidebarLeft({
       });
     };
     
+    // Function to inject CSS overrides to replace oklch variables
+    const injectRGBOverrides = (doc: Document) => {
+      // Remove or disable stylesheets that might contain oklch
+      const stylesheets = Array.from(doc.styleSheets);
+      stylesheets.forEach((sheet) => {
+        try {
+          if (sheet.href && sheet.href.includes('globals.css')) {
+            // Try to disable the stylesheet
+            try {
+              (sheet as any).disabled = true;
+            } catch (e) {
+              // Ignore
+            }
+          }
+        } catch (e) {
+          // Ignore cross-origin errors
+        }
+      });
+      
+      // Inject CSS overrides with high specificity
+      const style = doc.createElement('style');
+      style.id = 'oklch-rgb-converter';
+      style.textContent = `
+        :root, :root * {
+          --background: rgb(255, 255, 255) !important;
+          --foreground: rgb(33, 33, 33) !important;
+          --card: rgb(255, 255, 255) !important;
+          --card-foreground: rgb(33, 33, 33) !important;
+          --popover: rgb(255, 255, 255) !important;
+          --popover-foreground: rgb(33, 33, 33) !important;
+          --primary: rgb(37, 37, 37) !important;
+          --primary-foreground: rgb(251, 251, 251) !important;
+          --secondary: rgb(247, 247, 247) !important;
+          --secondary-foreground: rgb(37, 37, 37) !important;
+          --muted: rgb(247, 247, 247) !important;
+          --muted-foreground: rgb(140, 140, 140) !important;
+          --accent: rgb(247, 247, 247) !important;
+          --accent-foreground: rgb(37, 37, 37) !important;
+          --destructive: rgb(239, 68, 68) !important;
+          --border: rgb(237, 237, 237) !important;
+          --input: rgb(237, 237, 237) !important;
+          --ring: rgb(180, 180, 180) !important;
+          --sidebar: rgb(251, 251, 251) !important;
+          --sidebar-foreground: rgb(33, 33, 33) !important;
+          --sidebar-primary: rgb(37, 37, 37) !important;
+          --sidebar-primary-foreground: rgb(251, 251, 251) !important;
+          --sidebar-accent: rgb(247, 247, 247) !important;
+          --sidebar-accent-foreground: rgb(37, 37, 37) !important;
+          --sidebar-border: rgb(237, 237, 237) !important;
+          --sidebar-ring: rgb(180, 180, 180) !important;
+        }
+        * {
+          border-color: rgb(237, 237, 237) !important;
+          outline-color: rgba(180, 180, 180, 0.5) !important;
+        }
+      `;
+      
+      const head = doc.head || doc.getElementsByTagName('head')[0] || doc.documentElement;
+      if (head) {
+        // Insert at the beginning to ensure it overrides
+        head.insertBefore(style, head.firstChild);
+      }
+    };
+    
     try {
       const canvas = await html2canvas(element, {
         backgroundColor: null,
-        scale: 2,
+        scale: scale, // Higher scale for better quality
         useCORS: true,
         allowTaint: true,
         logging: false,
@@ -146,11 +187,16 @@ export function SidebarLeft({
         windowHeight: element.scrollHeight || element.clientHeight,
         removeContainer: true,
         imageTimeout: 15000,
-        onclone: (clonedDoc) => {
-          // Ensure all images are loaded in the cloned document
-          const clonedElement = clonedDoc.getElementById('image-render-card');
-          if (clonedElement) {
-            const images = clonedElement.getElementsByTagName('img');
+        onclone: (clonedDoc, clonedElement) => {
+          // Inject CSS overrides first - this replaces all oklch CSS variables
+          injectRGBOverrides(clonedDoc);
+          
+          // Get the target element
+          const targetElement = clonedDoc.getElementById('image-render-card') || clonedElement;
+          
+          if (targetElement) {
+            // Ensure all images are loaded in the cloned document
+            const images = targetElement.getElementsByTagName('img');
             Array.from(images).forEach((img) => {
               // Force display for images that might be hidden
               if (img.style.display === 'none') {
@@ -158,16 +204,48 @@ export function SidebarLeft({
               }
             });
             
-            // Convert all CSS variables and oklch colors to RGB
-            convertStylesToRGB(clonedElement, clonedDoc);
-            
-            // Also convert any direct style attributes
-            const allElements = clonedElement.querySelectorAll('*');
-            allElements.forEach((el) => {
-              if (el instanceof HTMLElement) {
-                convertStylesToRGB(el, clonedDoc);
+            // Convert SVG elements fill/stroke attributes
+            const svgElements = targetElement.querySelectorAll('svg, [fill], [stroke]');
+            svgElements.forEach((svg) => {
+              if (svg instanceof HTMLElement || svg instanceof SVGElement) {
+                const fill = svg.getAttribute('fill');
+                const stroke = svg.getAttribute('stroke');
+                
+                if (fill && (fill.includes('oklch') || fill.includes('var('))) {
+                  const temp = clonedDoc.createElement('div');
+                  temp.style.color = fill;
+                  const computed = clonedDoc.defaultView?.getComputedStyle(temp).color;
+                  if (computed && !computed.includes('oklch')) {
+                    svg.setAttribute('fill', computed);
+                  }
+                  temp.remove();
+                }
+                
+                if (stroke && (stroke.includes('oklch') || stroke.includes('var('))) {
+                  const temp = clonedDoc.createElement('div');
+                  temp.style.color = stroke;
+                  const computed = clonedDoc.defaultView?.getComputedStyle(temp).color;
+                  if (computed && !computed.includes('oklch')) {
+                    svg.setAttribute('stroke', computed);
+                  }
+                  temp.remove();
+                }
               }
             });
+            
+            // Convert all CSS variables and oklch colors to RGB - convert ALL elements recursively
+            const allElements = targetElement.querySelectorAll('*');
+            allElements.forEach((el) => {
+              if (el instanceof HTMLElement || el instanceof SVGElement) {
+                convertStylesToRGB(el as HTMLElement, clonedDoc);
+              }
+            });
+            
+            // Also convert the root element itself
+            convertStylesToRGB(targetElement as HTMLElement, clonedDoc);
+            
+            // Force a reflow to ensure styles are applied
+            void clonedDoc.defaultView?.getComputedStyle(targetElement).width;
           }
         },
       });
@@ -176,15 +254,28 @@ export function SidebarLeft({
         throw new Error('Failed to create canvas');
       }
 
-      // Convert canvas to data URL with specified format
+      // Convert canvas to blob and data URL with specified format
       const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+      
+      // Create blob first for better quality storage
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Failed to create blob from canvas'));
+            return;
+          }
+          resolve(blob);
+        }, mimeType, quality);
+      });
+      
+      // Also create data URL for immediate download
       const dataURL = canvas.toDataURL(mimeType, quality);
       
       if (!dataURL || dataURL === 'data:,') {
         throw new Error('Failed to generate image data URL');
       }
 
-      return dataURL;
+      return { dataURL, blob };
     } catch (error) {
       console.error('Export error:', error);
       throw new Error(`Failed to export image: ${error instanceof Error ? error.message : 'Unknown error'}`);
