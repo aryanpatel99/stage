@@ -56,7 +56,7 @@ export function MasonryGrid() {
       <div className="container mx-auto max-w-7xl">
         {/* CSS Columns masonry layout */}
         <div 
-          className="columns-1 sm:columns-2 xl:columns-3 gap-4 sm:gap-6 lg:gap-8"
+          className="columns-1 sm:columns-2 gap-4 sm:gap-6 lg:gap-8"
           style={{ 
             columnFill: 'balance' as const 
           }}
@@ -72,7 +72,7 @@ export function MasonryGrid() {
                   alt={item.alt}
                   fill
                   className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                  sizes="(max-width: 640px) 100vw, 50vw"
                   quality="auto"
                   crop="fill"
                   gravity="auto"
