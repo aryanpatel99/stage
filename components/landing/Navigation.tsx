@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { FaGithub } from "react-icons/fa";
+import { SiX } from "react-icons/si";
 import { motion, useSpring, useTransform } from "motion/react";
 
 interface NavigationProps {
@@ -87,6 +88,15 @@ export function Navigation({
                 <AnimatedCounter value={stars} />
               </span>
             )}
+          </a>
+          <a
+            href="https://x.com/code_kartik"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-accent rounded-lg transition-colors touch-manipulation text-muted-foreground hover:text-foreground group"
+            aria-label="X (Twitter) profile"
+          >
+            <SiX className="h-5 w-5 text-current" />
           </a>
           <Link href={ctaHref}>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm px-3 sm:px-4 py-2 touch-manipulation">
