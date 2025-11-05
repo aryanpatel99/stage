@@ -460,6 +460,7 @@ export const useImageStore = create<ImageState>((set, get) => ({
     set({
       uploadedImageUrl: imageUrl,
       imageName: file.name,
+      imageScale: 90,
     })
   },
 

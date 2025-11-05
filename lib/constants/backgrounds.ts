@@ -37,13 +37,14 @@ export const getBackgroundCSS = (
 
   switch (type) {
     case 'gradient':
+      const gradient = gradientColors[value as GradientKey] || gradientColors.primary_gradient;
       return {
-        background: gradientColors[value as GradientKey],
+        background: gradient,
         opacity,
       };
 
     case 'solid':
-      const color = solidColors[value as SolidColorKey];
+      const color = solidColors[value as SolidColorKey] || '#ffffff';
       return {
         backgroundColor: color,
         opacity,

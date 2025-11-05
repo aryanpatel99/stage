@@ -38,6 +38,22 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
   
   useEffect(() => {
     if (backgroundConfig.type === 'image' && backgroundConfig.value) {
+      const imageValue = backgroundConfig.value as string
+      
+      // Check if it's a valid image URL/blob/data URI or Cloudinary public ID
+      // Skip if it looks like a gradient key (e.g., "primary_gradient")
+      const isValidImageValue = 
+        imageValue.startsWith('http') || 
+        imageValue.startsWith('blob:') || 
+        imageValue.startsWith('data:') ||
+        // Check if it might be a Cloudinary public ID (not a gradient key)
+        (typeof imageValue === 'string' && !imageValue.includes('_gradient'))
+      
+      if (!isValidImageValue) {
+        setBgImage(null)
+        return
+      }
+      
       const img = new window.Image()
       img.crossOrigin = 'anonymous'
       img.onload = () => setBgImage(img)
@@ -47,17 +63,24 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
       }
       
       // Check if it's a Cloudinary public ID or URL
-      let imageUrl = backgroundConfig.value as string
+      let imageUrl = imageValue
       if (typeof imageUrl === 'string' && !imageUrl.startsWith('http') && !imageUrl.startsWith('blob:') && !imageUrl.startsWith('data:')) {
         // It might be a Cloudinary public ID, construct URL
         const { getCldImageUrl } = require('@/lib/cloudinary')
-        imageUrl = getCldImageUrl({
-          src: imageUrl,
-          width: 1920,
-          height: 1080,
-          quality: 'auto',
-          format: 'auto',
-        })
+        const { cloudinaryPublicIds } = require('@/lib/cloudinary-backgrounds')
+        if (cloudinaryPublicIds.includes(imageUrl)) {
+          imageUrl = getCldImageUrl({
+            src: imageUrl,
+            width: 1920,
+            height: 1080,
+            quality: 'auto',
+            format: 'auto',
+          })
+        } else {
+          // Invalid image value, don't try to load
+          setBgImage(null)
+          return
+        }
       }
       
       img.src = imageUrl
@@ -200,6 +223,67 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     if (backgroundConfig.type === 'gradient') {
       // Parse gradient string to get colors and direction
       const gradientStr = backgroundStyle.background as string
+      
+      // Check if gradientStr is valid
+      if (!gradientStr || typeof gradientStr !== 'string') {
+        // Fallback to default gradient
+        const rad = (45 * Math.PI) / 180
+        const cx = canvasW / 2
+        const cy = canvasH / 2
+        const hw = canvasW / 2
+        const hh = canvasH / 2
+        return {
+          fillLinearGradientStartPoint: {
+            x: cx - Math.cos(rad) * hw,
+            y: cy - Math.sin(rad) * hh,
+          },
+          fillLinearGradientEndPoint: {
+            x: cx + Math.cos(rad) * hw,
+            y: cy + Math.sin(rad) * hh,
+          },
+          fillLinearGradientColorStops: [0, '#4168d0', 1, '#c850c0'],
+        }
+      }
+      
+      // Check if it's a radial gradient
+      if (gradientStr.includes('radial-gradient')) {
+        // For radial gradients, extract colors and use a radial-like linear gradient
+        const rgbMatches = gradientStr.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/g)
+        let colorA = '#4168d0'
+        let colorB = '#c850c0'
+        
+        if (rgbMatches && rgbMatches.length >= 2) {
+          colorA = rgbMatches[0]
+          colorB = rgbMatches[rgbMatches.length - 1]
+        } else {
+          const hexMatches = gradientStr.match(/#[0-9A-Fa-f]{6}/g)
+          if (hexMatches && hexMatches.length >= 2) {
+            colorA = hexMatches[0]
+            colorB = hexMatches[hexMatches.length - 1]
+          }
+        }
+        
+        // Use a 45-degree angle for radial gradients approximated as linear
+        const rad = (45 * Math.PI) / 180
+        const cx = canvasW / 2
+        const cy = canvasH / 2
+        const hw = canvasW / 2
+        const hh = canvasH / 2
+        
+        return {
+          fillLinearGradientStartPoint: {
+            x: cx - Math.cos(rad) * hw,
+            y: cy - Math.sin(rad) * hh,
+          },
+          fillLinearGradientEndPoint: {
+            x: cx + Math.cos(rad) * hw,
+            y: cy + Math.sin(rad) * hh,
+          },
+          fillLinearGradientColorStops: [0, colorA, 1, colorB],
+        }
+      }
+      
+      // Parse linear gradient
       const angleMatch = gradientStr.match(/linear-gradient\((\d+)deg/)
       const angle = angleMatch ? parseInt(angleMatch[1], 10) : 45
       
