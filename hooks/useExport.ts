@@ -150,6 +150,89 @@ export function useExport(selectedAspectRatio: string) {
     }
   }, [selectedAspectRatio, settings, backgroundConfig, backgroundBorderRadius, textOverlays]);
 
+  const copyImage = useCallback(async (): Promise<void> => {
+    setIsExporting(true);
+    
+    try {
+      // Get Konva stage
+      const konvaStage = getKonvaStage();
+      
+      // Get actual pixel dimensions from aspect ratio preset
+      const preset = getAspectRatioPreset(selectedAspectRatio);
+      if (!preset) {
+        throw new Error('Invalid aspect ratio selected');
+      }
+
+      const exportOptions: ExportOptions = {
+        format: 'png', // Always use PNG for clipboard to preserve transparency
+        quality: 1.0,
+        scale: settings.scale,
+        exportWidth: preset.width,
+        exportHeight: preset.height,
+      };
+
+      const result = await exportElement(
+        'image-render-card',
+        exportOptions,
+        konvaStage,
+        backgroundConfig,
+        backgroundBorderRadius,
+        textOverlays
+      );
+
+      if (!result.dataURL || result.dataURL === 'data:,') {
+        throw new Error('Invalid image data generated');
+      }
+
+      // Copy to clipboard using Clipboard API
+      // Ensure we have a PNG blob for clipboard
+      const blob = result.blob.type === 'image/png' 
+        ? result.blob 
+        : await new Promise<Blob>((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                reject(new Error('Failed to get canvas context'));
+                return;
+              }
+              ctx.drawImage(img, 0, 0);
+              canvas.toBlob((blob) => {
+                if (!blob) {
+                  reject(new Error('Failed to create blob'));
+                  return;
+                }
+                resolve(blob);
+              }, 'image/png');
+            };
+            img.onerror = reject;
+            img.src = result.dataURL;
+          });
+
+      // Write to clipboard
+      if (navigator.clipboard && navigator.clipboard.write) {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'image/png': blob
+          })
+        ]);
+      } else {
+        throw new Error('Clipboard API not supported');
+      }
+    } catch (error) {
+      console.error('Copy failed:', error);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to copy image to clipboard. Please try again.';
+      throw new Error(errorMessage);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [selectedAspectRatio, settings, backgroundConfig, backgroundBorderRadius, textOverlays]);
+
   return {
     settings,
     isExporting,
@@ -157,6 +240,7 @@ export function useExport(selectedAspectRatio: string) {
     updateQuality,
     updateScale,
     exportImage,
+    copyImage,
   };
 }
 

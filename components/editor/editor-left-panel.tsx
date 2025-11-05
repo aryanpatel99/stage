@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { TextOverlayControls } from '@/components/text-overlay/text-overlay-controls';
 import { StyleTabs } from './style-tabs';
 import { Button } from '@/components/ui/button';
-import { Download, Trash2 } from 'lucide-react';
+import { Download, Trash2, Copy } from 'lucide-react';
 import { useImageStore } from '@/lib/store';
 import { ExportDialog } from '@/components/canvas/dialogs/ExportDialog';
 import { useExport } from '@/hooks/useExport';
@@ -21,6 +21,7 @@ export function EditorLeftPanel() {
   } = useImageStore();
   
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
+  const [copySuccess, setCopySuccess] = React.useState(false);
 
   const {
     settings: exportSettings,
@@ -29,6 +30,7 @@ export function EditorLeftPanel() {
     updateQuality,
     updateScale,
     exportImage,
+    copyImage,
   } = useExport(selectedAspectRatio);
 
   return (
@@ -74,14 +76,34 @@ export function EditorLeftPanel() {
 
         {/* Footer Actions */}
         <div className="p-4 border-t border-gray-200 bg-white md:rounded-b-r-2xl space-y-2">
-          <Button
-            onClick={() => setExportDialogOpen(true)}
-            disabled={!uploadedImageUrl}
-            className="w-full h-11 justify-center gap-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white shadow-sm hover:shadow-md transition-all font-medium"
-          >
-            <Download className="size-4" />
-            <span>Download</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setExportDialogOpen(true)}
+              disabled={!uploadedImageUrl}
+              className="flex-1 h-11 justify-center gap-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white shadow-sm hover:shadow-md transition-all font-medium"
+            >
+              <Download className="size-4" />
+              <span>Download</span>
+            </Button>
+            <Button
+              onClick={() => {
+                copyImage()
+                  .then(() => {
+                    setCopySuccess(true);
+                    setTimeout(() => setCopySuccess(false), 2000);
+                  })
+                  .catch((error) => {
+                    console.error('Failed to copy:', error);
+                    alert('Failed to copy image to clipboard. Please try again.');
+                  });
+              }}
+              disabled={!uploadedImageUrl || isExporting}
+              className="flex-1 h-11 justify-center gap-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 shadow-sm hover:shadow-md transition-all font-medium border border-gray-300"
+            >
+              <Copy className="size-4" />
+              <span>{copySuccess ? 'Copied!' : 'Copy'}</span>
+            </Button>
+          </div>
           <Button
             onClick={clearImage}
             disabled={!uploadedImageUrl}
