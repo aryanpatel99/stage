@@ -35,9 +35,9 @@ export function EditorLeftPanel() {
 
   return (
     <>
-      <div className="w-full h-full bg-muted flex flex-col md:rounded-r-2xl overflow-hidden md:w-80 border-r border-border">
+      <div className="w-full h-full bg-muted flex flex-col overflow-hidden md:w-80 border-r border-border">
         {/* Header */}
-        <div className="p-4 border-b border-border bg-background md:rounded-t-r-2xl">
+        <div className="p-4 border-b border-border bg-background">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
               <Image 
@@ -75,7 +75,7 @@ export function EditorLeftPanel() {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-border bg-background md:rounded-b-r-2xl space-y-2">
+        <div className="p-4 border-t border-border bg-background space-y-2">
           <div className="flex gap-2">
             <Button
               onClick={() => setExportDialogOpen(true)}

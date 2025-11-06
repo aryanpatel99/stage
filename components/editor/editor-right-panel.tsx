@@ -70,9 +70,9 @@ export function EditorRightPanel() {
   });
 
   return (
-    <div className="w-full h-full bg-muted flex flex-col md:rounded-l-2xl overflow-hidden md:w-80 border-l border-border">
+    <div className="w-full h-full bg-muted flex flex-col overflow-hidden md:w-80 border-l border-border">
       {/* Header */}
-      <div className="p-4 border-b border-border bg-background md:rounded-t-l-2xl">
+      <div className="p-4 border-b border-border bg-background">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-foreground">Canvas Settings</h3>
           <button
