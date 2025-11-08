@@ -458,12 +458,12 @@ export const useImageStore = create<ImageState>((set, get) => ({
   uploadedImageUrl: null,
   imageName: null,
   selectedGradient: 'sunset_vibes',
-  borderRadius: 0,
+  borderRadius: 10,
   backgroundBorderRadius: 10,
   selectedAspectRatio: '16_9',
   backgroundConfig: {
     type: 'image',
-    value: 'backgrounds/backgrounds/mac/mac-asset-10',
+    value: 'backgrounds/backgrounds/assets/asset-20',
     opacity: 1,
   },
   backgroundBlur: 0,
@@ -505,9 +505,10 @@ export const useImageStore = create<ImageState>((set, get) => ({
       uploadedImageUrl: imageUrl,
       imageName: file.name,
       imageScale: 100,
+      borderRadius: 10,
       backgroundConfig: {
         type: 'image',
-        value: 'backgrounds/backgrounds/mac/mac-asset-10',
+        value: 'backgrounds/backgrounds/assets/asset-20',
         opacity: 1,
         
       },
@@ -573,7 +574,7 @@ export const useImageStore = create<ImageState>((set, get) => ({
       
       // If current value is a gradient or solid color key, or not a valid image, set default to radiant9
       const newValue = (isGradientKey || isSolidColorKey || !isValidImage) 
-        ? 'backgrounds/backgrounds/mac/mac-asset-10' 
+        ? 'backgrounds/backgrounds/assets/asset-20' 
         : currentValue
       
       set({

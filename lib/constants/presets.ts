@@ -92,8 +92,6 @@ export const presets: PresetConfig[] = [
       spread: 5,
       color: 'rgba(0, 0, 0, 0.3)',
     },
-    backgroundBlur: 3,
-    backgroundNoise: 20,
   },
   {
     id: 'landing-showcase-3',
@@ -138,7 +136,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '16_9',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/assets/asset-11',
+      value: 'backgrounds/backgrounds/assets/asset-19',
       opacity: 1,
     },
     borderRadius: 16,
@@ -166,8 +164,6 @@ export const presets: PresetConfig[] = [
       spread: 10,
       color: 'rgba(255, 255, 255, 0.15)',
     },
-    backgroundBlur: 10,
-    backgroundNoise: 18,
   },
   {
     id: 'instagram-story',
@@ -364,7 +360,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: 'linkedin_banner',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/radiant/radiant2',
+      value: 'backgrounds/backgrounds/assets/asset-13',
       opacity: 1,
     },
     borderRadius: 0,
@@ -441,7 +437,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '4_5',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/nature/nature1',
+      value: 'backgrounds/backgrounds/assets/asset-17',
       opacity: 1,
     },
     borderRadius: 8,
