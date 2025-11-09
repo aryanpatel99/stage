@@ -73,12 +73,12 @@ export function EditorRightPanel() {
   return (
     <div className="w-full h-full bg-muted flex flex-col overflow-hidden md:w-80 border-l border-border">
       {/* Header */}
-      <div className="p-4 border-b border-border bg-background">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-foreground">Canvas Settings</h3>
+      <div className="p-4 border-b border-border bg-background pr-12">
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <h3 className="text-sm font-semibold text-foreground min-w-0 flex-1 truncate">Canvas Settings</h3>
           <button
             onClick={() => setExpanded(!expanded)}
-            className="p-1 rounded-lg hover:bg-accent transition-colors border border-border/50 hover:border-border"
+            className="p-1 rounded-lg hover:bg-accent transition-colors border border-border/50 hover:border-border shrink-0"
           >
             {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
           </button>
