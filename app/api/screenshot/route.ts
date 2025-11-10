@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import chromium from '@sparticuz/chromium'
+import { getCachedScreenshot, cacheScreenshot, normalizeUrl, invalidateCache } from '@/lib/screenshot-cache'
 
 export const maxDuration = 10
 
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json()
-    const { url } = body
+    const { url, forceRefresh } = body
 
     if (!url || typeof url !== 'string') {
       return NextResponse.json(
@@ -83,6 +84,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const normalizedUrl = normalizeUrl(validUrl.toString())
+
+    if (forceRefresh) {
+      try {
+        await invalidateCache(normalizedUrl)
+      } catch (invalidateError) {
+        console.warn('Failed to invalidate cache, proceeding with screenshot:', invalidateError)
+      }
+    }
+
+    if (!forceRefresh) {
+      try {
+        const cachedScreenshot = await getCachedScreenshot(normalizedUrl)
+        if (cachedScreenshot) {
+          return NextResponse.json({
+            screenshot: cachedScreenshot,
+            url: normalizedUrl,
+            cached: true,
+          })
+        }
+      } catch (cacheError) {
+        console.warn('Cache check failed, proceeding with screenshot:', cacheError)
+      }
+    }
+
     browser = await getBrowser()
     const page = await browser.newPage()
 
@@ -93,7 +119,7 @@ export async function POST(request: NextRequest) {
     })
 
     // First, load the page to detect its default theme
-    await page.goto(validUrl.toString(), {
+    await page.goto(normalizedUrl, {
       waitUntil: 'networkidle2',
       timeout: 8000,
     })
@@ -172,9 +198,16 @@ export async function POST(request: NextRequest) {
     await browser.close()
     browser = null
 
+    try {
+      await cacheScreenshot(normalizedUrl, screenshot)
+    } catch (cacheError) {
+      console.warn('Failed to cache screenshot:', cacheError)
+    }
+
     return NextResponse.json({
       screenshot,
-      url: validUrl.toString(),
+      url: normalizedUrl,
+      cached: false,
     })
   } catch (error) {
     if (browser) {
