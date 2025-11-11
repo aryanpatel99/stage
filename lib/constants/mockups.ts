@@ -7,10 +7,10 @@ export const MOCKUP_DEFINITIONS: MockupDefinition[] = [
     type: 'macbook',
     src: '/mockups/mac/macbook.png',
     screenArea: {
-      x: 0.118,
-      y: 0.062,
-      width: 0.764,
-      height: 0.818,
+      x: 0.116,
+      y: 0.060,
+      width: 0.770,
+      height: 0.865,
     },
   },
   {
@@ -19,10 +19,10 @@ export const MOCKUP_DEFINITIONS: MockupDefinition[] = [
     type: 'imac',
     src: '/mockups/mac/imac.png',
     screenArea: {
-      x: 0.024,
+      x: 0.023,
       y: 0.028,
-      width: 0.952,
-      height: 0.735,
+      width: 0.956,
+      height: 0.724,
       borderRadius: 8,
     },
   },
@@ -45,10 +45,10 @@ export const MOCKUP_DEFINITIONS: MockupDefinition[] = [
     type: 'iphone',
     src: '/mockups/iphone/iphone.png',
     screenArea: {
-      x: 0.048,
-      y: 0.02,
-      width: 0.904,
-      height: 0.96,
+      x: 0.045,
+      y: 0.015,
+      width: 0.908,
+      height: 0.97,
       borderRadius: 40,
       notch: {
         x: 0.31,
