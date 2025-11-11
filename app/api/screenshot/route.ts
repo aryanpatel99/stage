@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import chromium from '@sparticuz/chromium'
 import { getCachedScreenshot, cacheScreenshot, normalizeUrl, invalidateCache } from '@/lib/screenshot-cache'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export const maxDuration = 10
 
@@ -58,6 +59,27 @@ export async function POST(request: NextRequest) {
   let browser = null
   
   try {
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    const rateLimit = checkRateLimit(ip)
+    
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { 
+          error: 'Rate limit exceeded. Please try again later.',
+          retryAfter: Math.ceil((rateLimit.resetAt - Date.now()) / 1000)
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((rateLimit.resetAt - Date.now()) / 1000).toString(),
+            'X-RateLimit-Limit': '30',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimit.resetAt.toString()
+          }
+        }
+      )
+    }
+
     const body = await request.json()
     const { url, forceRefresh } = body
 
@@ -118,11 +140,15 @@ export async function POST(request: NextRequest) {
       deviceScaleFactor: 1,
     })
 
-    // First, load the page to detect its default theme
+    await page.setDefaultNavigationTimeout(15000)
+    await page.setDefaultTimeout(15000)
+
     await page.goto(normalizedUrl, {
-      waitUntil: 'networkidle2',
-      timeout: 8000,
+      waitUntil: 'domcontentloaded',
+      timeout: 15000,
     })
+
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
     // Detect the website's default theme preference
     const themePreference = await page.evaluate(() => {
@@ -178,16 +204,16 @@ export async function POST(request: NextRequest) {
       return 'light'
     })
 
-    // Reload page with the detected theme preference
     await page.emulateMediaFeatures([
       { name: 'prefers-color-scheme', value: themePreference }
     ])
 
-    // Reload to apply theme preference
     await page.reload({
-      waitUntil: 'networkidle2',
-      timeout: 8000,
+      waitUntil: 'domcontentloaded',
+      timeout: 15000,
     })
+
+    await new Promise(resolve => setTimeout(resolve, 500))
 
     const screenshot = await page.screenshot({
       type: 'png',
@@ -232,6 +258,13 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: 'Failed to connect to the website. Please check the URL and try again.' },
           { status: 400 }
+        )
+      }
+
+      if (error.message.includes('detached') || error.message.includes('LifecycleWatcher disposed')) {
+        return NextResponse.json(
+          { error: 'Screenshot capture was interrupted. Please try again.' },
+          { status: 500 }
         )
       }
     }

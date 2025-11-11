@@ -66,27 +66,39 @@ A modern web-based canvas editor for creating stunning visual designs. Upload im
    npm install
    ```
 
-3. **Set up environment variables** (optional)
+3. **Set up environment variables**
 
    Create a `.env.local` file in the root directory:
    ```env
-   # Optional: Cloudinary Configuration (for image optimization)
+   # Database (Required for screenshot caching)
+   DATABASE_URL="postgresql://user:password@host:port/dbname?schema=public"
+
+   # Cloudinary (Required for screenshot storage)
    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud-name
    CLOUDINARY_API_KEY=your-api-key
    CLOUDINARY_API_SECRET=your-api-secret
 
-   # Optional: Screenshot API (for website screenshots)
-   SCREENSHOTAPI_KEY=your-screenshot-api-key
+   # Cron Job Security (Required for production)
+   CRON_SECRET=your-random-secret-string
    ```
 
-   > **Note**: The app works completely without these environment variables. All core features including **export work fully in-browser**. Cloudinary is only used for optional image optimization of backgrounds and overlays.
+   > **Note**: Screenshot feature requires database and Cloudinary. All other core features including **export work fully in-browser**. Cloudinary is also used for optional image optimization of backgrounds and overlays.
 
-4. **Start the development server**
+4. **Set up the database**
+   ```bash
+   # Run Prisma migrations to create the database schema
+   npx prisma migrate dev --name init
+   
+   # Or use db push for quick setup (no migration files)
+   npx prisma db push
+   ```
+
+5. **Start the development server**
    ```bash
    npm run dev
    ```
 
-5. **Open your browser**
+6. **Open your browser**
 
    Navigate to [http://localhost:3000](http://localhost:3000)
 
@@ -138,9 +150,15 @@ A modern web-based canvas editor for creating stunning visual designs. Upload im
 - **[Radix UI](https://www.radix-ui.com/)** - Accessible component primitives
 - **[Lucide React](https://lucide.dev/)** - Icon library
 
-### Image Processing
-- **[Cloudinary](https://cloudinary.com/)** - Image optimization and CDN (optional)
+### Image Processing & Storage
+- **[Cloudinary](https://cloudinary.com/)** - Image optimization, CDN, and screenshot storage
 - **[Sharp](https://sharp.pixelplumbing.com/)** - Server-side image processing
+- **[Puppeteer](https://pptr.dev/)** - Website screenshot capture
+- **[@sparticuz/chromium](https://github.com/Sparticuz/chromium)** - Chromium for serverless
+
+### Database & Caching
+- **[Prisma](https://www.prisma.io/)** - Type-safe ORM
+- **[PostgreSQL](https://www.postgresql.org/)** - Database for screenshot caching
 
 ## 📁 Project Structure
 
@@ -174,6 +192,49 @@ For detailed architecture information, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 - `npm run upload-backgrounds` - Upload backgrounds to Cloudinary
 - `npm run upload-demo-images` - Upload demo images to Cloudinary
 - `npm run upload-overlays` - Upload overlays to Cloudinary
+
+## 🔒 Production Setup
+
+### Environment Variables for Vercel
+
+Set these in your Vercel project settings:
+
+```env
+DATABASE_URL="postgresql://user:password@host:port/dbname?schema=public"
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+CRON_SECRET=your-random-secret-string
+```
+
+### Automatic Screenshot Cache Cleanup
+
+Stage includes an automatic cleanup job that runs daily at 2 AM UTC to remove screenshots older than 2 days from both Cloudinary and the database.
+
+**Setup:**
+1. The cron job is configured in `vercel.json`
+2. Ensure `CRON_SECRET` is set in environment variables
+3. Vercel will automatically run the cleanup job
+
+**Manual cleanup:**
+```bash
+curl -X GET https://your-domain.com/api/cron/cleanup-cache \
+  -H "Authorization: Bearer your-cron-secret"
+```
+
+### Rate Limiting
+
+The screenshot API includes built-in rate limiting:
+- **Limit**: 30 requests per minute per IP
+- **Response**: 429 status with `Retry-After` header
+- **Headers**: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+
+### Cache Expiration
+
+Screenshot cache expires after 2 days to stay within Cloudinary free tier limits:
+- **Storage**: 25 GB
+- **Bandwidth**: 25 GB/month
+- **Transformations**: 25,000/month
 
 ## 🏗️ Architecture
 
@@ -221,7 +282,8 @@ For detailed contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 - Export may take a few seconds for high-resolution images
 - Some browsers may have limitations with large canvas operations
-- Website screenshot feature requires API key
+- Website screenshot may timeout for slow-loading websites (15s timeout)
+- Screenshot feature requires database and Cloudinary configuration
 
 ## 📄 License
 
