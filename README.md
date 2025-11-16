@@ -216,17 +216,146 @@ SCREENSHOT_API_URL=https://api.screen-shot.xyz
 
 **Note**: `SCREENSHOT_API_URL` defaults to `https://api.screen-shot.xyz` which is a free, open-source screenshot API that requires no API key. You can deploy your own instance to Cloudflare Workers or use a different service by setting this variable.
 
-### Manual Screenshot Cache Cleanup
+### Screenshot Cache Cleanup
+
+Stage automatically caches website screenshots in Cloudinary to improve performance and reduce API calls. The cleanup process removes old cached screenshots from both Cloudinary storage and your database.
+
+#### How It Works
+
+- **Cache Duration**: Screenshots are cached for 2 days (48 hours) by default
+- **Automatic Expiration**: Old cache entries are automatically invalidated when accessed after expiration
+- **Manual Cleanup**: Use the cleanup API to proactively remove old screenshots
+
+#### Setting Up Cleanup Secret
+
+The `CLEANUP_SECRET` is **not provided by any service** - you need to create it yourself. It's a security token that prevents unauthorized access to your cleanup endpoint.
+
+**Generate a secure random string:**
+
+```bash
+# Option 1: Using OpenSSL (recommended)
+openssl rand -hex 32
+
+# Option 2: Using Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Option 3: Using Python
+python3 -c "import secrets; print(secrets.token_hex(32))"
+
+# Option 4: Online generator (use a trusted source)
+# Visit: https://www.random.org/strings/
+```
+
+**Add to your `.env.local` file:**
+
+```env
+CLEANUP_SECRET=your-generated-secret-string-here
+```
+
+**For production (Vercel):**
+
+1. Go to your Vercel project dashboard
+2. Navigate to **Settings** → **Environment Variables**
+3. Add `CLEANUP_SECRET` with your generated secret value
+4. Select the appropriate environments (Production, Preview, Development)
+5. Click **Save**
+
+**Security Notes:**
+- Use a long, random string (at least 32 characters, 64+ recommended)
+- Never commit this to version control (it's already in `.gitignore`)
+- Use different secrets for development and production
+- Treat it like a password - keep it secure
+
+#### Manual Cleanup via API
 
 To remove screenshots older than 2 days from both Cloudinary and the database:
 
 ```bash
+# Production
 curl -X POST https://your-domain.com/api/cleanup-cache \
+  -H "Content-Type: application/json" \
+  -d '{"secret": "your-cleanup-secret"}'
+
+# Local development
+curl -X POST http://localhost:3000/api/cleanup-cache \
   -H "Content-Type: application/json" \
   -d '{"secret": "your-cleanup-secret"}'
 ```
 
-**Recommended schedule**: Run this weekly or when approaching Cloudinary storage limits.
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Cache cleanup completed"
+}
+```
+
+#### Automated Cleanup (Recommended)
+
+**Option 1: Vercel Cron Jobs** (Pro/Enterprise plans)
+
+Add to `vercel.json`:
+```json
+{
+  "crons": [{
+    "path": "/api/cleanup-cache",
+    "schedule": "0 2 * * 0"
+  }]
+}
+```
+
+Then create a cron route at `app/api/cleanup-cache/cron/route.ts`:
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { clearOldCache } from '@/lib/screenshot-cache'
+
+export async function GET(request: NextRequest) {
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  
+  await clearOldCache()
+  return NextResponse.json({ success: true })
+}
+```
+
+**Option 2: External Cron Service** (Free tier compatible)
+
+Use services like:
+- [cron-job.org](https://cron-job.org) (free)
+- [EasyCron](https://www.easycron.com) (free tier available)
+- GitHub Actions scheduled workflows
+
+Set up a weekly cron job that calls your cleanup endpoint.
+
+**Option 3: Manual Trigger**
+
+Run the cleanup API call manually when needed, especially when approaching Cloudinary storage limits.
+
+#### What Gets Cleaned
+
+The cleanup process:
+1. Finds all screenshot cache entries older than 2 days (default)
+2. Deletes the images from Cloudinary storage
+3. Removes the database records
+4. Logs the number of entries cleared
+
+**Note**: Only cached screenshots are cleaned. Your uploaded backgrounds, overlays, and other assets are **not** affected.
+
+#### Monitoring Cloudinary Storage
+
+Check your Cloudinary dashboard to monitor:
+- **Storage Usage**: Total storage consumed
+- **Bandwidth**: Monthly bandwidth usage
+- **Transformations**: Number of image transformations
+
+**Free Tier Limits**:
+- Storage: 25 GB
+- Bandwidth: 25 GB/month
+- Transformations: 25,000/month
+
+**Recommended**: Run cleanup weekly or when storage exceeds 20 GB to stay within free tier limits.
 
 ### Rate Limiting
 
@@ -234,13 +363,6 @@ The screenshot API includes built-in rate limiting:
 - **Limit**: 20 requests per minute per IP
 - **Response**: 429 status with `Retry-After` header
 - **Headers**: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
-
-### Cache Expiration
-
-Screenshot cache expires after 2 days to stay within Cloudinary free tier limits:
-- **Storage**: 25 GB
-- **Bandwidth**: 25 GB/month
-- **Transformations**: 25,000/month
 
 ## 🏗️ Architecture
 
