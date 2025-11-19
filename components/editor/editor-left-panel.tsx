@@ -9,7 +9,6 @@ import { MockupGallery, MockupControls } from '@/components/mockups';
 import { StyleTabs } from './style-tabs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ImageIcon, Type, Sticker } from 'lucide-react';
-import { PresetSelector } from '@/components/presets/PresetSelector';
 import { FaXTwitter } from 'react-icons/fa6';
 
 export function EditorLeftPanel() {
@@ -30,9 +29,7 @@ export function EditorLeftPanel() {
                 className="h-8 w-8"
               />
             </Link>
-            <div className="flex-1">
-              <PresetSelector />
-            </div>
+            <div className="flex-1" />
             <a
               href="https://x.com/code_kartik"
               target="_blank"

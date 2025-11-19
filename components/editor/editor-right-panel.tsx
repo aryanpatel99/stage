@@ -16,6 +16,8 @@ import { Slider } from '@/components/ui/slider';
 import { FaImage, FaTimes } from 'react-icons/fa';
 import { BackgroundEffects } from '@/components/controls/BackgroundEffects';
 import { PresetGallery } from '@/components/presets/PresetGallery';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Settings, Sparkles } from 'lucide-react';
 
 export function EditorRightPanel() {
   const { 
@@ -29,6 +31,7 @@ export function EditorRightPanel() {
   
   const [expanded, setExpanded] = React.useState(true);
   const [bgUploadError, setBgUploadError] = React.useState<string | null>(null);
+  const [activeTab, setActiveTab] = React.useState<'presets' | 'settings'>('presets');
 
   const validateFile = (file: File): string | null => {
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
@@ -98,16 +101,33 @@ export function EditorRightPanel() {
       {expanded && (
         <>
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            {/* Presets Section */}
-            <div className="space-y-4">
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Presets</h4>
-              <PresetGallery />
-            </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'presets' | 'settings')} className="w-full">
+              <TabsList className="w-full grid grid-cols-2 rounded-none bg-transparent h-12 p-1.5 gap-1.5 mb-4">
+                <TabsTrigger 
+                  value="presets" 
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:shadow-black/20 rounded-md border-0 data-[state=active]:border-0 transition-all duration-200 text-sm font-medium"
+                >
+                  <Sparkles className="size-4 mr-1.5" />
+                  Presets
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="settings" 
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:shadow-black/20 rounded-md border-0 data-[state=active]:border-0 transition-all duration-200 text-sm font-medium"
+                >
+                  <Settings className="size-4 mr-1.5" />
+                  Settings
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Background Section */}
-            <div className="space-y-4">
-              <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Background</h4>
+              <TabsContent value="presets" className="mt-0">
+                <PresetGallery />
+              </TabsContent>
+
+              <TabsContent value="settings" className="mt-0 space-y-6">
+                {/* Background Section */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">Background</h4>
               
               {/* Opacity */}
               <div className="space-y-3">
@@ -437,7 +457,9 @@ export function EditorRightPanel() {
                   </div>
                   </div>
                 )}
-            </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </>
       )}
