@@ -6,6 +6,7 @@ import { useRef, useEffect } from 'react';
 import { FrameRenderer } from '../frames/FrameRenderer';
 import { getShadowProps, type ShadowConfig } from '../utils/shadow-utils';
 import type { FrameConfig } from '../frames/FrameRenderer';
+import { useImageStore } from '@/lib/store';
 
 interface MainImageLayerProps {
   image: HTMLImageElement;
@@ -24,6 +25,7 @@ interface MainImageLayerProps {
     offsetY: number;
     rotation: number;
     radius: number;
+    scale: number;
   };
   frame: FrameConfig;
   shadow: ShadowConfig;
@@ -61,24 +63,27 @@ export function MainImageLayer({
   setSelectedTextId,
   setScreenshot,
 }: MainImageLayerProps) {
+  const groupRef = useRef<Konva.Group>(null);
   const mainImageRef = useRef<Konva.Image>(null);
   const mainImageTransformerRef = useRef<Konva.Transformer>(null);
   const shadowProps = getShadowProps(shadow);
+  const { imageScale, setImageScale } = useImageStore();
 
   useEffect(() => {
     if (mainImageTransformerRef.current) {
-      if (isMainImageSelected && mainImageRef.current) {
-        mainImageTransformerRef.current.nodes([mainImageRef.current]);
+      if (isMainImageSelected && groupRef.current) {
+        mainImageTransformerRef.current.nodes([groupRef.current]);
       } else {
         mainImageTransformerRef.current.nodes([]);
       }
-      mainImageRef.current?.getLayer()?.batchDraw();
+      groupRef.current?.getLayer()?.batchDraw();
     }
   }, [isMainImageSelected]);
 
   return (
     <Layer>
       <Group
+        ref={groupRef}
         x={canvasW / 2 + screenshot.offsetX}
         y={canvasH / 2 + screenshot.offsetY}
         width={framedW}
@@ -94,6 +99,28 @@ export function MainImageLayer({
           if (typeof setScreenshot === 'function') {
             setScreenshot({ offsetX: newOffsetX, offsetY: newOffsetY });
           }
+        }}
+        onTransformEnd={(e) => {
+          const node = e.target;
+          const scaleX = node.scaleX();
+          const scaleY = node.scaleY();
+
+          // Use the average of scaleX and scaleY to maintain aspect ratio
+          const finalScale = (scaleX + scaleY) / 2;
+
+          // Calculate the new scale based on current screenshot.scale
+          const newScreenshotScale = screenshot.scale * finalScale;
+
+          // Update screenshot scale
+          setScreenshot({ scale: newScreenshotScale });
+
+          // Update imageScale in the store (imageScale is in percentage, screenshot.scale is decimal)
+          const newImageScale = imageScale * finalScale;
+          setImageScale(newImageScale);
+
+          // Reset the node's scale to 1 so transformations don't compound
+          node.scaleX(1);
+          node.scaleY(1);
         }}
       >
         <FrameRenderer
@@ -155,20 +182,20 @@ export function MainImageLayer({
           }}
           {...shadowProps}
         />
-        <Transformer
-          ref={mainImageTransformerRef}
-          keepRatio={true}
-          boundBoxFunc={(oldBox, newBox) => {
-            if (
-              Math.abs(newBox.width) < 50 ||
-              Math.abs(newBox.height) < 50
-            ) {
-              return oldBox;
-            }
-            return newBox;
-          }}
-        />
       </Group>
+      <Transformer
+        ref={mainImageTransformerRef}
+        keepRatio={true}
+        boundBoxFunc={(oldBox, newBox) => {
+          if (
+            Math.abs(newBox.width) < 50 ||
+            Math.abs(newBox.height) < 50
+          ) {
+            return oldBox;
+          }
+          return newBox;
+        }}
+      />
     </Layer>
   );
 }
