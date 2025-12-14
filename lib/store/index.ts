@@ -50,17 +50,9 @@ export interface ImageBorder {
   enabled: boolean
   width: number
   color: string
-  type: 'none' | 'solid' | 'glassy' | 'infinite-mirror' | 'window' | 'stack' | 'ruler' | 'eclipse' | 'dotted' | 'focus'
-  theme?: 'light' | 'dark'
+  type: 'none' | 'arc-light' | 'arc-dark' | 'macos-light' | 'macos-dark' | 'windows-light' | 'windows-dark' | 'photograph'
   padding?: number
   title?: string
-  style?: 'solid' | 'dashed' | 'dotted' | 'double' | 'default' | 'outline' | 'border'
-  top?: boolean
-  right?: boolean
-  bottom?: boolean
-  left?: boolean
-  borderRadius?: number
-  inset?: boolean
 }
 
 export interface ImageShadow {
@@ -158,10 +150,9 @@ export interface EditorState {
   // Frame state (same as imageBorder)
   frame: {
     enabled: boolean
-    type: 'none' | 'solid' | 'glassy' | 'infinite-mirror' | 'window' | 'stack' | 'ruler' | 'eclipse' | 'dotted' | 'focus'
+    type: 'none' | 'arc-light' | 'arc-dark' | 'macos-light' | 'macos-dark' | 'windows-light' | 'windows-dark' | 'photograph'
     width: number
     color: string
-    theme?: 'light' | 'dark'
     padding?: number
     title?: string
   }
@@ -234,7 +225,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     type: 'none',
     width: 2,
     color: '#000000',
-    theme: 'light',
     padding: 20,
     title: '',
   },
@@ -351,7 +341,6 @@ export function useEditorStoreSync() {
       editorStore.frame.type !== frame.type ||
       editorStore.frame.width !== frame.width ||
       editorStore.frame.color !== frame.color ||
-      editorStore.frame.theme !== frame.theme ||
       editorStore.frame.padding !== frame.padding ||
       editorStore.frame.title !== frame.title
     ) {
@@ -360,7 +349,6 @@ export function useEditorStoreSync() {
         type: frame.type,
         width: frame.width,
         color: frame.color,
-        theme: frame.theme,
         padding: frame.padding,
         title: frame.title,
       })
@@ -511,7 +499,6 @@ export const useImageStore = create<ImageState>()(temporal((set, get) => ({
     width: 2,
     color: '#000000',
     type: 'none',
-    theme: 'light',
     padding: 20,
     title: '',
   },

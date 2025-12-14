@@ -145,13 +145,7 @@ export function MainImageLayer({
           width={imageScaledW}
           height={imageScaledH}
           opacity={has3DTransform ? 0 : imageOpacity}
-          cornerRadius={
-            showFrame && frame.type === 'window'
-              ? [0, 0, screenshot.radius, screenshot.radius]
-              : showFrame && frame.type === 'ruler'
-              ? screenshot.radius * 0.8
-              : screenshot.radius
-          }
+          cornerRadius={screenshot.radius}
           imageSmoothingEnabled={false}
           draggable={false}
           onClick={(e) => {
