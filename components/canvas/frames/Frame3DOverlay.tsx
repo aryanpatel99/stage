@@ -45,7 +45,6 @@ export function Frame3DOverlay({
             backgroundColor: isDark ? 'rgba(20, 20, 20, 0.85)' : 'rgba(255, 255, 255, 0.25)',
             borderRadius: `${screenshotRadius + 12}px`,
             boxSizing: 'border-box',
-            border: `1px solid ${isDark ? 'rgba(60, 60, 60, 0.8)' : 'rgba(255, 255, 255, 0.8)'}`,
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
           }}
@@ -59,18 +58,10 @@ export function Frame3DOverlay({
           <div
             style={{
               position: 'absolute',
-              inset: 0,
-              backgroundColor: isDark ? '#2a2a2a' : '#f6f6f6',
-              borderRadius: '12px',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
               top: 0,
               left: 0,
               right: 0,
-              height: '52px',
+              height: '40px',
               backgroundColor: isDark ? '#3d3d3d' : '#e8e8e8',
               borderRadius: '12px 12px 0 0',
               display: 'flex',
@@ -106,18 +97,10 @@ export function Frame3DOverlay({
           <div
             style={{
               position: 'absolute',
-              inset: 0,
-              backgroundColor: isDark ? '#202020' : '#ffffff',
-              borderRadius: '8px',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
               top: 0,
               left: 0,
               right: 0,
-              height: '40px',
+              height: '28px',
               backgroundColor: isDark ? '#2d2d2d' : '#f3f3f3',
               borderRadius: '8px 8px 0 0',
               display: 'flex',

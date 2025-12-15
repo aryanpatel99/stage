@@ -53,8 +53,6 @@ export function FrameRenderer({
             height={framedH}
             fill={isDark ? 'rgba(20, 20, 20, 0.85)' : 'rgba(255, 255, 255, 0.25)'}
             cornerRadius={screenshotRadius + 12}
-            stroke={isDark ? 'rgba(60, 60, 60, 0.8)' : 'rgba(255, 255, 255, 0.8)'}
-            strokeWidth={1}
             {...shadowProps}
           />
         </Group>
@@ -66,16 +64,10 @@ export function FrameRenderer({
         <Group>
           <Rect
             width={framedW}
-            height={framedH}
-            fill={isDark ? '#2a2a2a' : '#f6f6f6'}
-            cornerRadius={12}
-            {...shadowProps}
-          />
-          <Rect
-            width={framedW}
-            height={52}
+            height={40}
             fill={isDark ? '#3d3d3d' : '#e8e8e8'}
             cornerRadius={[12, 12, 0, 0]}
+            {...shadowProps}
           />
           <Circle x={24} y={26} radius={7} fill="#ff5f57" />
           <Circle x={48} y={26} radius={7} fill="#febc2e" />
@@ -85,7 +77,7 @@ export function FrameRenderer({
             x={0}
             y={0}
             width={framedW}
-            height={52}
+            height={40}
             align="center"
             verticalAlign="middle"
             fill={isDark ? '#ffffff' : '#4d4d4d'}
@@ -101,23 +93,17 @@ export function FrameRenderer({
         <Group>
           <Rect
             width={framedW}
-            height={framedH}
-            fill={isDark ? '#202020' : '#ffffff'}
-            cornerRadius={8}
-            {...shadowProps}
-          />
-          <Rect
-            width={framedW}
-            height={40}
+            height={28}
             fill={isDark ? '#2d2d2d' : '#f3f3f3'}
             cornerRadius={[8, 8, 0, 0]}
+            {...shadowProps}
           />
           <Text
             text={frame.title || ''}
             x={16}
             y={0}
             width={framedW - 150}
-            height={40}
+            height={28}
             align="left"
             verticalAlign="middle"
             fill={isDark ? '#ffffff' : '#1a1a1a'}
@@ -126,14 +112,14 @@ export function FrameRenderer({
           />
           {/* Minimize */}
           <Line
-            points={[framedW - 100, 20, framedW - 88, 20]}
+            points={[framedW - 100, 14, framedW - 88, 14]}
             stroke={isDark ? '#ffffff' : '#1a1a1a'}
             strokeWidth={1}
           />
           {/* Maximize */}
           <Rect
             x={framedW - 70}
-            y={14}
+            y={10}
             width={12}
             height={12}
             stroke={isDark ? '#ffffff' : '#1a1a1a'}
@@ -142,12 +128,12 @@ export function FrameRenderer({
           {/* Close */}
           <Group>
             <Line
-              points={[framedW - 40, 14, framedW - 28, 26]}
+              points={[framedW - 40, 10, framedW - 28, 22]}
               stroke={isDark ? '#ffffff' : '#1a1a1a'}
               strokeWidth={1}
             />
             <Line
-              points={[framedW - 28, 14, framedW - 40, 26]}
+              points={[framedW - 28, 10, framedW - 40, 22]}
               stroke={isDark ? '#ffffff' : '#1a1a1a'}
               strokeWidth={1}
             />
@@ -169,15 +155,6 @@ export function FrameRenderer({
             shadowBlur={12}
             shadowOffsetY={4}
             {...shadowProps}
-          />
-          <Rect
-            x={1}
-            y={1}
-            width={framedW - 2}
-            height={framedH - 2}
-            stroke="rgba(0,0,0,0.08)"
-            strokeWidth={1}
-            cornerRadius={3}
           />
           {frame.title && (
             <Text

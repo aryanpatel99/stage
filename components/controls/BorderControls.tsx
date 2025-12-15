@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { useImageStore } from '@/lib/store'
 import { Input } from '@/components/ui/input'
+import { Slider } from '@/components/ui/slider'
 
 const frameOptions = [
   { value: 'none', label: 'None' },
@@ -47,17 +48,13 @@ function FramePreview({
 const framePreviews: Record<FrameType, React.ReactNode> = {
   none: <div className="size-full rounded-md border-2 border-dashed border-muted-foreground/50" />,
   'arc-light': (
-    <div className="size-full rounded-lg bg-white border border-neutral-200 p-0.5">
-      <div className="size-full rounded-md border border-neutral-100" />
-    </div>
+    <div className="size-full rounded-lg bg-white border border-neutral-200 p-0.5" />
   ),
   'arc-dark': (
-    <div className="size-full rounded-lg bg-neutral-900 border border-neutral-700 p-0.5">
-      <div className="size-full rounded-md border border-neutral-800" />
-    </div>
+    <div className="size-full rounded-lg bg-neutral-900 border border-neutral-700 p-0.5" />
   ),
   'macos-light': (
-    <div className="flex size-full flex-col rounded-md border border-neutral-200 bg-neutral-100">
+    <div className="flex size-full flex-col">
       <div className="flex h-2.5 items-center gap-0.5 rounded-t-md bg-neutral-200 px-1">
         <div className="size-1 rounded-full bg-red-400" />
         <div className="size-1 rounded-full bg-yellow-400" />
@@ -66,7 +63,7 @@ const framePreviews: Record<FrameType, React.ReactNode> = {
     </div>
   ),
   'macos-dark': (
-    <div className="flex size-full flex-col rounded-md border border-neutral-700 bg-neutral-800">
+    <div className="flex size-full flex-col">
       <div className="flex h-2.5 items-center gap-0.5 rounded-t-md bg-neutral-700 px-1">
         <div className="size-1 rounded-full bg-red-500" />
         <div className="size-1 rounded-full bg-yellow-500" />
@@ -75,8 +72,8 @@ const framePreviews: Record<FrameType, React.ReactNode> = {
     </div>
   ),
   'windows-light': (
-    <div className="flex size-full flex-col rounded-sm border border-neutral-200 bg-white">
-      <div className="flex h-2 items-center justify-end gap-1 bg-neutral-100 px-1">
+    <div className="flex size-full flex-col">
+      <div className="flex h-2 items-center justify-end gap-1 bg-neutral-100 px-1 rounded-t-sm">
         <div className="w-1 h-px bg-neutral-600" />
         <div className="size-1 border border-neutral-600" />
         <div className="size-1 relative">
@@ -86,8 +83,8 @@ const framePreviews: Record<FrameType, React.ReactNode> = {
     </div>
   ),
   'windows-dark': (
-    <div className="flex size-full flex-col rounded-sm border border-neutral-700 bg-neutral-900">
-      <div className="flex h-2 items-center justify-end gap-1 bg-neutral-800 px-1">
+    <div className="flex size-full flex-col">
+      <div className="flex h-2 items-center justify-end gap-1 bg-neutral-800 px-1 rounded-t-sm">
         <div className="w-1 h-px bg-neutral-400" />
         <div className="size-1 border border-neutral-400" />
         <div className="size-1 relative">
@@ -115,6 +112,7 @@ export function BorderControls() {
   }
 
   const showTitleInput = ['macos-light', 'macos-dark', 'windows-light', 'windows-dark', 'photograph'].includes(imageBorder.type)
+  const showThicknessControl = ['arc-light', 'arc-dark'].includes(imageBorder.type)
   const isPhotograph = imageBorder.type === 'photograph'
 
   return (
@@ -136,6 +134,21 @@ export function BorderControls() {
             ))}
           </div>
         </div>
+
+        {showThicknessControl && (
+          <div className="space-y-2">
+            <label className="text-xs text-muted-foreground mb-2 block">Frame Size</label>
+            <Slider
+              value={[imageBorder.width]}
+              onValueChange={(value) => setImageBorder({ width: value[0], enabled: true })}
+              min={4}
+              max={40}
+              step={1}
+              label="Frame Size"
+              valueDisplay={`${imageBorder.width}px`}
+            />
+          </div>
+        )}
 
         {showTitleInput && (
           <div>

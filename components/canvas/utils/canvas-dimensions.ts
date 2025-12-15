@@ -95,11 +95,14 @@ export function calculateCanvasDimensions(
   const isWindowsFrame = frame.type === 'windows-light' || frame.type === 'windows-dark';
   const isPhotograph = frame.type === 'photograph';
 
-  const frameOffset = showFrame && (frame.type === 'arc-light' || frame.type === 'arc-dark') ? 12 : 0;
-  const polaroidPadding = 20;
-  const polaroidBottom = 80;
-  const windowPadding = showFrame && isWindowFrame ? (frame.padding || 16) : (showFrame && isPhotograph ? polaroidPadding : 0);
-  const windowHeader = showFrame && isMacosFrame ? 52 : (showFrame && isWindowsFrame ? 40 : (showFrame && isPhotograph ? polaroidBottom - polaroidPadding : 0));
+  const frameOffset =
+    showFrame && (frame.type === 'arc-light' || frame.type === 'arc-dark')
+      ? Math.max(0, frame.width || 12)
+      : 0;
+  const polaroidPadding = 8;
+  const polaroidBottom = 60;
+  const windowPadding = showFrame && isWindowFrame ? 0 : (showFrame && isPhotograph ? polaroidPadding : 0);
+  const windowHeader = showFrame && isMacosFrame ? 40 : (showFrame && isWindowsFrame ? 28 : (showFrame && isPhotograph ? polaroidBottom - polaroidPadding : 0));
   const eclipseBorder = 0;
 
   const framedW =

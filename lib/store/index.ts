@@ -223,7 +223,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   frame: {
     enabled: false,
     type: 'none',
-    width: 2,
+    width: 10,
     color: '#000000',
     padding: 20,
     title: '',
