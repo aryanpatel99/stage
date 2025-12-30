@@ -94,6 +94,18 @@ const defaultSponsors: Sponsor[] = [
     url: "https://x.com/fardeentwt",
   },
   {
+    name: "Suhail Roshan",
+    avatar: "/suhail.png",
+    avatarAlt: "suhail roshan",
+    amount: "$5.00",
+    amountType: "one time",
+    total: "$5.00",
+    github: "suhailroushan13",
+    twitter: "0xsuhailroushan",
+    website: "https://suhailroushan.in",
+    url: "https://x.com/0xsuhailroushan",
+  },
+  {
     name: "David Haz",
     avatar: "/david.jpg",
     avatarAlt: "david haz",
