@@ -106,6 +106,18 @@ const defaultSponsors: Sponsor[] = [
     url: "https://x.com/davidhdev",
   },
   {
+    name: "David Haz",
+    avatar: "/david.jpg",
+    avatarAlt: "david haz",
+    amount: "$5.00",
+    amountType: "one time",
+    total: "$5.00",
+    github: "DavidHDev",
+    twitter: "davidhdev",
+    website: "http://www.davidhaz.com",
+    url: "https://x.com/davidhdev",
+  },
+  {
     name: "Arinjay Wyawhare",
     avatar: "/arinjay.jpg",
     avatarAlt: "arinjay wyawhare",
