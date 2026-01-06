@@ -83,6 +83,47 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
   );
   const loadedOverlayImages = useOverlayImages(imageOverlays);
 
+  useEffect(() => {                                           // deleting overlays when backspace or delete is pressed
+    const handleKeyDown = (e: KeyboardEvent) => {            
+      if (e.key == 'Delete' || e.key == 'Backspace'){ 
+        if (selectedOverlayId){
+          e.preventDefault()
+          removeImageOverlay(selectedOverlayId);
+          setSelectedOverlayId(null);
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  },[selectedOverlayId, removeImageOverlay])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+
+      if (e.key === 'Delete' || e.key === 'Backspace') { // Delete logic
+        const store = useImageStore.getState();
+        if (selectedOverlayId) {
+          e.preventDefault();
+          store.removeImageOverlay(selectedOverlayId);
+          setSelectedOverlayId(null);
+        }
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { // Undo logic
+        e.preventDefault();
+        const { undo, redo } = useImageStore.temporal.getState();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedOverlayId]);
+
   useEffect(() => {
     // deleting overlays when backspace or delete is pressed
     const handleKeyDown = (e: KeyboardEvent) => {
