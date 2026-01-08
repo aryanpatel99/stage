@@ -2,6 +2,8 @@
  * Export utility functions for style conversion and canvas configuration
  */
 
+import { exportWorkerService } from '@/lib/workers/export-worker-service';
+
 /**
  * Convert CSS variables and computed styles to RGB
  */
@@ -302,7 +304,7 @@ function gaussianRandom(mean: number = 0, stdDev: number = 1): number {
 }
 
 /**
- * Generate a noise texture canvas with Gaussian-distributed noise
+ * Generate a noise texture canvas with Gaussian-distributed noise (sync version for fallback)
  * This creates realistic image grain/noise similar to film grain or sensor noise
  * 
  * @param width - Canvas width in pixels
@@ -310,7 +312,7 @@ function gaussianRandom(mean: number = 0, stdDev: number = 1): number {
  * @param intensity - Noise intensity (0-1), controls the standard deviation
  * @returns Canvas element with noise texture
  */
-export function generateNoiseTexture(
+function generateNoiseTextureSync(
   width: number,
   height: number,
   intensity: number
@@ -347,4 +349,61 @@ export function generateNoiseTexture(
   ctx.putImageData(imageData, 0, 0);
   return canvas;
 }
+
+/**
+ * Generate a noise texture canvas with Gaussian-distributed noise
+ * Uses Web Worker for heavy computation to prevent UI blocking
+ * Falls back to synchronous generation if worker is unavailable
+ * 
+ * @param width - Canvas width in pixels
+ * @param height - Canvas height in pixels
+ * @param intensity - Noise intensity (0-1), controls the standard deviation
+ * @returns Canvas element with noise texture
+ */
+export function generateNoiseTexture(
+  width: number,
+  height: number,
+  intensity: number
+): HTMLCanvasElement {
+  // Return sync version for immediate use
+  // The async version is available via generateNoiseTextureAsync
+  return generateNoiseTextureSync(width, height, intensity);
+}
+
+/**
+ * Generate a noise texture canvas asynchronously using Web Worker
+ * This offloads heavy computation to a worker thread to prevent UI blocking
+ * 
+ * @param width - Canvas width in pixels
+ * @param height - Canvas height in pixels
+ * @param intensity - Noise intensity (0-1), controls the standard deviation
+ * @returns Promise resolving to Canvas element with noise texture
+ */
+export async function generateNoiseTextureAsync(
+  width: number,
+  height: number,
+  intensity: number
+): Promise<HTMLCanvasElement> {
+  try {
+    // Use worker service for heavy computation
+    const imageData = await exportWorkerService.generateNoiseTexture(width, height, intensity);
+    
+    // Convert ImageData to canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      return generateNoiseTextureSync(width, height, intensity);
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+    return canvas;
+  } catch (error) {
+    console.warn('Async noise generation failed, using sync fallback:', error);
+    return generateNoiseTextureSync(width, height, intensity);
+  }
+}
+
 

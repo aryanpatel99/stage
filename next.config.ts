@@ -22,7 +22,10 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // 🔥 REQUIRED FOR ffmpeg.wasm (SharedArrayBuffer)
+  // Turbopack configuration (Next.js 16+ default bundler)
+  turbopack: {},
+
+  // REQUIRED FOR ffmpeg.wasm (SharedArrayBuffer)
   async headers() {
     return [
       {

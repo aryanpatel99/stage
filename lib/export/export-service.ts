@@ -5,6 +5,7 @@
  * - Uses Konva canvas for ALL rendering (background, patterns, noise, images, text, overlays)
  * - Only uses modern-screenshot for 3D perspective transforms (HTML fallback)
  * - No html2canvas for backgrounds/overlays (everything is in Konva now)
+ * - Uses Web Workers for heavy image processing to prevent UI blocking
  *
  * All export operations run client-side without external services.
  * Cloudinary is optional and only used for image optimization when configured.
@@ -17,9 +18,11 @@ import {
   convertStylesToRGB,
   injectRGBOverrides,
   generateNoiseTexture,
+  generateNoiseTextureAsync,
 } from './export-utils';
 import { getBackgroundCSS } from '@/lib/constants/backgrounds';
 import { getFontCSS } from '@/lib/constants/fonts';
+import { exportWorkerService } from '@/lib/workers/export-worker-service';
 
 export interface ExportOptions {
   format: 'png';
@@ -158,14 +161,14 @@ function createBackgroundElement(
 }
 
 /**
- * Apply blur effect to a canvas using Canvas 2D context filter
+ * Apply blur effect to a canvas using Canvas 2D context filter (sync version)
  * This is more reliable than relying on html2canvas to capture CSS filters
  * 
  * @param canvas - The canvas to apply blur to
  * @param blurAmount - Blur amount in pixels (should be scaled for high-DPI exports)
  * @returns A new canvas with the blur effect applied
  */
-function applyBlurToCanvas(
+function applyBlurToCanvasSync(
   canvas: HTMLCanvasElement,
   blurAmount: number
 ): HTMLCanvasElement {
@@ -192,14 +195,60 @@ function applyBlurToCanvas(
 }
 
 /**
- * Apply opacity to a canvas
+ * Apply blur effect to a canvas using Web Worker for heavy computation
+ * Falls back to sync version if worker is unavailable
+ * 
+ * @param canvas - The canvas to apply blur to
+ * @param blurAmount - Blur amount in pixels (should be scaled for high-DPI exports)
+ * @returns Promise resolving to a new canvas with the blur effect applied
+ */
+async function applyBlurToCanvas(
+  canvas: HTMLCanvasElement,
+  blurAmount: number
+): Promise<HTMLCanvasElement> {
+  if (blurAmount <= 0) {
+    return canvas;
+  }
+
+  try {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return canvas;
+    }
+
+    // Get image data from canvas
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    // Apply blur using worker
+    const blurredImageData = await exportWorkerService.applyBlur(imageData, blurAmount);
+    
+    // Create new canvas with blurred result
+    const blurredCanvas = document.createElement('canvas');
+    blurredCanvas.width = canvas.width;
+    blurredCanvas.height = canvas.height;
+    const blurredCtx = blurredCanvas.getContext('2d');
+    
+    if (!blurredCtx) {
+      return applyBlurToCanvasSync(canvas, blurAmount);
+    }
+    
+    blurredCtx.putImageData(blurredImageData, 0, 0);
+    return blurredCanvas;
+  } catch (error) {
+    console.warn('Worker blur failed, using sync fallback:', error);
+    return applyBlurToCanvasSync(canvas, blurAmount);
+  }
+}
+
+/**
+ * Apply opacity to a canvas (sync version for fallback)
  * This ensures background opacity is correctly applied during export
  * 
  * @param canvas - The canvas to apply opacity to
  * @param opacity - Opacity value (0-1)
  * @returns A new canvas with the opacity applied
  */
-function applyOpacityToCanvas(
+function applyOpacityToCanvasSync(
   canvas: HTMLCanvasElement,
   opacity: number
 ): HTMLCanvasElement {
@@ -228,6 +277,59 @@ function applyOpacityToCanvas(
   ctx.globalAlpha = 1;
 
   return opacityCanvas;
+}
+
+/**
+ * Apply opacity to a canvas using Web Worker for heavy computation
+ * Falls back to sync version if worker is unavailable
+ * 
+ * @param canvas - The canvas to apply opacity to
+ * @param opacity - Opacity value (0-1)
+ * @returns Promise resolving to a new canvas with the opacity applied
+ */
+async function applyOpacityToCanvas(
+  canvas: HTMLCanvasElement,
+  opacity: number
+): Promise<HTMLCanvasElement> {
+  if (opacity >= 1) {
+    return canvas;
+  }
+
+  if (opacity <= 0) {
+    const transparentCanvas = document.createElement('canvas');
+    transparentCanvas.width = canvas.width;
+    transparentCanvas.height = canvas.height;
+    return transparentCanvas;
+  }
+
+  try {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return canvas;
+    }
+
+    // Get image data from canvas
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    // Apply opacity using worker
+    const resultImageData = await exportWorkerService.applyOpacity(imageData, opacity);
+    
+    // Create new canvas with result
+    const resultCanvas = document.createElement('canvas');
+    resultCanvas.width = canvas.width;
+    resultCanvas.height = canvas.height;
+    const resultCtx = resultCanvas.getContext('2d');
+    
+    if (!resultCtx) {
+      return applyOpacityToCanvasSync(canvas, opacity);
+    }
+    
+    resultCtx.putImageData(resultImageData, 0, 0);
+    return resultCanvas;
+  } catch (error) {
+    console.warn('Worker opacity failed, using sync fallback:', error);
+    return applyOpacityToCanvasSync(canvas, opacity);
+  }
 }
 
 /**
@@ -350,9 +452,10 @@ async function applyNoiseToCanvas(
   if (previewNoiseTexture) {
     noiseCanvas = previewNoiseTexture;
   } else {
-    // Fallback: Generate noise texture if we can't extract from preview
+    // Fallback: Generate noise texture using worker if we can't extract from preview
     // This should rarely happen, but ensures export still works
-    noiseCanvas = generateNoiseTexture(200, 200, noiseIntensity);
+    // Use async version for worker-based generation
+    noiseCanvas = await generateNoiseTextureAsync(200, 200, noiseIntensity);
   }
 
   // Apply noise with overlay blend mode (matching preview's mix-blend-mode: overlay)
@@ -912,7 +1015,7 @@ async function exportBackground(
 
     // Step 1: Apply blur to background (noise was excluded from capture)
     const blurredCanvas = backgroundBlur > 0
-      ? applyBlurToCanvas(canvas, backgroundBlur * scale)
+      ? await applyBlurToCanvas(canvas, backgroundBlur * scale)
       : canvas;
 
     // Step 2: Apply noise overlay on top of blurred background
@@ -923,7 +1026,7 @@ async function exportBackground(
 
     // Step 3: Apply opacity to the final background
     // This ensures opacity is correctly applied during export, matching the preview
-    return applyOpacityToCanvas(canvasWithNoise, backgroundOpacity);
+    return await applyOpacityToCanvas(canvasWithNoise, backgroundOpacity);
   } catch (error) {
     // Clean up container on error
     if (container.parentNode) {
