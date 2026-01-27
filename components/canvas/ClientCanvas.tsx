@@ -84,7 +84,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
   const loadedOverlayImages = useOverlayImages(imageOverlays);
 
   useEffect(() => {                                           // deleting overlays when backspace or delete is pressed
-    const handleKeyDown = (e: KeyboardEvent) => {            
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key == 'Delete' || e.key == 'Backspace'){ 
         if (selectedOverlayId){
           e.preventDefault()
@@ -96,6 +96,30 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   },[selectedOverlayId, removeImageOverlay])
+
+
+  // to clear selection while clicking outside of canvas
+  useEffect(() => {
+    const handlePointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (!target) return;
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      
+      if (!container.contains(target)) {
+        setSelectedOverlayId(null);
+        setIsMainImageSelected(false);
+        setSelectedTextId(null);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -118,7 +142,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
           undo();
         }
       }
-    }
+    };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
