@@ -13,7 +13,7 @@ export const demoImagePaths: string[] = [
   "backgrounds/demo/demo-4.png",
   "backgrounds/demo/demo-5.png",
   "backgrounds/demo/demo-6.png",
-  "backgrounds/demo/demo-7.png",
+  "backgrounds/demo/demo-11.png",
   "backgrounds/demo/demo-8.png",
   "backgrounds/demo/demo-9.png",
   "backgrounds/demo/demo-10.png",

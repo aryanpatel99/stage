@@ -12,10 +12,8 @@ interface MasonryItem {
 
 // Aspect ratios based on actual image dimensions
 const getAspectRatio = (index: number): string => {
-  const demoNumber = index + 1;
-
-  // Square images (3240x3240)
-  if (demoNumber === 7 || demoNumber === 10) return "aspect-square";
+  // Square images at position 7 (demo-11) and position 10 (demo-10)
+  if (index === 6 || index === 9) return "aspect-square";
 
   // All others are 16:9 landscape (3600x2025)
   return "aspect-video";
