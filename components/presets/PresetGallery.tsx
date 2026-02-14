@@ -4,8 +4,8 @@ import * as React from 'react';
 import { useImageStore, useEditorStore } from '@/lib/store';
 import { presets, type PresetConfig } from '@/lib/constants/presets';
 import { getBackgroundCSS } from '@/lib/constants/backgrounds';
-import { getCldImageUrl } from '@/lib/cloudinary';
-import { cloudinaryPublicIds } from '@/lib/cloudinary-backgrounds';
+import { getR2ImageUrl } from '@/lib/r2';
+import { backgroundPaths } from '@/lib/r2-backgrounds';
 import { cn } from '@/lib/utils';
 interface PresetGalleryProps {
   onPresetSelect?: (preset: PresetConfig) => void;
@@ -116,23 +116,15 @@ export function PresetGallery({ onPresetSelect }: PresetGalleryProps) {
   const getBackgroundImageUrl = (config: PresetConfig['backgroundConfig']): string | null => {
     if (config.type !== 'image') return null;
     const value = config.value as string;
-    
+
     if (value.startsWith('blob:') || value.startsWith('http') || value.startsWith('data:')) {
       return value;
     }
-    
-    if (cloudinaryPublicIds.includes(value)) {
-      return getCldImageUrl({
-        src: value,
-        width: 400,
-        height: 300,
-        quality: 'auto',
-        format: 'auto',
-        crop: 'fill',
-        gravity: 'auto',
-      });
+
+    if (backgroundPaths.includes(value)) {
+      return getR2ImageUrl({ src: value });
     }
-    
+
     return null;
   };
 

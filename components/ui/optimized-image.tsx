@@ -1,6 +1,7 @@
 "use client";
 
-import { CldImage } from 'next-cloudinary';
+import Image from 'next/image';
+import { getR2ImageUrl } from '@/lib/r2';
 
 interface OptimizedImageProps {
   src: string;
@@ -18,9 +19,9 @@ interface OptimizedImageProps {
 }
 
 /**
- * OptimizedImage component that uses Cloudinary for all images.
- * All images must be Cloudinary public IDs.
- * Requires NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME to be set.
+ * OptimizedImage component that uses R2 for all images.
+ * All images must be R2 paths.
+ * Requires NEXT_PUBLIC_R2_PUBLIC_URL to be set.
  */
 export function OptimizedImage({
   src,
@@ -36,47 +37,35 @@ export function OptimizedImage({
   gravity = 'auto',
   ...props
 }: OptimizedImageProps) {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  
-  if (!cloudName) {
-    console.error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not set. All images require Cloudinary configuration.');
-    return null;
-  }
+  // Get R2 URL for the image
+  const imageUrl = getR2ImageUrl({ src });
 
-  // Always use Cloudinary - src should be a Cloudinary public ID
   if (fill) {
     return (
-      <CldImage
-        src={src}
+      <Image
+        src={imageUrl}
         alt={alt}
         fill
         className={className}
         priority={priority}
         sizes={sizes}
-        quality={quality}
-        crop={crop}
-        gravity={gravity}
-        unoptimized={false}
+        unoptimized
         {...props}
       />
     );
   }
 
   return (
-    <CldImage
-      src={src}
+    <Image
+      src={imageUrl}
       alt={alt}
-      width={width}
-      height={height}
+      width={width || 800}
+      height={height || 600}
       className={className}
       priority={priority}
       sizes={sizes}
-      quality={quality}
-      crop={crop}
-      gravity={gravity}
-      unoptimized={false}
+      unoptimized
       {...props}
     />
   );
 }
-

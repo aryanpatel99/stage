@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useImageStore } from '@/lib/store'
-import { getCldImageUrl } from '@/lib/cloudinary'
-import { OVERLAY_PUBLIC_IDS } from '@/lib/cloudinary-overlays'
+import { getR2ImageUrl } from '@/lib/r2'
+import { isOverlayPath } from '@/lib/r2-overlays'
 
 export function OverlayRenderer() {
   const { imageOverlays, updateImageOverlay } = useImageStore()
@@ -121,20 +121,13 @@ export function OverlayRenderer() {
       {imageOverlays.map((overlay) => {
         if (!overlay.isVisible) return null
 
-        // Check if this is a Cloudinary public ID or a custom upload
-        const isCloudinaryId = OVERLAY_PUBLIC_IDS.includes(overlay.src as any) || 
-                               (typeof overlay.src === 'string' && overlay.src.startsWith('overlays/'))
-        
-        // Get the image URL - use Cloudinary if it's a Cloudinary ID, otherwise use the src directly
-        const imageUrl = isCloudinaryId && !overlay.isCustom
-          ? getCldImageUrl({
-              src: overlay.src,
-              width: overlay.size * 2, // 2x for retina
-              height: overlay.size * 2,
-              quality: 'auto',
-              format: 'auto',
-              crop: 'fit',
-            })
+        // Check if this is an R2 overlay path or a custom upload
+        const isR2Overlay = isOverlayPath(overlay.src) ||
+                           (typeof overlay.src === 'string' && overlay.src.startsWith('overlays/'))
+
+        // Get the image URL - use R2 if it's a known path, otherwise use the src directly
+        const imageUrl = isR2Overlay && !overlay.isCustom
+          ? getR2ImageUrl({ src: overlay.src })
           : overlay.src
 
         return (

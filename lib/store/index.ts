@@ -579,7 +579,7 @@ export const useImageStore = create<ImageState>()(
     selectedAspectRatio: "16_9",
     backgroundConfig: {
       type: "image",
-      value: "backgrounds/backgrounds/mac/mac-asset-8",
+      value: "backgrounds/mac/mac-asset-8.jpg",
       opacity: 1,
     },
     backgroundBlur: 0,
@@ -646,7 +646,7 @@ export const useImageStore = create<ImageState>()(
         borderRadius: 10,
         backgroundConfig: {
           type: "image",
-          value: "backgrounds/backgrounds/mac/mac-asset-8",
+          value: "backgrounds/mac/mac-asset-8.jpg",
           opacity: 1,
         },
         selectedGradient: "pink_orange",
@@ -741,7 +741,7 @@ export const useImageStore = create<ImageState>()(
         // If current value is a gradient or solid color key, or not a valid image, set default to asset-26
         const newValue =
           isGradientKey || isSolidColorKey || !isValidImage
-            ? "backgrounds/backgrounds/mac/mac-asset-8"
+            ? "backgrounds/mac/mac-asset-8.jpg"
             : currentValue;
 
         set({

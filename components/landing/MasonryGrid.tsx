@@ -1,7 +1,7 @@
 "use client";
 
 import { OptimizedImage } from "@/components/ui/optimized-image";
-import { demoImagePublicIds } from "@/lib/cloudinary-demo-images";
+import { demoImagePaths } from "@/lib/r2-demo-images";
 
 interface MasonryItem {
   id: number;
@@ -42,10 +42,10 @@ const getAspectRatio = (index: number): string => {
   return defaultRatios[(demoNumber - 1) % defaultRatios.length];
 };
 
-// Use demo image Cloudinary public IDs directly with specific sizes
-const sampleItems: MasonryItem[] = demoImagePublicIds.map((publicId, index) => ({
+// Use demo image R2 paths directly
+const sampleItems: MasonryItem[] = demoImagePaths.map((imagePath, index) => ({
   id: index + 1,
-  image: publicId,
+  image: imagePath,
   alt: `Gallery image ${index + 1}`,
   aspectRatio: getAspectRatio(index),
 }));

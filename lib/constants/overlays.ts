@@ -1,8 +1,7 @@
 /**
  * Available anime character overlay images
- * Using Cloudinary public IDs for optimized delivery
+ * Using R2 paths for delivery
  */
-import { OVERLAY_PUBLIC_IDS } from '@/lib/cloudinary-overlays'
+import { OVERLAY_PATHS } from '@/lib/r2-overlays'
 
-export const OVERLAY_IMAGES = OVERLAY_PUBLIC_IDS as readonly string[]
-
+export const OVERLAY_IMAGES = OVERLAY_PATHS as readonly string[]

@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { useImageStore } from '@/lib/store'
 import { Delete02Icon, ViewIcon, ViewOffSlashIcon } from 'hugeicons-react'
-import { getCldImageUrl } from '@/lib/cloudinary'
-import { OVERLAY_PUBLIC_IDS } from '@/lib/cloudinary-overlays'
+import { getR2ImageUrl } from '@/lib/r2'
+import { OVERLAY_PATHS, isOverlayPath } from '@/lib/r2-overlays'
 
 export function OverlayControls() {
   const {
@@ -116,23 +116,16 @@ export function OverlayControls() {
                 </Button>
                 <div className="relative w-8 h-8 shrink-0 rounded overflow-hidden">
                   {(() => {
-                    // Check if this is a Cloudinary public ID or a custom upload
-                    const isCloudinaryId = OVERLAY_PUBLIC_IDS.includes(overlay.src as any) || 
-                                         (typeof overlay.src === 'string' && overlay.src.startsWith('overlays/'))
-                    
-                    // Get the image URL - use Cloudinary if it's a Cloudinary ID, otherwise use the src directly
-                    const imageUrl = isCloudinaryId && !overlay.isCustom
-                      ? getCldImageUrl({
-                          src: overlay.src,
-                          width: 32,
-                          height: 32,
-                          quality: 'auto',
-                          format: 'auto',
-                          crop: 'fit',
-                        })
+                    // Check if this is an R2 overlay path or a custom upload
+                    const isR2Overlay = isOverlayPath(overlay.src) ||
+                                       (typeof overlay.src === 'string' && overlay.src.startsWith('overlays/'))
+
+                    // Get the image URL - use R2 if it's a known path, otherwise use the src directly
+                    const imageUrl = isR2Overlay && !overlay.isCustom
+                      ? getR2ImageUrl({ src: overlay.src })
                       : overlay.src
-                    
-                    // Use regular img tag for Cloudinary URLs and data URLs
+
+                    // Use regular img tag
                     return (
                       <img
                         src={imageUrl}

@@ -1,8 +1,8 @@
 import { gradientColors, GradientKey } from './gradient-colors';
 import { SolidColorKey, solidColors } from './solid-colors';
 import { meshGradients, magicGradients, MeshGradientKey, MagicGradientKey } from './mesh-gradients';
-import { getCldImageUrl } from '@/lib/cloudinary';
-import { cloudinaryPublicIds } from '@/lib/cloudinary-backgrounds';
+import { getR2ImageUrl } from '@/lib/r2';
+import { backgroundPaths } from '@/lib/r2-backgrounds';
 
 export type BackgroundType = 'gradient' | 'solid' | 'image';
 
@@ -95,43 +95,17 @@ export const getBackgroundCSS = (
     }
 
     case 'image': {
-      // Check if it's a Cloudinary public ID
-      const isCloudinaryPublicId = typeof value === 'string' &&
+      // Check if it's a known R2 background path
+      const isR2Path = typeof value === 'string' &&
         !value.startsWith('blob:') &&
         !value.startsWith('http') &&
         !value.startsWith('data:') &&
-        cloudinaryPublicIds.includes(value);
+        backgroundPaths.includes(value);
 
-      let imageUrl = value as string;
-
-      // If it's a Cloudinary public ID, try to get the optimized URL
-      if (isCloudinaryPublicId) {
-        try {
-          // Check if Cloudinary is configured
-          const cloudName = typeof window !== 'undefined'
-            ? (window as any).__NEXT_DATA__?.env?.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
-              (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME as string)
-            : (process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME as string);
-
-          if (cloudName) {
-            imageUrl = getCldImageUrl({
-              src: value as string,
-              width: 1920,
-              height: 1080,
-              quality: 'auto',
-              format: 'auto',
-              crop: 'fill',
-              gravity: 'auto',
-            });
-          } else {
-            console.warn(`Cloudinary cloud name not found. Background image "${value}" will be used as-is. For optimized images, set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME in your environment variables.`);
-            // Use value as-is, might be a local path or URL
-          }
-        } catch (error) {
-          console.warn(`Failed to get Cloudinary URL for background "${value}":`, error);
-          // Use value as-is on error
-        }
-      }
+      // Get the image URL (R2 URL if it's a known path, otherwise use as-is)
+      const imageUrl = isR2Path
+        ? getR2ImageUrl({ src: value })
+        : value as string;
 
       return {
         backgroundImage: `url(${imageUrl})`,

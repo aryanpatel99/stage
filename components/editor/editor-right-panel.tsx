@@ -7,12 +7,13 @@ import { Button } from "@/components/ui/button";
 import { ArrowDown01Icon, ArrowUp01Icon, Settings02Icon, SparklesIcon, Image01Icon, Cancel01Icon } from "hugeicons-react";
 import { useDropzone } from "react-dropzone";
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "@/lib/constants";
-import { getCldImageUrl } from "@/lib/cloudinary";
+import { getR2ImageUrl } from "@/lib/r2";
 import {
   backgroundCategories,
   getAvailableCategories,
-  cloudinaryPublicIds,
-} from "@/lib/cloudinary-backgrounds";
+  backgroundPaths,
+  getBackgroundThumbnailUrl,
+} from "@/lib/r2-backgrounds";
 import {
   gradientColors,
   type GradientKey,
@@ -392,7 +393,7 @@ export function EditorRightPanel() {
                         (backgroundConfig.value.startsWith("blob:") ||
                           backgroundConfig.value.startsWith("http") ||
                           backgroundConfig.value.startsWith("data:") ||
-                          cloudinaryPublicIds.includes(
+                          backgroundPaths.includes(
                             backgroundConfig.value
                           )) && (
                           <div className="space-y-2">
@@ -401,30 +402,20 @@ export function EditorRightPanel() {
                             </Label>
                             <div className="relative rounded-lg overflow-hidden border border-border aspect-video bg-muted">
                               {(() => {
-                                // Check if it's a Cloudinary public ID
-                                const isCloudinaryPublicId =
+                                // Check if it's a known R2 background path
+                                const isR2Path =
                                   typeof backgroundConfig.value === "string" &&
                                   !backgroundConfig.value.startsWith("blob:") &&
                                   !backgroundConfig.value.startsWith("http") &&
                                   !backgroundConfig.value.startsWith("data:") &&
-                                  cloudinaryPublicIds.includes(
+                                  backgroundPaths.includes(
                                     backgroundConfig.value
                                   );
 
-                                let imageUrl = backgroundConfig.value as string;
-
-                                // If it's a Cloudinary public ID, get the optimized URL
-                                if (isCloudinaryPublicId) {
-                                  imageUrl = getCldImageUrl({
-                                    src: backgroundConfig.value as string,
-                                    width: 600,
-                                    height: 400,
-                                    quality: "auto",
-                                    format: "auto",
-                                    crop: "fill",
-                                    gravity: "auto",
-                                  });
-                                }
+                                // Get the image URL
+                                const imageUrl = isR2Path
+                                  ? getR2ImageUrl({ src: backgroundConfig.value as string })
+                                  : (backgroundConfig.value as string);
 
                                 return (
                                   <>
@@ -500,29 +491,19 @@ export function EditorRightPanel() {
                                       </Label>
                                       <div className="grid grid-cols-2 gap-2 overflow-y-auto pb-2 max-h-64">
                                         {categoryBackgrounds.map(
-                                          (publicId: string, idx: number) => {
-                                            const thumbnailUrl = getCldImageUrl(
-                                              {
-                                                src: publicId,
-                                                width: 300,
-                                                height: 200,
-                                                quality: "auto",
-                                                format: "auto",
-                                                crop: "fill",
-                                                gravity: "auto",
-                                              }
-                                            );
+                                          (imagePath: string, idx: number) => {
+                                            const thumbnailUrl = getBackgroundThumbnailUrl(imagePath);
 
                                             return (
                                               <button
                                                 key={`${category}-${idx}`}
                                                 onClick={() => {
-                                                  setBackgroundValue(publicId);
+                                                  setBackgroundValue(imagePath);
                                                   setBackgroundType("image");
                                                 }}
                                                 className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all ${
                                                   backgroundConfig.value ===
-                                                  publicId
+                                                  imagePath
                                                     ? "border-primary ring-2 ring-ring shadow-sm"
                                                     : "border-border hover:border-border/80"
                                                 }`}

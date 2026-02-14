@@ -35,7 +35,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '16_9',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/assets/asset-13',
+      value: 'backgrounds/assets/asset-13.jpg',
       opacity: 1,
     },
     borderRadius: 10,
@@ -66,7 +66,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '16_9',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/assets/asset-18',
+      value: 'backgrounds/assets/asset-18.jpg',
       opacity: 1,
     },
     borderRadius: 10,
@@ -95,7 +95,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '16_9',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/assets/asset-29',
+      value: 'backgrounds/assets/asset-29.jpeg',
       opacity: 1,
     },
     borderRadius: 10,
@@ -126,7 +126,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '16_9',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/assets/asset-19',
+      value: 'backgrounds/assets/asset-19.jpg',
       opacity: 1,
     },
     borderRadius: 10,
@@ -155,7 +155,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '16_9',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/radiant/radiant1',
+      value: 'backgrounds/radiant/radiant1.jpg',
       opacity: 1,
     },
     borderRadius: 10,
@@ -193,7 +193,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: 'og_image',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/radiant/radiant1',
+      value: 'backgrounds/radiant/radiant1.jpg',
       opacity: 1,
     },
     borderRadius: 12,
@@ -224,7 +224,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: 'twitter_banner',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/mesh/mesh1',
+      value: 'backgrounds/mesh/mesh1.webp',
       opacity: 1,
     },
     borderRadius: 0,
@@ -255,7 +255,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: 'instagram_banner',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/radiant/radiant3',
+      value: 'backgrounds/radiant/radiant3.jpg',
       opacity: 1,
     },
     borderRadius: 0,
@@ -286,7 +286,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: 'youtube_banner',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/mesh/mesh2',
+      value: 'backgrounds/mesh/mesh2.webp',
       opacity: 1,
     },
     borderRadius: 0,
@@ -317,7 +317,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: 'linkedin_banner',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/assets/asset-13',
+      value: 'backgrounds/assets/asset-13.jpg',
       opacity: 1,
     },
     borderRadius: 0,
@@ -348,7 +348,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '16_9',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/silk/monochrome',
+      value: 'backgrounds/silk/monochrome.png',
       opacity: 1,
     },
     borderRadius: 20,
@@ -379,7 +379,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '4_5',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/assets/asset-17',
+      value: 'backgrounds/assets/asset-12.jpg',
       opacity: 1,
     },
     borderRadius: 8,
@@ -410,7 +410,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '4_5',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/radiant/radiant5',
+      value: 'backgrounds/radiant/radiant5.jpg',
       opacity: 1,
     },
     borderRadius: 24,
@@ -441,7 +441,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '16_9',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/mesh/mesh3',
+      value: 'backgrounds/mesh/mesh3.webp',
       opacity: 1,
     },
     borderRadius: 16,
@@ -472,7 +472,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '16_9',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/mac/mac-asset-10',
+      value: 'backgrounds/mac/mac-asset-10.jpg',
       opacity: 1,
     },
     borderRadius: 12,
@@ -503,7 +503,7 @@ export const presets: PresetConfig[] = [
     aspectRatio: '1_1',
     backgroundConfig: {
       type: 'image',
-      value: 'backgrounds/backgrounds/radiant/radiant7',
+      value: 'backgrounds/radiant/radiant8.jpg',
       opacity: 1,
     },
     borderRadius: 20,

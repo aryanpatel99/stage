@@ -16,8 +16,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { gradientColors, type GradientKey } from '@/lib/constants/gradient-colors';
 import { solidColors, type SolidColorKey } from '@/lib/constants/solid-colors';
-import { getCldImageUrl } from '@/lib/cloudinary';
-import { cloudinaryPublicIds } from '@/lib/cloudinary-backgrounds';
+import { getR2ImageUrl } from '@/lib/r2';
+import { backgroundPaths } from '@/lib/r2-backgrounds';
 
 export function CleanUploadState() {
   const [isDragActive, setIsDragActive] = React.useState(false);
@@ -41,9 +41,9 @@ export function CleanUploadState() {
     }
 
     if (type === 'image' && value) {
-      const isCloudinary = cloudinaryPublicIds.includes(value);
-      const imageUrl = isCloudinary
-        ? getCldImageUrl({ src: value, width: 1920, height: 1080, quality: 'auto', format: 'auto', crop: 'fill', gravity: 'auto' })
+      const isR2Path = backgroundPaths.includes(value);
+      const imageUrl = isR2Path
+        ? getR2ImageUrl({ src: value })
         : value;
       return { backgroundImage: `url(${imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' };
     }

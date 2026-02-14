@@ -5,11 +5,11 @@ import { useImageStore } from '@/lib/store';
 import { useDropzone } from 'react-dropzone';
 import { useResponsiveCanvasDimensions } from '@/hooks/useAspectRatioDimensions';
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from '@/lib/constants';
-import { getCldImageUrl } from '@/lib/cloudinary';
+import { getR2ImageUrl } from '@/lib/r2';
 import {
   backgroundCategories,
-  cloudinaryPublicIds,
-} from '@/lib/cloudinary-backgrounds';
+  getBackgroundThumbnailUrl,
+} from '@/lib/r2-backgrounds';
 import { gradientColors, type GradientKey } from '@/lib/constants/gradient-colors';
 import { solidColors, type SolidColorKey } from '@/lib/constants/solid-colors';
 import { meshGradients, magicGradients, type MeshGradientKey, type MagicGradientKey } from '@/lib/constants/mesh-gradients';
@@ -337,22 +337,22 @@ export function BackgroundSection() {
           defaultOpen={category === 'assets'}
         >
           <div className="grid grid-cols-5 gap-2">
-            {(backgroundCategories[category] || []).map((publicId: string, idx: number) => (
+            {(backgroundCategories[category] || []).map((imagePath: string, idx: number) => (
               <button
                 key={`${category}-${idx}`}
                 onClick={() => {
-                  setBackgroundValue(publicId);
+                  setBackgroundValue(imagePath);
                   setBackgroundType('image');
                 }}
                 className={cn(
                   'aspect-video rounded-lg overflow-hidden border-2 transition-all hover:scale-105',
-                  backgroundConfig.value === publicId
+                  backgroundConfig.value === imagePath
                     ? 'border-primary ring-1 ring-primary/30'
                     : 'border-transparent hover:border-border/50'
                 )}
               >
                 <img
-                  src={getCldImageUrl({ src: publicId, width: 120, height: 68, quality: 'auto', format: 'auto', crop: 'fill', gravity: 'auto' })}
+                  src={getBackgroundThumbnailUrl(imagePath)}
                   alt={`${category} ${idx + 1}`}
                   className="w-full h-full object-cover"
                   loading="lazy"

@@ -6,12 +6,14 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
+        // R2 public development URL (*.r2.dev)
         protocol: "https",
-        hostname: "res.cloudinary.com",
+        hostname: "**.r2.dev",
       },
       {
+        // R2 custom domain
         protocol: "https",
-        hostname: "**.cloudinary.com",
+        hostname: "assets.stagee.art",
       },
     ],
   },
