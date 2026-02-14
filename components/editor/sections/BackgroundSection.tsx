@@ -14,8 +14,9 @@ import { gradientColors, type GradientKey } from '@/lib/constants/gradient-color
 import { solidColors, type SolidColorKey } from '@/lib/constants/solid-colors';
 import { meshGradients, magicGradients, type MeshGradientKey, type MagicGradientKey } from '@/lib/constants/mesh-gradients';
 import { Button } from '@/components/ui/button';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { SectionWrapper } from './SectionWrapper';
-import { Cancel01Icon, Image01Icon, PaintBoardIcon, GridIcon, ShuffleIcon } from 'hugeicons-react';
+import { Cancel01Icon, Image01Icon, ShuffleIcon } from 'hugeicons-react';
 import { cn } from '@/lib/utils';
 
 // Arrow URLs
@@ -50,7 +51,24 @@ export function BackgroundSection() {
 
   const responsiveDimensions = useResponsiveCanvasDimensions();
   const [bgUploadError, setBgUploadError] = React.useState<string | null>(null);
-  const [activeImageTab, setActiveImageTab] = React.useState<typeof CATEGORY_ORDER[number]>('assets');
+  const [customColor, setCustomColor] = React.useState('#7dd4ad');
+
+  // Track which custom bg option is active
+  const customBgType = React.useMemo(() => {
+    if (backgroundConfig.type === 'solid' && backgroundConfig.value === 'transparent') {
+      return 'transparent';
+    }
+    if (backgroundConfig.type === 'solid' && backgroundConfig.value?.startsWith('#')) {
+      return 'color';
+    }
+    if (backgroundConfig.type === 'solid' && backgroundConfig.value?.startsWith('rgba')) {
+      return 'color';
+    }
+    if (backgroundConfig.type === 'image' && backgroundConfig.value?.startsWith('blob:')) {
+      return 'image';
+    }
+    return null;
+  }, [backgroundConfig]);
 
   const validateFile = (file: File): string | null => {
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
@@ -230,153 +248,161 @@ export function BackgroundSection() {
         </div>
       </SectionWrapper>
 
-      {/* Background Images */}
-      <SectionWrapper title="Backgrounds" defaultOpen={true}>
-        <div className="space-y-4">
-          {/* Quick Actions */}
-          <div className="flex gap-2">
-            <div
-              {...getBgRootProps()}
-              className={cn(
-                'flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg border border-dashed cursor-pointer transition-all text-xs',
-                isBgDragActive
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border/60 hover:border-primary/50 hover:bg-surface-2/30 text-text-secondary'
-              )}
-            >
-              <input {...getBgInputProps()} />
-              <Image01Icon size={14} />
-              <span>Upload</span>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setBackgroundType('solid');
-                setBackgroundValue('white');
-              }}
-              className={cn(
-                'flex-1 h-9 text-xs gap-1.5',
-                backgroundConfig.type === 'solid' && 'border-primary bg-primary/5'
-              )}
-            >
-              <PaintBoardIcon size={14} />
-              Color
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setBackgroundType('solid');
-                setBackgroundValue('transparent');
-              }}
-              className="flex-1 h-9 text-xs gap-1.5"
-            >
-              <GridIcon size={14} />
-              Clear
-            </Button>
+      {/* Custom BG */}
+      <SectionWrapper title="Custom BG" defaultOpen={true}>
+        <div className="grid grid-cols-3 gap-2">
+          {/* Image Upload */}
+          <div
+            {...getBgRootProps()}
+            className={cn(
+              'flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg border cursor-pointer transition-all',
+              customBgType === 'image'
+                ? 'border-primary bg-primary/5'
+                : 'border-border/50 bg-surface-2 hover:bg-surface-3'
+            )}
+          >
+            <input {...getBgInputProps()} />
+            <Image01Icon size={20} className="text-text-secondary" />
+            <span className="text-xs text-text-secondary">Image</span>
           </div>
 
-          {bgUploadError && <p className="text-xs text-destructive">{bgUploadError}</p>}
-
-          {/* Current Image Preview */}
-          {backgroundConfig.type === 'image' && backgroundConfig.value &&
-            (backgroundConfig.value.startsWith('blob:') ||
-              backgroundConfig.value.startsWith('http') ||
-              backgroundConfig.value.startsWith('data:') ||
-              cloudinaryPublicIds.includes(backgroundConfig.value)) && (
-              <div className="relative rounded-lg overflow-hidden border border-border/40 aspect-video bg-surface-1/50">
-                <img
-                  src={
-                    cloudinaryPublicIds.includes(backgroundConfig.value)
-                      ? getCldImageUrl({ src: backgroundConfig.value, width: 400, height: 225, quality: 'auto', format: 'auto', crop: 'fill', gravity: 'auto' })
-                      : backgroundConfig.value
-                  }
-                  alt="Background"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  className="absolute top-2 right-2 p-1 rounded-md bg-black/50 text-white hover:bg-destructive transition-colors"
-                  onClick={() => {
-                    setBackgroundType('gradient');
-                    setBackgroundValue('vibrant_orange_pink');
-                    if (backgroundConfig.value.startsWith('blob:')) URL.revokeObjectURL(backgroundConfig.value);
-                  }}
-                >
-                  <Cancel01Icon size={14} />
-                </button>
-              </div>
+          {/* Color Picker */}
+          <ColorPicker
+            color={customColor}
+            onChange={(newColor) => {
+              setCustomColor(newColor);
+              setBackgroundType('solid');
+              setBackgroundValue(newColor);
+            }}
+            className={cn(
+              'flex flex-col items-center justify-center gap-1.5 py-3 h-auto',
+              customBgType === 'color'
+                ? 'border-primary bg-primary/5'
+                : ''
             )}
+          />
 
-          {/* Solid Colors */}
-          {backgroundConfig.type === 'solid' && (
-            <div className="grid grid-cols-8 gap-1">
-              {(Object.keys(solidColors) as SolidColorKey[]).map((key) => (
-                <button
-                  key={key}
-                  onClick={() => setBackgroundValue(key)}
-                  className={cn(
-                    'aspect-square rounded-md border-2 transition-all hover:scale-110',
-                    backgroundConfig.value === key
-                      ? 'border-primary ring-1 ring-primary/30'
-                      : 'border-border/30 hover:border-border'
-                  )}
-                  style={{ backgroundColor: solidColors[key] }}
-                  title={key.replace(/_/g, ' ')}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Category Tabs - Segmented Control */}
-          <div className="relative flex p-0.5 bg-surface-1 dark:bg-surface-1/80 rounded-lg border border-border/30">
-            {/* Sliding background indicator */}
+          {/* Transparent */}
+          <button
+            onClick={() => {
+              setBackgroundType('solid');
+              setBackgroundValue('transparent');
+            }}
+            className={cn(
+              'flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg border transition-all',
+              customBgType === 'transparent'
+                ? 'border-primary bg-primary/5'
+                : 'border-border/50 bg-surface-2 hover:bg-surface-3'
+            )}
+          >
+            {/* Checkerboard pattern for transparent */}
             <div
-              className="absolute top-0.5 bottom-0.5 bg-white dark:bg-surface-4 rounded-md shadow-sm transition-all duration-200 ease-out"
+              className="w-5 h-5 rounded-full border border-border/50"
               style={{
-                left: `calc(${availableCategories.indexOf(activeImageTab) * (100 / availableCategories.length)}% + 2px)`,
-                width: `calc(${100 / availableCategories.length}% - 4px)`,
+                background: 'repeating-conic-gradient(#808080 0% 25%, #fff 0% 50%) 50% / 8px 8px',
               }}
             />
-            {availableCategories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveImageTab(cat)}
-                className={cn(
-                  'relative z-10 flex-1 py-1.5 text-[11px] font-medium rounded-md transition-colors duration-150',
-                  activeImageTab === cat
-                    ? 'text-foreground'
-                    : 'text-text-tertiary hover:text-text-secondary'
-                )}
-              >
-                {CATEGORY_LABELS[cat] || cat}
-              </button>
-            ))}
-          </div>
+            <span className="text-xs text-text-secondary">Transparent</span>
+          </button>
+        </div>
+        {bgUploadError && <p className="text-xs text-destructive mt-2">{bgUploadError}</p>}
 
-          {/* Image Grid */}
-          <div className="grid grid-cols-4 gap-1.5 max-h-32 overflow-y-auto scrollbar-hide">
-            {(backgroundCategories[activeImageTab] || []).map((publicId: string, idx: number) => (
+        {/* Current Image Preview */}
+        {backgroundConfig.type === 'image' && backgroundConfig.value?.startsWith('blob:') && (
+          <div className="relative rounded-lg overflow-hidden border border-border/40 aspect-video bg-surface-1/50 mt-3">
+            <img
+              src={backgroundConfig.value}
+              alt="Background"
+              className="w-full h-full object-cover"
+            />
+            <button
+              className="absolute top-2 right-2 p-1 rounded-md bg-black/50 text-white hover:bg-destructive transition-colors"
+              onClick={() => {
+                setBackgroundType('gradient');
+                setBackgroundValue('vibrant_orange_pink');
+                URL.revokeObjectURL(backgroundConfig.value);
+              }}
+            >
+              <Cancel01Icon size={14} />
+            </button>
+          </div>
+        )}
+      </SectionWrapper>
+
+      {/* Background Images - Each category shown separately */}
+      {availableCategories.map((category) => (
+        <SectionWrapper
+          key={category}
+          title={CATEGORY_LABELS[category] || category}
+          defaultOpen={category === 'assets'}
+        >
+          <div className="grid grid-cols-5 gap-2">
+            {(backgroundCategories[category] || []).map((publicId: string, idx: number) => (
               <button
-                key={`${activeImageTab}-${idx}`}
+                key={`${category}-${idx}`}
                 onClick={() => {
                   setBackgroundValue(publicId);
                   setBackgroundType('image');
                 }}
                 className={cn(
-                  'aspect-video rounded-md overflow-hidden border-2 transition-all hover:scale-105',
+                  'aspect-video rounded-lg overflow-hidden border-2 transition-all hover:scale-105',
                   backgroundConfig.value === publicId
                     ? 'border-primary ring-1 ring-primary/30'
-                    : 'border-border/30 hover:border-border'
+                    : 'border-transparent hover:border-border/50'
                 )}
               >
                 <img
                   src={getCldImageUrl({ src: publicId, width: 120, height: 68, quality: 'auto', format: 'auto', crop: 'fill', gravity: 'auto' })}
-                  alt={`${activeImageTab} ${idx + 1}`}
+                  alt={`${category} ${idx + 1}`}
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
               </button>
+            ))}
+          </div>
+        </SectionWrapper>
+      ))}
+
+      {/* Magic Gradients */}
+      <SectionWrapper
+        title="Magic Gradients"
+        defaultOpen={false}
+        action={
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              shuffleMagicGradient();
+            }}
+            className="py-0.5 bg-surface-1 hover:bg-surface-2 cursor-pointer border border-border/20 rounded-md transition-colors flex text-[10px] text-text-tertiary space-x-1 px-2 items-center"
+          >
+            <span>SHUFFLE</span>
+            <ShuffleIcon size={12} />
+          </button>
+        }
+      >
+        <div className="overflow-x-auto scrollbar-hide">
+          <div
+            className="grid grid-flow-col auto-cols-min gap-2 w-max"
+            style={{ gridTemplateRows: 'repeat(4, 1fr)', gridAutoFlow: 'column' }}
+          >
+            {(Object.keys(magicGradients) as MagicGradientKey[]).map((key, idx) => (
+              <button
+                key={`magic-${key}`}
+                onClick={() => {
+                  setBackgroundType('gradient');
+                  setBackgroundValue(`magic:${key}`);
+                }}
+                className={cn(
+                  'block h-8 w-8 shrink-0 cursor-pointer transition-all duration-200 border border-border/20 hover:scale-105',
+                  backgroundConfig.value === `magic:${key}`
+                    ? 'rounded-full scale-110'
+                    : 'rounded-lg'
+                )}
+                style={{
+                  background: magicGradients[key],
+                  gridArea: `${(idx % 4) + 1} / ${Math.floor(idx / 4) + 1}`,
+                }}
+              />
             ))}
           </div>
         </div>
@@ -384,85 +410,55 @@ export function BackgroundSection() {
 
       {/* Gradients */}
       <SectionWrapper title="Gradients" defaultOpen={false}>
-        <div className="space-y-3">
-          {/* Magic Gradients */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase tracking-wider text-text-muted">Magic</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={shuffleMagicGradient}
-                className="h-6 px-2 text-[10px]"
-              >
-                <ShuffleIcon size={12} className="mr-1" />
-                Shuffle
-              </Button>
-            </div>
-            <div className="grid grid-cols-4 gap-1.5">
-              {(Object.keys(magicGradients) as MagicGradientKey[]).map((key) => (
+        <div className="overflow-x-auto scrollbar-hide">
+          <div
+            className="grid grid-flow-col auto-cols-min gap-2 w-max"
+            style={{ gridTemplateRows: 'repeat(2, 1fr)', gridAutoFlow: 'column' }}
+          >
+            {/* Classic Gradients */}
+            {(Object.keys(gradientColors) as GradientKey[]).map((key, idx) => (
+              <button
+                key={`classic-${key}`}
+                onClick={() => {
+                  setBackgroundType('gradient');
+                  setBackgroundValue(key);
+                }}
+                className={cn(
+                  'block h-8 w-8 shrink-0 cursor-pointer transition-all duration-200 border border-border/20 hover:scale-105',
+                  backgroundConfig.value === key
+                    ? 'rounded-full scale-110'
+                    : 'rounded-lg'
+                )}
+                style={{
+                  background: gradientColors[key],
+                  gridArea: `${(idx % 2) + 1} / ${Math.floor(idx / 2) + 1}`,
+                }}
+              />
+            ))}
+            {/* Mesh Gradients */}
+            {(Object.keys(meshGradients) as MeshGradientKey[]).map((key, idx) => {
+              const classicCount = Object.keys(gradientColors).length;
+              const colOffset = Math.ceil(classicCount / 2);
+              return (
                 <button
-                  key={key}
-                  onClick={() => {
-                    setBackgroundType('gradient');
-                    setBackgroundValue(`magic:${key}`);
-                  }}
-                  className={cn(
-                    'h-8 rounded-md border-2 transition-all hover:scale-105',
-                    backgroundConfig.value === `magic:${key}`
-                      ? 'border-primary ring-1 ring-primary/30'
-                      : 'border-border/30 hover:border-border'
-                  )}
-                  style={{ background: magicGradients[key] }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Regular Gradients */}
-          <div className="space-y-2">
-            <span className="text-[10px] uppercase tracking-wider text-text-muted">Classic</span>
-            <div className="grid grid-cols-6 gap-1 max-h-28 overflow-y-auto scrollbar-hide">
-              {(Object.keys(gradientColors) as GradientKey[]).map((key) => (
-                <button
-                  key={key}
-                  onClick={() => {
-                    setBackgroundType('gradient');
-                    setBackgroundValue(key);
-                  }}
-                  className={cn(
-                    'h-7 rounded-md border-2 transition-all hover:scale-110',
-                    backgroundConfig.value === key
-                      ? 'border-primary ring-1 ring-primary/30'
-                      : 'border-border/30 hover:border-border'
-                  )}
-                  style={{ background: gradientColors[key] }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Mesh Gradients */}
-          <div className="space-y-2">
-            <span className="text-[10px] uppercase tracking-wider text-text-muted">Mesh</span>
-            <div className="grid grid-cols-4 gap-1.5">
-              {(Object.keys(meshGradients) as MeshGradientKey[]).map((key) => (
-                <button
-                  key={key}
+                  key={`mesh-${key}`}
                   onClick={() => {
                     setBackgroundType('gradient');
                     setBackgroundValue(`mesh:${key}`);
                   }}
                   className={cn(
-                    'h-10 rounded-md border-2 transition-all hover:scale-105',
+                    'block h-8 w-8 shrink-0 cursor-pointer transition-all duration-200 border border-border/20 hover:scale-105',
                     backgroundConfig.value === `mesh:${key}`
-                      ? 'border-primary ring-1 ring-primary/30'
-                      : 'border-border/30 hover:border-border'
+                      ? 'rounded-full scale-110'
+                      : 'rounded-lg'
                   )}
-                  style={{ background: meshGradients[key] }}
+                  style={{
+                    background: meshGradients[key],
+                    gridArea: `${(idx % 2) + 1} / ${Math.floor(idx / 2) + 1 + colOffset}`,
+                  }}
                 />
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
       </SectionWrapper>

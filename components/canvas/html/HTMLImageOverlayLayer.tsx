@@ -39,6 +39,12 @@ function DraggableImage({
     [overlay.src]
   );
 
+  // Check if it's a shadow overlay (decorative, non-interactive)
+  const isShadow = useMemo(() =>
+    typeof overlay.src === 'string' && overlay.src.includes('overlay-shadow'),
+    [overlay.src]
+  );
+
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -82,6 +88,41 @@ function DraggableImage({
     overlay.flipY ? 'scaleY(-1)' : '',
   ].filter(Boolean).join(' ');
 
+  // Shadows are decorative and should not block other overlays
+  if (isShadow) {
+    return (
+      <div
+        ref={ref}
+        data-image-overlay-id={overlay.id}
+        style={{
+          position: 'absolute',
+          left: `${overlay.position.x}px`,
+          top: `${overlay.position.y}px`,
+          width: `${overlay.size}px`,
+          height: `${overlay.size}px`,
+          transform: `translate(-50%, -50%) ${transform}`,
+          transformOrigin: 'center center',
+          opacity: overlay.opacity,
+          userSelect: 'none',
+          zIndex: 5, // Low z-index for shadows (above background, below image)
+          pointerEvents: 'none', // Shadows don't block interactions
+        }}
+      >
+        <img
+          src={overlayImg.src}
+          alt="Shadow overlay"
+          draggable={false}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            display: 'block',
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       ref={ref}
@@ -100,7 +141,7 @@ function DraggableImage({
         userSelect: 'none',
         outline: isSelected ? '2px solid rgba(59, 130, 246, 0.5)' : 'none',
         outlineOffset: '2px',
-        zIndex: 200,
+        zIndex: 200, // Higher z-index for interactive overlays
         pointerEvents: 'auto',
       }}
     >

@@ -1,5 +1,6 @@
 import { gradientColors, GradientKey } from './gradient-colors';
 import { SolidColorKey, solidColors } from './solid-colors';
+import { meshGradients, magicGradients, MeshGradientKey, MagicGradientKey } from './mesh-gradients';
 import { getCldImageUrl } from '@/lib/cloudinary';
 import { cloudinaryPublicIds } from '@/lib/cloudinary-backgrounds';
 
@@ -15,12 +16,27 @@ export const getBackgroundStyle = (config: BackgroundConfig): string => {
   const { type, value, opacity = 1 } = config;
 
   switch (type) {
-    case 'gradient':
+    case 'gradient': {
+      if (typeof value === 'string' && value.startsWith('mesh:')) {
+        const meshKey = value.replace('mesh:', '') as MeshGradientKey;
+        return meshGradients[meshKey] || gradientColors.vibrant_orange_pink;
+      }
+      if (typeof value === 'string' && value.startsWith('magic:')) {
+        const magicKey = value.replace('magic:', '') as MagicGradientKey;
+        return magicGradients[magicKey] || gradientColors.vibrant_orange_pink;
+      }
       return gradientColors[value as GradientKey];
+    }
 
     case 'solid': {
+      if (value === 'transparent') {
+        return 'transparent';
+      }
+      if (typeof value === 'string' && (value.startsWith('#') || value.startsWith('rgb'))) {
+        return value;
+      }
       const color = solidColors[value as SolidColorKey];
-      return color;
+      return color || '#ffffff';
     }
 
     case 'image':
@@ -38,7 +54,18 @@ export const getBackgroundCSS = (
 
   switch (type) {
     case 'gradient': {
-      const gradient = gradientColors[value as GradientKey] || gradientColors.vibrant_orange_pink;
+      let gradient: string;
+
+      if (typeof value === 'string' && value.startsWith('mesh:')) {
+        const meshKey = value.replace('mesh:', '') as MeshGradientKey;
+        gradient = meshGradients[meshKey] || gradientColors.vibrant_orange_pink;
+      } else if (typeof value === 'string' && value.startsWith('magic:')) {
+        const magicKey = value.replace('magic:', '') as MagicGradientKey;
+        gradient = magicGradients[magicKey] || gradientColors.vibrant_orange_pink;
+      } else {
+        gradient = gradientColors[value as GradientKey] || gradientColors.vibrant_orange_pink;
+      }
+
       return {
         background: gradient,
         opacity,
@@ -46,6 +73,20 @@ export const getBackgroundCSS = (
     }
 
     case 'solid': {
+      // Handle transparent background
+      if (value === 'transparent') {
+        return {
+          backgroundColor: 'transparent',
+          opacity: 1,
+        };
+      }
+      // Handle direct color values (hex, rgb, rgba)
+      if (typeof value === 'string' && (value.startsWith('#') || value.startsWith('rgb'))) {
+        return {
+          backgroundColor: value,
+          opacity,
+        };
+      }
       const color = solidColors[value as SolidColorKey] || '#ffffff';
       return {
         backgroundColor: color,

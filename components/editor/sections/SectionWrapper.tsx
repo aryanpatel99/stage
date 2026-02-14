@@ -9,13 +9,15 @@ interface SectionWrapperProps {
   children: React.ReactNode;
   defaultOpen?: boolean;
   className?: string;
+  action?: React.ReactNode;
 }
 
 export function SectionWrapper({
   title,
   children,
   defaultOpen = true,
-  className
+  className,
+  action
 }: SectionWrapperProps) {
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
 
@@ -23,18 +25,21 @@ export function SectionWrapper({
     <div className={cn('mb-1', className)}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-2 py-3 px-2 hover:bg-surface-2/30 rounded-lg transition-colors group"
+        className="w-full flex items-center justify-between gap-2 py-3 px-2 hover:bg-surface-2/30 rounded-lg transition-colors group"
       >
-        <ArrowDown01Icon
-          size={16}
-          className={cn(
-            'text-text-tertiary transition-transform duration-200',
-            !isOpen && '-rotate-90'
-          )}
-        />
-        <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary group-hover:text-text-secondary">
-          {title}
-        </span>
+        <div className="flex items-center gap-2">
+          <ArrowDown01Icon
+            size={16}
+            className={cn(
+              'text-text-tertiary transition-transform duration-200',
+              !isOpen && '-rotate-90'
+            )}
+          />
+          <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary group-hover:text-text-secondary">
+            {title}
+          </span>
+        </div>
+        {action && <div onClick={(e) => e.stopPropagation()}>{action}</div>}
       </button>
 
       <div className={cn(
