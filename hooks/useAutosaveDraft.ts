@@ -13,6 +13,7 @@ import {
   getDraft,
   blobUrlToBase64,
   deleteDraft,
+  migrateFromLocalStorage,
 } from "@/lib/draft-storage";
 
 const AUTOSAVE_DELAY = 1000;
@@ -31,6 +32,9 @@ export function useAutosaveDraft() {
       if (hasLoadedRef.current) return;
 
       try {
+        // Migrate from localStorage to IndexedDB (one-time)
+        await migrateFromLocalStorage();
+
         const draft = await getDraft();
         if (!draft) {
           hasLoadedRef.current = true;
@@ -219,6 +223,21 @@ export function useAutosaveDraft() {
             imageBorder,
             imageShadow,
             perspective3D,
+            imageFilters: {
+              brightness: 100,
+              contrast: 100,
+              grayscale: 0,
+              blur: 0,
+              hueRotate: 0,
+              invert: 0,
+              saturate: 100,
+              sepia: 0,
+            },
+            exportSettings: {
+              quality: '2x',
+              format: 'png',
+              fileName: '',
+            },
             slides: [],
             activeSlideId: null,
             slideshow: {

@@ -19,12 +19,14 @@ import { TextOverlayLayer } from "./layers/TextOverlayLayer";
 import { ImageOverlayLayer } from "./layers/ImageOverlayLayer";
 import { Perspective3DOverlay } from "./overlays/Perspective3DOverlay";
 import { useBackgroundImage, useOverlayImages } from "./hooks/useImageLoading";
+import { OverlayToolbar } from "./OverlayToolbar";
 
 let globalKonvaStage: Konva.Stage | null = null;
 
 function CanvasRenderer({ image }: { image: HTMLImageElement }) {
   const stageRef = useRef<Konva.Stage>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const {
     screenshot,
     setScreenshot,
@@ -48,6 +50,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     updateTextOverlay,
     updateImageOverlay,
     removeImageOverlay,
+    addImageOverlay,
   } = useImageStore();
 
   const hasMockups = mockups.length > 0 && mockups.some((m) => m.isVisible);
@@ -83,22 +86,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
   );
   const loadedOverlayImages = useOverlayImages(imageOverlays);
 
-  useEffect(() => {                                           // deleting overlays when backspace or delete is pressed
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key == 'Delete' || e.key == 'Backspace'){ 
-        if (selectedOverlayId){
-          e.preventDefault()
-          removeImageOverlay(selectedOverlayId);
-          setSelectedOverlayId(null);
-        }
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  },[selectedOverlayId, removeImageOverlay])
-
-
-  // to clear selection while clicking outside of canvas
+  // Clear selection when clicking outside of canvas
   useEffect(() => {
     const handlePointerDown = (e: PointerEvent) => {
       const target = e.target as Node | null;
@@ -107,7 +95,6 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
       const container = containerRef.current;
       if (!container) return;
 
-      
       if (!container.contains(target)) {
         setSelectedOverlayId(null);
         setIsMainImageSelected(false);
@@ -121,62 +108,20 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     };
   }, []);
 
+  // Keyboard shortcuts for delete and undo/redo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-
-      if (e.key === 'Delete' || e.key === 'Backspace') { // Delete logic
-        const store = useImageStore.getState();
-        if (selectedOverlayId) {
-          e.preventDefault();
-          store.removeImageOverlay(selectedOverlayId);
-          setSelectedOverlayId(null);
-        }
-      }
-
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { // Undo logic
-        e.preventDefault();
-        const { undo, redo } = useImageStore.temporal.getState();
-        if (e.shiftKey) {
-          redo();
-        } else {
-          undo();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedOverlayId]);
-
-  useEffect(() => {
-    // deleting overlays when backspace or delete is pressed
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key == "Delete" || e.key == "Backspace") {
+      // Delete overlay
+      if (e.key === "Delete" || e.key === "Backspace") {
         if (selectedOverlayId) {
           e.preventDefault();
           removeImageOverlay(selectedOverlayId);
           setSelectedOverlayId(null);
         }
       }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedOverlayId, removeImageOverlay]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Delete" || e.key === "Backspace") {
-        // Delete logic
-        const store = useImageStore.getState();
-        if (selectedOverlayId) {
-          e.preventDefault();
-          store.removeImageOverlay(selectedOverlayId);
-          setSelectedOverlayId(null);
-        }
-      }
-
+      // Undo/Redo
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
-        // Undo logic
         e.preventDefault();
         const { undo, redo } = useImageStore.temporal.getState();
         if (e.shiftKey) {
@@ -189,7 +134,34 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedOverlayId]);
+  }, [selectedOverlayId, removeImageOverlay]);
+
+  // Get selected overlay for toolbar positioning
+  const selectedOverlay = selectedOverlayId
+    ? imageOverlays.find(o => o.id === selectedOverlayId)
+    : null;
+
+  // Handle duplicate overlay
+  const handleDuplicateOverlay = () => {
+    if (!selectedOverlay) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: _id, ...overlayWithoutId } = selectedOverlay;
+    addImageOverlay({
+      ...overlayWithoutId,
+      position: {
+        x: selectedOverlay.position.x + 30,
+        y: selectedOverlay.position.y + 30,
+      },
+    });
+  };
+
+  // Handle delete overlay
+  const handleDeleteOverlay = () => {
+    if (!selectedOverlayId) return;
+    removeImageOverlay(selectedOverlayId);
+    setSelectedOverlayId(null);
+  };
 
   useEffect(() => {
     const updateStage = () => {
@@ -318,13 +290,13 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
       }}
     >
       <div
+        ref={canvasContainerRef}
         style={{
           position: "relative",
           width: `${canvasW}px`,
           height: `${canvasH}px`,
           minWidth: `${canvasW}px`,
           minHeight: `${canvasH}px`,
-          overflow: "hidden",
           isolation: "isolate",
         }}
       >
@@ -471,6 +443,19 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
             updateImageOverlay={updateImageOverlay}
           />
         </Stage>
+
+        {/* Floating toolbar for selected overlay */}
+        {selectedOverlay && (
+          <OverlayToolbar
+            position={{
+              x: selectedOverlay.position.x,
+              y: selectedOverlay.position.y - selectedOverlay.size / 2,
+            }}
+            onDelete={handleDeleteOverlay}
+            onDuplicate={handleDuplicateOverlay}
+            containerRef={canvasContainerRef}
+          />
+        )}
       </div>
     </div>
   );
@@ -482,20 +467,55 @@ export function getKonvaStage(): Konva.Stage | null {
 
 export default function ClientCanvas() {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const { screenshot, setScreenshot } = useEditorStore();
+  const { uploadedImageUrl } = useImageStore();
 
   useEffect(() => {
-    if (!screenshot.src) {
+    // Reset states when source changes
+    setLoadError(false);
+
+    // Check both stores for image presence
+    if (!screenshot.src || !uploadedImageUrl) {
       setImage(null);
       return;
     }
 
     const img = new window.Image();
     img.crossOrigin = "anonymous";
-    img.onload = () => setImage(img);
-    img.onerror = () => setScreenshot({ src: null });
+
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (!img.complete) {
+        console.warn('Image load timeout');
+        setLoadError(true);
+        setScreenshot({ src: null });
+      }
+    }, 10000); // 10 second timeout
+
+    img.onload = () => {
+      clearTimeout(timeoutId);
+      setImage(img);
+    };
+
+    img.onerror = () => {
+      clearTimeout(timeoutId);
+      console.warn('Image load error');
+      setLoadError(true);
+      setScreenshot({ src: null });
+    };
+
     img.src = screenshot.src;
-  }, [screenshot.src, setScreenshot]);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [screenshot.src, uploadedImageUrl, setScreenshot]);
+
+  // Show nothing if there's an error (let EditorCanvas show upload UI)
+  if (loadError || !screenshot.src || !uploadedImageUrl) {
+    return null;
+  }
 
   if (!image) {
     return (

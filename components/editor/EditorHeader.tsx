@@ -23,7 +23,7 @@ import { ExportDialog } from '@/components/canvas/dialogs/ExportDialog';
 
 export function EditorHeader() {
   const { screenshot } = useEditorStore();
-  const { uploadedImageUrl, selectedAspectRatio } = useImageStore();
+  const { selectedAspectRatio } = useImageStore();
   const [aspectRatioOpen, setAspectRatioOpen] = React.useState(false);
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
 

@@ -2,11 +2,11 @@
 
 import { Layer, Group, Image as KonvaImage, Transformer, Rect } from 'react-konva';
 import Konva from 'konva';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { FrameRenderer } from '../frames/FrameRenderer';
 import { getShadowProps, type ShadowConfig } from '../utils/shadow-utils';
 import type { FrameConfig } from '../frames/FrameRenderer';
-import { useImageStore } from '@/lib/store';
+import { useImageStore, type ImageFilters } from '@/lib/store';
 
 interface MainImageLayerProps {
   image: HTMLImageElement;
@@ -67,7 +67,76 @@ export function MainImageLayer({
   const mainImageRef = useRef<Konva.Image>(null);
   const mainImageTransformerRef = useRef<Konva.Transformer>(null);
   const shadowProps = getShadowProps(shadow);
-  const { imageScale, setImageScale } = useImageStore();
+  const { imageScale, setImageScale, imageFilters } = useImageStore();
+
+  // Build filters array based on active filters
+  const activeFilters = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filters: any[] = [];
+
+    // Brightness filter (Konva uses -1 to 1, we use 0-200 where 100 is normal)
+    if (imageFilters.brightness !== 100) {
+      filters.push(Konva.Filters.Brighten);
+    }
+
+    // Contrast filter
+    if (imageFilters.contrast !== 100) {
+      filters.push(Konva.Filters.Contrast);
+    }
+
+    // Grayscale filter (using HSL)
+    if (imageFilters.grayscale > 0 || imageFilters.hueRotate !== 0 || imageFilters.saturate !== 100) {
+      filters.push(Konva.Filters.HSL);
+    }
+
+    // Blur filter
+    if (imageFilters.blur > 0) {
+      filters.push(Konva.Filters.Blur);
+    }
+
+    // Invert filter
+    if (imageFilters.invert > 0) {
+      filters.push(Konva.Filters.Invert);
+    }
+
+    // Sepia filter
+    if (imageFilters.sepia > 0) {
+      filters.push(Konva.Filters.Sepia);
+    }
+
+    return filters;
+  }, [imageFilters]);
+
+  // Apply filter values to the image node
+  useEffect(() => {
+    const node = mainImageRef.current;
+    if (!node) return;
+
+    // Set brightness (-1 to 1, where 0 is normal)
+    node.brightness((imageFilters.brightness - 100) / 100);
+
+    // Set contrast (-100 to 100, where 0 is normal)
+    node.contrast((imageFilters.contrast - 100));
+
+    // Set saturation (-1 to 1 for desaturation, but we want 0-200 scale)
+    // At 0 = grayscale, 100 = normal, 200 = double saturation
+    node.saturation((imageFilters.saturate - 100) / 100);
+
+    // Set hue rotation (0-360)
+    node.hue(imageFilters.hueRotate);
+
+    // Set blur radius
+    node.blurRadius(imageFilters.blur);
+
+    // Cache the node for filters to work
+    if (activeFilters.length > 0) {
+      node.cache();
+    } else {
+      node.clearCache();
+    }
+
+    node.getLayer()?.batchDraw();
+  }, [imageFilters, activeFilters]);
 
   useEffect(() => {
     if (mainImageTransformerRef.current) {
@@ -172,6 +241,7 @@ export function MainImageLayer({
               ? [0, 0, screenshot.radius, screenshot.radius]
               : screenshot.radius
           }
+          filters={activeFilters.length > 0 ? activeFilters : undefined}
           imageSmoothingEnabled={false}
           draggable={false}
           onClick={(e) => {

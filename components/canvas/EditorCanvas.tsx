@@ -37,6 +37,9 @@ export function EditorCanvas() {
     uploadedImageUrl,
     clearImage,
   } = useImageStore();
+
+  // Check both stores - imageStore is the source of truth (tracked by undo/redo)
+  const hasImage = !!uploadedImageUrl && !!screenshot.src;
   const [exportOpen, setExportOpen] = useState(false);
 
   React.useEffect(() => {
@@ -72,12 +75,13 @@ export function EditorCanvas() {
     return () => clearTimeout(timer);
   }, [isPreviewing, previewIndex, slides.length]);
 
-  if (!screenshot.src) {
+  // Show upload state if no image in either store
+  if (!hasImage) {
     return (
       <div className="flex-1 flex flex-col h-full w-full">
         {/* Canvas area with background */}
         <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden">
-          <div className="relative w-full max-w-3xl aspect-video md:aspect-auto md:h-[70vh] rounded-lg overflow-hidden shadow-2xl">
+          <div className="relative w-full max-w-3xl aspect-video md:aspect-auto md:h-[70vh] rounded-lg overflow-hidden">
             <CleanUploadState />
           </div>
         </div>

@@ -18,6 +18,17 @@ interface TextShadow {
   offsetX: number;
   offsetY: number;
 }
+
+export interface ImageFilters {
+  brightness: number;    // 0-200 (100 = normal)
+  contrast: number;      // 0-200 (100 = normal)
+  grayscale: number;     // 0-100
+  blur: number;          // 0-20px
+  hueRotate: number;     // 0-360 degrees
+  invert: number;        // 0-100
+  saturate: number;      // 0-200 (100 = normal)
+  sepia: number;         // 0-100
+}
 interface Slide {
   id: string;
   src: string;
@@ -224,14 +235,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   shadow: {
-    enabled: false,
-    elevation: 10,
+    enabled: true,
+    elevation: 6,
     side: "bottom",
-    softness: 10,
-    color: "rgba(0, 0, 0, 0.3)",
-    intensity: 1,
+    softness: 24,
+    color: "rgba(0, 0, 0, 1)",
+    intensity: 0.25,
     offsetX: 0,
-    offsetY: 4,
+    offsetY: 6,
   },
 
   pattern: {
@@ -478,6 +489,12 @@ export interface ImageState {
     translateY: number;
     scale: number;
   };
+  imageFilters: ImageFilters;
+  exportSettings: {
+    quality: '1x' | '2x' | '3x';
+    format: 'png' | 'jpeg' | 'webp';
+    fileName: string;
+  };
   setUploadedImageUrl: (url: string | null, name: string | null) => void;
   setImage: (file: File) => void;
   clearImage: () => void;
@@ -508,6 +525,9 @@ export interface ImageState {
   setImageBorder: (border: ImageBorder | Partial<ImageBorder>) => void;
   setImageShadow: (shadow: ImageShadow | Partial<ImageShadow>) => void;
   setPerspective3D: (perspective: Partial<ImageState["perspective3D"]>) => void;
+  setImageFilter: (key: keyof ImageFilters, value: number) => void;
+  resetImageFilters: () => void;
+  setExportSettings: (settings: Partial<ImageState["exportSettings"]>) => void;
   exportImage: () => Promise<void>;
   // Slideshow
   slides: Slide[];
@@ -559,7 +579,7 @@ export const useImageStore = create<ImageState>()(
     selectedAspectRatio: "16_9",
     backgroundConfig: {
       type: "image",
-      value: "backgrounds/backgrounds/assets/asset-26",
+      value: "backgrounds/backgrounds/mac/mac-asset-8",
       opacity: 1,
     },
     backgroundBlur: 0,
@@ -594,6 +614,21 @@ export const useImageStore = create<ImageState>()(
       translateY: 0,
       scale: 1,
     },
+    imageFilters: {
+      brightness: 100,
+      contrast: 100,
+      grayscale: 0,
+      blur: 0,
+      hueRotate: 0,
+      invert: 0,
+      saturate: 100,
+      sepia: 0,
+    },
+    exportSettings: {
+      quality: '2x',
+      format: 'png',
+      fileName: '',
+    },
 
     setUploadedImageUrl: (url: string | null, name: string | null = null) => {
       set({
@@ -611,7 +646,7 @@ export const useImageStore = create<ImageState>()(
         borderRadius: 10,
         backgroundConfig: {
           type: "image",
-          value: "backgrounds/backgrounds/assets/asset-26",
+          value: "backgrounds/backgrounds/mac/mac-asset-8",
           opacity: 1,
         },
         selectedGradient: "pink_orange",
@@ -706,7 +741,7 @@ export const useImageStore = create<ImageState>()(
         // If current value is a gradient or solid color key, or not a valid image, set default to asset-26
         const newValue =
           isGradientKey || isSolidColorKey || !isValidImage
-            ? "backgrounds/backgrounds/assets/asset-26"
+            ? "backgrounds/backgrounds/mac/mac-asset-8"
             : currentValue;
 
         set({
@@ -870,6 +905,41 @@ export const useImageStore = create<ImageState>()(
         perspective3D: {
           ...currentPerspective,
           ...perspective,
+        },
+      });
+    },
+
+    setImageFilter: (key: keyof ImageFilters, value: number) => {
+      const currentFilters = get().imageFilters;
+      set({
+        imageFilters: {
+          ...currentFilters,
+          [key]: value,
+        },
+      });
+    },
+
+    resetImageFilters: () => {
+      set({
+        imageFilters: {
+          brightness: 100,
+          contrast: 100,
+          grayscale: 0,
+          blur: 0,
+          hueRotate: 0,
+          invert: 0,
+          saturate: 100,
+          sepia: 0,
+        },
+      });
+    },
+
+    setExportSettings: (settings: Partial<ImageState["exportSettings"]>) => {
+      const currentSettings = get().exportSettings;
+      set({
+        exportSettings: {
+          ...currentSettings,
+          ...settings,
         },
       });
     },

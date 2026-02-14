@@ -6,6 +6,7 @@ import { EditorContent } from "./EditorContent";
 import { EditorCanvas } from "@/components/canvas/EditorCanvas";
 import { EditorStoreSync } from "@/components/canvas/EditorStoreSync";
 import { EditorHeader } from "./EditorHeader";
+import { CanvasToolbar } from "./CanvasToolbar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ function EditorMain() {
           <EditorContent>
             <EditorCanvas />
           </EditorContent>
+          <CanvasToolbar />
         </div>
 
         {/* Right Panel - Desktop */}
