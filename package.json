@@ -33,7 +33,6 @@
     "cloudinary": "^2.8.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "html2canvas": "^1.4.1",
     "hugeicons-react": "^0.4.0",
     "lucide-react": "^0.552.0",
     "modern-screenshot": "^4.6.6",

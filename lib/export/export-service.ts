@@ -11,14 +11,8 @@
  * Cloudinary is optional and only used for image optimization when configured.
  */
 
-import html2canvas from 'html2canvas';
 import { domToCanvas } from 'modern-screenshot';
-import {
-  convertStylesToRGB,
-  injectRGBOverrides,
-  generateNoiseTexture,
-  generateNoiseTextureAsync,
-} from './export-utils';
+import { generateNoiseTextureAsync } from './export-utils';
 import { getBackgroundCSS } from '@/lib/constants/backgrounds';
 import { getFontCSS } from '@/lib/constants/fonts';
 import { exportWorkerService } from '@/lib/workers/export-worker-service';
@@ -353,13 +347,19 @@ async function capture3DTransformWithModernScreenshot(
 }
 
 /**
- * Export HTML canvas container using html2canvas
+ * Export HTML canvas container using modern-screenshot (domToCanvas)
+ * This provides better CSS fidelity than html2canvas, especially for:
+ * - Box shadows
+ * - CSS filters
+ * - Border radius
+ * - Transforms
  */
 async function exportHTMLCanvas(
   container: HTMLElement,
   targetWidth: number,
   targetHeight: number,
-  scale: number
+  scale: number,
+  borderRadius: number = 0
 ): Promise<HTMLCanvasElement> {
   // Get current container dimensions
   const containerRect = container.getBoundingClientRect();
@@ -369,41 +369,25 @@ async function exportHTMLCanvas(
   // Calculate scale factor to match export dimensions
   const scaleX = targetWidth / originalWidth;
   const scaleY = targetHeight / originalHeight;
+  const exportScale = scale * Math.max(scaleX, scaleY);
 
   // Wait for any pending renders
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise(resolve => setTimeout(resolve, 150));
 
-  // Capture with html2canvas
-  const canvas = await html2canvas(container, {
+  // Use modern-screenshot for better CSS fidelity
+  const canvas = await domToCanvas(container, {
+    scale: exportScale,
     backgroundColor: null,
-    scale: scale * Math.max(scaleX, scaleY),
-    useCORS: true,
-    allowTaint: true,
-    logging: false,
     width: originalWidth,
     height: originalHeight,
-    windowWidth: originalWidth,
-    windowHeight: originalHeight,
-    removeContainer: false,
-    onclone: (clonedDoc, clonedElement) => {
-      // Inject RGB overrides to prevent oklch colors
-      injectRGBOverrides(clonedDoc);
-
-      // Convert any remaining oklch colors in the cloned document
-      const clonedElements = clonedElement.querySelectorAll('*');
-      clonedElements.forEach((el) => {
-        if (el instanceof HTMLElement) {
-          convertStylesToRGB(el, clonedDoc);
-        }
-      });
-      convertStylesToRGB(clonedElement as HTMLElement, clonedDoc);
-    },
   });
 
   // Scale the canvas to match export dimensions
   const finalCanvas = document.createElement('canvas');
-  finalCanvas.width = targetWidth * scale;
-  finalCanvas.height = targetHeight * scale;
+  const finalWidth = targetWidth * scale;
+  const finalHeight = targetHeight * scale;
+  finalCanvas.width = finalWidth;
+  finalCanvas.height = finalHeight;
   const ctx = finalCanvas.getContext('2d');
 
   if (!ctx) {
@@ -416,7 +400,7 @@ async function exportHTMLCanvas(
   ctx.drawImage(
     canvas,
     0, 0, canvas.width, canvas.height,
-    0, 0, targetWidth * scale, targetHeight * scale
+    0, 0, finalWidth, finalHeight
   );
 
   return finalCanvas;
@@ -478,7 +462,7 @@ export async function exportElement(
           )
         );
 
-        // Resize to match export dimensions if needed
+        // Resize to match export dimensions
         if (finalCanvas.width !== options.exportWidth * options.scale ||
             finalCanvas.height !== options.exportHeight * options.scale) {
           const resizedCanvas = document.createElement('canvas');
@@ -502,7 +486,8 @@ export async function exportElement(
           container,
           options.exportWidth,
           options.exportHeight,
-          options.scale
+          options.scale,
+          backgroundBorderRadius
         );
       }
     } else {
@@ -511,7 +496,8 @@ export async function exportElement(
         container,
         options.exportWidth,
         options.exportHeight,
-        options.scale
+        options.scale,
+        backgroundBorderRadius
       );
     }
 

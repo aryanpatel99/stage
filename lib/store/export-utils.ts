@@ -1,4 +1,4 @@
-import html2canvas from "html2canvas";
+import { domToCanvas } from "modern-screenshot";
 
 /**
  * Export image with gradient background from an element
@@ -13,16 +13,11 @@ export async function exportImageWithGradient(
     throw new Error(`Element with id "${elementId}" not found`);
   }
 
-  console.log(element);
-
   try {
-    // Use html2canvas to capture the element
-    const canvas = await html2canvas(element, {
+    // Use modern-screenshot for better CSS fidelity
+    const canvas = await domToCanvas(element, {
       backgroundColor: null, // Transparent background to preserve gradients
       scale: 2, // Higher quality
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
       width: element.scrollWidth,
       height: element.scrollHeight,
     });

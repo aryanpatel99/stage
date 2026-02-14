@@ -36,7 +36,8 @@ export const HTMLCanvasRenderer = forwardRef<HTMLDivElement, HTMLCanvasRendererP
           borderRadius: `${borderRadius}px`,
           overflow: 'hidden',
           isolation: 'isolate',
-          contain: 'layout style paint',
+          // Use clip-path for more reliable clipping (esp. with blur effects)
+          clipPath: borderRadius > 0 ? `inset(0 round ${borderRadius}px)` : undefined,
           ...style,
         }}
       >

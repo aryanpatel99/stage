@@ -162,6 +162,31 @@ export function Perspective3DOverlay({
 
   const shadowFilter = buildShadowFilter();
 
+  const isDark = frame.type.includes('dark');
+  const isMacFrame = frame.type === 'macos-light' || frame.type === 'macos-dark';
+  const isWinFrame = frame.type === 'windows-light' || frame.type === 'windows-dark';
+  const isArcFrame = frame.type === 'arc-light' || frame.type === 'arc-dark';
+
+  // Get frame container background color
+  const getFrameBackground = () => {
+    if (isMacFrame) {
+      return isDark ? 'rgb(40, 40, 43)' : '#e8e8e8';
+    }
+    if (isWinFrame) {
+      return isDark ? '#2d2d2d' : '#f3f3f3';
+    }
+    return 'transparent';
+  };
+
+  // Calculate image border radius
+  const getImageBorderRadius = () => {
+    if (isMacFrame || isWinFrame) {
+      const innerRadius = Math.max(0, screenshot.radius - windowPadding);
+      return `0 0 ${innerRadius}px ${innerRadius}px`;
+    }
+    return `${screenshot.radius}px`;
+  };
+
   return (
     <div
       data-3d-overlay="true"
@@ -198,11 +223,15 @@ export function Perspective3DOverlay({
           opacity: 1,
         }}
       >
+        {/* Frame background container for macOS/Windows */}
         <div
           style={{
             position: 'relative',
             width: '100%',
             height: '100%',
+            backgroundColor: (isMacFrame || isWinFrame) ? getFrameBackground() : 'transparent',
+            borderRadius: (isMacFrame || isWinFrame || isArcFrame) ? `${screenshot.radius}px` : undefined,
+            overflow: 'hidden',
           }}
         >
           <Frame3DOverlay
@@ -231,10 +260,7 @@ export function Perspective3DOverlay({
               objectFit: 'cover',
               opacity: imageOpacity,
               filter: imageFilterStyle,
-              borderRadius:
-                showFrame && (frame.type === 'macos-light' || frame.type === 'macos-dark' || frame.type === 'windows-light' || frame.type === 'windows-dark')
-                  ? `0 0 ${screenshot.radius}px ${screenshot.radius}px`
-                  : `${screenshot.radius}px`,
+              borderRadius: getImageBorderRadius(),
               // Apply frame border directly to image (arc, polaroid)
               ...(showFrame && getFrameImageStyle(frame, screenshot.radius)),
             }}

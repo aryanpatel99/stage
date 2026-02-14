@@ -212,7 +212,10 @@ export function HTMLMainImageLayer({
   // Image border radius based on frame type
   const getImageBorderRadius = () => {
     if (isMacFrame || isWinFrame) {
-      return `0 0 ${screenshot.radius}px ${screenshot.radius}px`;
+      // For frames with title bar, only round bottom corners
+      // Use slightly smaller radius to fit inside the container
+      const innerRadius = Math.max(0, screenshot.radius - windowPadding);
+      return `0 0 ${innerRadius}px ${innerRadius}px`;
     }
     return `${screenshot.radius}px`;
   };
@@ -233,7 +236,7 @@ export function HTMLMainImageLayer({
         right: 0,
         height: '22px',
         background: isDark ? 'rgb(40, 40, 43)' : '#e8e8e8',
-        borderRadius: '8px 8px 0 0',
+        borderRadius: `${screenshot.radius}px ${screenshot.radius}px 0 0`,
         display: 'flex',
         alignItems: 'center',
         padding: '0 12px',
@@ -284,7 +287,7 @@ export function HTMLMainImageLayer({
         right: 0,
         height: '28px',
         backgroundColor: isDark ? '#2d2d2d' : '#f3f3f3',
-        borderRadius: '8px 8px 0 0',
+        borderRadius: `${screenshot.radius}px ${screenshot.radius}px 0 0`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -321,7 +324,6 @@ export function HTMLMainImageLayer({
       position: 'relative',
       width: `${framedW}px`,
       height: `${framedH}px`,
-      borderRadius: '8px',
       overflow: 'hidden',
     };
 
@@ -337,7 +339,8 @@ export function HTMLMainImageLayer({
     if (isMacFrame) {
       return {
         ...baseStyle,
-        backgroundColor: isDark ? 'rgb(30, 30, 33)' : '#f5f5f5',
+        backgroundColor: isDark ? 'rgb(40, 40, 43)' : '#e8e8e8',
+        borderRadius: `${screenshot.radius}px`,
         boxShadow: boxShadow,
       };
     }
@@ -345,7 +348,8 @@ export function HTMLMainImageLayer({
     if (isWinFrame) {
       return {
         ...baseStyle,
-        backgroundColor: isDark ? '#1f1f1f' : '#ffffff',
+        backgroundColor: isDark ? '#2d2d2d' : '#f3f3f3',
+        borderRadius: `${screenshot.radius}px`,
         boxShadow: boxShadow,
       };
     }
@@ -354,6 +358,7 @@ export function HTMLMainImageLayer({
       return {
         ...baseStyle,
         backgroundColor: 'white',
+        borderRadius: '8px',
         padding: '8px 8px 24px 8px',
         boxShadow: boxShadow,
       };
