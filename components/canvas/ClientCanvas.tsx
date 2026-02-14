@@ -1,30 +1,30 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Stage, Layer } from "react-konva";
-import Konva from "konva";
 import { useEditorStore } from "@/lib/store";
 import { useImageStore } from "@/lib/store";
 import { generatePattern } from "@/lib/patterns";
 import { useResponsiveCanvasDimensions } from "@/hooks/useAspectRatioDimensions";
-import { getBackgroundCSS } from "@/lib/constants/backgrounds";
 import { generateNoiseTexture } from "@/lib/export/export-utils";
 import { MockupRenderer } from "@/components/mockups/MockupRenderer";
 import { calculateCanvasDimensions } from "./utils/canvas-dimensions";
-import { BackgroundLayer } from "./layers/BackgroundLayer";
-import { PatternLayer } from "./layers/PatternLayer";
-import { NoiseLayer } from "./layers/NoiseLayer";
-import { MainImageLayer } from "./layers/MainImageLayer";
-import { TextOverlayLayer } from "./layers/TextOverlayLayer";
-import { ImageOverlayLayer } from "./layers/ImageOverlayLayer";
 import { Perspective3DOverlay } from "./overlays/Perspective3DOverlay";
 import { useBackgroundImage, useOverlayImages } from "./hooks/useImageLoading";
 import { OverlayToolbar } from "./OverlayToolbar";
+import {
+  HTMLCanvasRenderer,
+  HTMLBackgroundLayer,
+  HTMLPatternLayer,
+  HTMLNoiseLayer,
+  HTMLMainImageLayer,
+  HTMLTextOverlayLayer,
+  HTMLImageOverlayLayer,
+} from "./html";
 
-let globalKonvaStage: Konva.Stage | null = null;
+// Reference to the HTML canvas container for export
+let globalCanvasContainer: HTMLDivElement | null = null;
 
 function CanvasRenderer({ image }: { image: HTMLImageElement }) {
-  const stageRef = useRef<Konva.Stage>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const {
@@ -56,7 +56,6 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
 
   const hasMockups = mockups.length > 0 && mockups.some((m) => m.isVisible);
   const responsiveDimensions = useResponsiveCanvasDimensions();
-  const backgroundStyle = getBackgroundCSS(backgroundConfig);
 
   const [viewportSize, setViewportSize] = useState({
     width: 1920,
@@ -86,6 +85,16 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     containerHeight
   );
   const loadedOverlayImages = useOverlayImages(imageOverlays);
+
+  // Update global reference for export
+  useEffect(() => {
+    if (canvasContainerRef.current) {
+      globalCanvasContainer = canvasContainerRef.current;
+    }
+    return () => {
+      globalCanvasContainer = null;
+    };
+  }, []);
 
   // Clear selection when clicking outside of canvas
   useEffect(() => {
@@ -163,22 +172,6 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     removeImageOverlay(selectedOverlayId);
     setSelectedOverlayId(null);
   };
-
-  useEffect(() => {
-    const updateStage = () => {
-      if (stageRef.current) {
-        globalKonvaStage = stageRef.current;
-      }
-    };
-
-    updateStage();
-    const timeout = setTimeout(updateStage, 100);
-
-    return () => {
-      clearTimeout(timeout);
-      globalKonvaStage = null;
-    };
-  });
 
   useEffect(() => {
     if (backgroundNoise > 0) {
@@ -276,6 +269,16 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     perspective3D.translateY !== 0 ||
     perspective3D.scale !== 1;
 
+  // Handle canvas click to deselect
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    // Only deselect if clicking on the canvas background (not on an overlay)
+    if (e.target === e.currentTarget) {
+      setSelectedOverlayId(null);
+      setIsMainImageSelected(false);
+      setSelectedTextId(null);
+    }
+  };
+
   return (
     <div
       ref={containerRef}
@@ -290,17 +293,44 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
         padding: "0px",
       }}
     >
-      <div
+      <HTMLCanvasRenderer
         ref={canvasContainerRef}
+        width={canvasW}
+        height={canvasH}
+        borderRadius={backgroundBorderRadius}
+        onClick={handleCanvasClick}
         style={{
-          position: "relative",
-          width: `${canvasW}px`,
-          height: `${canvasH}px`,
-          minWidth: `${canvasW}px`,
-          minHeight: `${canvasH}px`,
           isolation: "isolate",
         }}
       >
+        {/* Background Layer */}
+        <HTMLBackgroundLayer
+          backgroundConfig={backgroundConfig}
+          backgroundBlur={backgroundBlur}
+          backgroundBorderRadius={backgroundBorderRadius}
+          width={canvasW}
+          height={canvasH}
+          noiseTexture={noiseTexture}
+          backgroundNoise={backgroundNoise}
+        />
+
+        {/* Pattern Layer */}
+        <HTMLPatternLayer
+          patternImage={patternImage}
+          width={canvasW}
+          height={canvasH}
+          patternOpacity={patternStyle.opacity}
+        />
+
+        {/* Noise Layer */}
+        <HTMLNoiseLayer
+          noiseImage={noiseImage}
+          width={canvasW}
+          height={canvasH}
+          noiseOpacity={noise.opacity}
+        />
+
+        {/* 3D Transform Overlay - renders when 3D transforms are active */}
         <Perspective3DOverlay
           has3DTransform={has3DTransform}
           perspective3D={perspective3D}
@@ -325,126 +355,65 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
           imageFilters={imageFilters}
         />
 
-        <Stage
-          width={canvasW}
-          height={canvasH}
-          ref={stageRef}
-          className="hires-stage"
-          style={{
-            display: "block",
-            backgroundColor: "transparent",
-            overflow: "hidden",
-            position: "relative",
-            borderRadius: `${backgroundBorderRadius}px`,
-            contain: "layout style paint",
-          }}
-          onMouseDown={(e) => {
-            const clickedOnTransformer =
-              e.target.getParent()?.className === "Transformer";
-            if (clickedOnTransformer) {
-              return;
-            }
-
-            const clickedOnOverlay =
-              e.target.attrs.image &&
-              Object.keys(loadedOverlayImages).some(
-                (key) => e.target.attrs.id === key
-              );
-
-            const clickedOnText = e.target.attrs.text !== undefined;
-
-            if (!clickedOnOverlay && !clickedOnText) {
-              setSelectedOverlayId(null);
-              setIsMainImageSelected(false);
-              setSelectedTextId(null);
-            }
-          }}
-        >
-          <BackgroundLayer
-            backgroundConfig={backgroundConfig}
-            backgroundStyle={backgroundStyle}
-            backgroundBlur={backgroundBlur}
-            backgroundBorderRadius={backgroundBorderRadius}
+        {/* Main Image Layer - renders when no 3D transform and no mockups */}
+        {!hasMockups && !has3DTransform && (
+          <HTMLMainImageLayer
+            image={image}
             canvasW={canvasW}
             canvasH={canvasH}
-            bgImage={bgImage}
-            noiseTexture={noiseTexture}
-            backgroundNoise={backgroundNoise}
-          />
-
-          <PatternLayer
-            patternImage={patternImage}
-            canvasW={canvasW}
-            canvasH={canvasH}
-            patternOpacity={patternStyle.opacity}
-          />
-
-          <NoiseLayer
-            noiseImage={noiseImage}
-            canvasW={canvasW}
-            canvasH={canvasH}
-            noiseOpacity={noise.opacity}
-          />
-
-          {!hasMockups && (
-            <MainImageLayer
-              image={image}
-              canvasW={canvasW}
-              canvasH={canvasH}
-              framedW={framedW}
-              framedH={framedH}
-              frameOffset={frameOffset}
-              windowPadding={windowPadding}
-              windowHeader={windowHeader}
-              eclipseBorder={eclipseBorder}
-              imageScaledW={imageScaledW}
-              imageScaledH={imageScaledH}
-              screenshot={screenshot}
-              frame={frame}
-              shadow={shadow}
-              showFrame={showFrame}
-              has3DTransform={has3DTransform}
-              imageOpacity={imageOpacity}
-              isMainImageSelected={isMainImageSelected}
-              setIsMainImageSelected={setIsMainImageSelected}
-              setSelectedOverlayId={setSelectedOverlayId}
-              setSelectedTextId={setSelectedTextId}
-              setScreenshot={setScreenshot}
-            />
-          )}
-
-          <TextOverlayLayer
-            textOverlays={textOverlays}
-            canvasW={canvasW}
-            canvasH={canvasH}
-            selectedTextId={selectedTextId}
-            setSelectedTextId={setSelectedTextId}
-            setSelectedOverlayId={setSelectedOverlayId}
+            framedW={framedW}
+            framedH={framedH}
+            frameOffset={frameOffset}
+            windowPadding={windowPadding}
+            windowHeader={windowHeader}
+            imageScaledW={imageScaledW}
+            imageScaledH={imageScaledH}
+            screenshot={screenshot}
+            frame={frame}
+            shadow={shadow}
+            showFrame={showFrame}
+            imageOpacity={imageOpacity}
+            imageFilters={imageFilters}
+            isMainImageSelected={isMainImageSelected}
             setIsMainImageSelected={setIsMainImageSelected}
-            updateTextOverlay={updateTextOverlay}
-          />
-
-          <Layer>
-            {mockups.map((mockup) => (
-              <MockupRenderer
-                key={mockup.id}
-                mockup={mockup}
-                canvasWidth={canvasW}
-                canvasHeight={canvasH}
-              />
-            ))}
-          </Layer>
-
-          <ImageOverlayLayer
-            imageOverlays={imageOverlays}
-            loadedOverlayImages={loadedOverlayImages}
-            selectedOverlayId={selectedOverlayId}
             setSelectedOverlayId={setSelectedOverlayId}
-            setIsMainImageSelected={setIsMainImageSelected}
             setSelectedTextId={setSelectedTextId}
-            updateImageOverlay={updateImageOverlay}
+            setScreenshot={setScreenshot}
           />
-        </Stage>
+        )}
+
+        {/* Mockups Layer */}
+        {mockups.map((mockup) => (
+          <MockupRenderer
+            key={mockup.id}
+            mockup={mockup}
+            canvasWidth={canvasW}
+            canvasHeight={canvasH}
+          />
+        ))}
+
+        {/* Text Overlay Layer */}
+        <HTMLTextOverlayLayer
+          textOverlays={textOverlays}
+          canvasW={canvasW}
+          canvasH={canvasH}
+          selectedTextId={selectedTextId}
+          setSelectedTextId={setSelectedTextId}
+          setSelectedOverlayId={setSelectedOverlayId}
+          setIsMainImageSelected={setIsMainImageSelected}
+          updateTextOverlay={updateTextOverlay}
+        />
+
+        {/* Image Overlay Layer */}
+        <HTMLImageOverlayLayer
+          imageOverlays={imageOverlays}
+          loadedOverlayImages={loadedOverlayImages}
+          selectedOverlayId={selectedOverlayId}
+          setSelectedOverlayId={setSelectedOverlayId}
+          setIsMainImageSelected={setIsMainImageSelected}
+          setSelectedTextId={setSelectedTextId}
+          updateImageOverlay={updateImageOverlay}
+        />
 
         {/* Floating toolbar for selected overlay */}
         {selectedOverlay && (
@@ -458,13 +427,13 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
             containerRef={canvasContainerRef}
           />
         )}
-      </div>
+      </HTMLCanvasRenderer>
     </div>
   );
 }
 
-export function getKonvaStage(): Konva.Stage | null {
-  return globalKonvaStage;
+export function getCanvasContainer(): HTMLDivElement | null {
+  return globalCanvasContainer;
 }
 
 export default function ClientCanvas() {

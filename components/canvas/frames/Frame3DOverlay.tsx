@@ -17,12 +17,13 @@ export function getFrameImageStyle(
   frame: FrameConfig,
   screenshotRadius: number
 ): React.CSSProperties | null {
-  const borderWidth = frame.width || 6;
+  // Arc frames use fixed 8px semi-transparent border with higher opacity
+  const arcBorderWidth = 8;
 
   switch (frame.type) {
     case 'arc-light':
       return {
-        border: `${borderWidth}px solid rgba(255, 255, 255, 0.5)`,
+        border: `${arcBorderWidth}px solid rgba(255, 255, 255, 0.5)`,
         borderRadius: `${screenshotRadius}px`,
         overflow: 'hidden',
         boxSizing: 'border-box',
@@ -30,7 +31,7 @@ export function getFrameImageStyle(
 
     case 'arc-dark':
       return {
-        border: `${borderWidth}px solid rgba(0, 0, 0, 0.7)`,
+        border: `${arcBorderWidth}px solid rgba(0, 0, 0, 0.7)`,
         borderRadius: `${screenshotRadius}px`,
         overflow: 'hidden',
         boxSizing: 'border-box',
@@ -77,8 +78,8 @@ export function Frame3DOverlay({
 
   const isDark = frame.type.includes('dark');
 
-  // Get border width from frame config, default to 6px for arc frames
-  const borderWidth = frame.width || 6;
+  // Arc frames use 8px border
+  const borderWidth = 8;
 
   // For arc frames, the border should wrap tightly around the image
   // The outer radius = inner radius + border width

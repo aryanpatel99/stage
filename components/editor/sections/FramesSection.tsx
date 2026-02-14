@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { useImageStore, type ImageBorder } from '@/lib/store';
 import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
 import { SectionWrapper } from './SectionWrapper';
 import { cn } from '@/lib/utils';
 
@@ -28,9 +27,9 @@ export function FramesSection() {
       type: value,
       enabled: value !== 'none',
     };
-    // Set default border width for arc frames
+    // Set fixed border width for arc frames (8px, not adjustable)
     if (value === 'arc-light' || value === 'arc-dark') {
-      next.width = 6;
+      next.width = 8;
     }
     // Set default title for macOS/Windows frames
     if (value === 'macos-light' || value === 'macos-dark') {
@@ -40,7 +39,7 @@ export function FramesSection() {
   };
 
   const isSelected = (value: FrameType) => imageBorder.type === value;
-  const showThicknessControl = ['arc-light', 'arc-dark'].includes(imageBorder.type);
+  // Arc frames have fixed 8px border - no slider needed
   const showTitleInput = ['macos-light', 'macos-dark', 'windows-light', 'windows-dark'].includes(imageBorder.type);
 
   return (
@@ -78,21 +77,6 @@ export function FramesSection() {
           </button>
         ))}
       </div>
-
-      {showThicknessControl && (
-        <div className="flex items-center gap-4 pt-2">
-          <span className="text-sm text-text-secondary w-14 shrink-0">Size</span>
-          <Slider
-            value={[imageBorder.width]}
-            onValueChange={(value) => setImageBorder({ width: value[0], enabled: true })}
-            min={4}
-            max={40}
-            step={1}
-            className="flex-1"
-          />
-          <span className="text-sm text-text-tertiary w-10 text-right tabular-nums">{imageBorder.width}px</span>
-        </div>
-      )}
 
       {showTitleInput && (
         <div className="pt-2">

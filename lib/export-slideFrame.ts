@@ -1,6 +1,6 @@
 import { exportElement, type ExportOptions } from "@/lib/export/export-service";
 
-import { getKonvaStage } from "@/components/canvas/ClientCanvas";
+import { getCanvasContainer } from "@/components/canvas/ClientCanvas";
 import { getAspectRatioPreset } from "@/lib/aspect-ratio-utils";
 
 import { useEditorStore, useImageStore } from "@/lib/store";
@@ -21,7 +21,7 @@ export async function exportSlideFrame(): Promise<HTMLImageElement> {
       exportWidth: preset.width,
       exportHeight: preset.height,
     },
-    getKonvaStage(),
+    getCanvasContainer(),
     imageStore.backgroundConfig,
     imageStore.backgroundBorderRadius,
     imageStore.textOverlays,
