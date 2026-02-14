@@ -6,7 +6,7 @@ import { MOCKUP_DEFINITIONS, getMockupsByType } from '@/lib/constants/mockups'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useResponsiveCanvasDimensions } from '@/hooks/useAspectRatioDimensions'
 import Image from 'next/image'
-import { Smartphone, Laptop, Monitor, Watch } from 'lucide-react'
+import { SmartPhone01Icon, LaptopIcon, ComputerIcon, Watch02Icon } from 'hugeicons-react'
 
 export function MockupGallery() {
   const { addMockup } = useImageStore()
@@ -70,28 +70,28 @@ export function MockupGallery() {
             value="macbook" 
             className="data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:shadow-black/20 rounded-md border-0 data-[state=active]:border-0 transition-all duration-200 text-xs gap-1.5"
           >
-            <Laptop className="h-3.5 w-3.5" />
+            <LaptopIcon className="h-3.5 w-3.5" />
             <span>MacBook</span>
           </TabsTrigger>
           <TabsTrigger 
             value="imac" 
             className="data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:shadow-black/20 rounded-md border-0 data-[state=active]:border-0 transition-all duration-200 text-xs gap-1.5"
           >
-            <Monitor className="h-3.5 w-3.5" />
+            <ComputerIcon className="h-3.5 w-3.5" />
             <span>iMac</span>
           </TabsTrigger>
           <TabsTrigger 
             value="iwatch" 
             className="data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:shadow-black/20 rounded-md border-0 data-[state=active]:border-0 transition-all duration-200 text-xs gap-1.5"
           >
-            <Watch className="h-3.5 w-3.5" />
+            <Watch02Icon className="h-3.5 w-3.5" />
             <span>Watch</span>
           </TabsTrigger>
           <TabsTrigger 
             value="iphone" 
             className="data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:shadow-black/20 rounded-md border-0 data-[state=active]:border-0 transition-all duration-200 text-xs gap-1.5"
           >
-            <Smartphone className="h-3.5 w-3.5" />
+            <SmartPhone01Icon className="h-3.5 w-3.5" />
             <span>iPhone</span>
           </TabsTrigger>
         </TabsList>
@@ -193,7 +193,7 @@ export function MockupGallery() {
             </div>
           ) : (
             <div className="text-center py-8 text-sm text-muted-foreground">
-              <Smartphone className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <SmartPhone01Icon className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>iPhone mockups coming soon</p>
             </div>
           )}

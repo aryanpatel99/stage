@@ -4,7 +4,7 @@ import * as React from "react";
 import { useImageStore } from "@/lib/store";
 import { AspectRatioDropdown } from "@/components/aspect-ratio/aspect-ratio-dropdown";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowDown01Icon, ArrowUp01Icon, Settings02Icon, SparklesIcon, Image01Icon, Cancel01Icon } from "hugeicons-react";
 import { useDropzone } from "react-dropzone";
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "@/lib/constants";
 import { getCldImageUrl } from "@/lib/cloudinary";
@@ -20,11 +20,9 @@ import {
 import { solidColors, type SolidColorKey } from "@/lib/constants/solid-colors";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { FaImage, FaTimes } from "react-icons/fa";
 import { BackgroundEffects } from "@/components/controls/BackgroundEffects";
 import { PresetGallery } from "@/components/presets/PresetGallery";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Settings, Sparkles } from "lucide-react";
 
 export function EditorRightPanel() {
   const {
@@ -101,9 +99,9 @@ export function EditorRightPanel() {
             className="p-1 rounded-lg hover:bg-accent transition-colors border border-border/50 hover:border-border shrink-0"
           >
             {expanded ? (
-              <ChevronUp className="size-4" />
+              <ArrowUp01Icon className="size-4" />
             ) : (
-              <ChevronDown className="size-4" />
+              <ArrowDown01Icon className="size-4" />
             )}
           </button>
         </div>
@@ -141,14 +139,14 @@ export function EditorRightPanel() {
                   value="presets"
                   className="data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:shadow-black/20 rounded-md border-0 data-[state=active]:border-0 transition-all duration-200 text-sm font-medium"
                 >
-                  <Sparkles className="size-4 mr-1.5" />
+                  <SparklesIcon className="size-4 mr-1.5" />
                   Presets
                 </TabsTrigger>
                 <TabsTrigger
                   value="settings"
                   className="data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:shadow-black/20 rounded-md border-0 data-[state=active]:border-0 transition-all duration-200 text-sm font-medium"
                 >
-                  <Settings className="size-4 mr-1.5" />
+                  <Settings02Icon className="size-4 mr-1.5" />
                   Settings
                 </TabsTrigger>
               </TabsList>
@@ -457,7 +455,7 @@ export function EditorRightPanel() {
                                         }
                                       }}
                                     >
-                                      <FaTimes size={14} />
+                                      <Cancel01Icon className="size-3.5" />
                                       <span className="text-xs font-medium">
                                         Remove
                                       </span>
@@ -573,7 +571,7 @@ export function EditorRightPanel() {
                                 : "text-muted-foreground"
                             }`}
                           >
-                            <FaImage size={32} />
+                            <Image01Icon className="size-8" />
                           </div>
                           {isBgDragActive ? (
                             <p className="text-xs font-medium text-foreground text-center">

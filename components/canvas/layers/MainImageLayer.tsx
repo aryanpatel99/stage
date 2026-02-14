@@ -8,6 +8,9 @@ import { getShadowProps, type ShadowConfig } from '../utils/shadow-utils';
 import type { FrameConfig } from '../frames/FrameRenderer';
 import { useImageStore, type ImageFilters } from '@/lib/store';
 
+// Frame types that apply shadow directly to the image (no solid background)
+const DIRECT_IMAGE_SHADOW_FRAMES = new Set(['none', 'arc-light', 'arc-dark']);
+
 interface MainImageLayerProps {
   image: HTMLImageElement;
   canvasW: number;
@@ -66,8 +69,18 @@ export function MainImageLayer({
   const groupRef = useRef<Konva.Group>(null);
   const mainImageRef = useRef<Konva.Image>(null);
   const mainImageTransformerRef = useRef<Konva.Transformer>(null);
-  const shadowProps = getShadowProps(shadow);
   const { imageScale, setImageScale, imageFilters } = useImageStore();
+
+  // Memoize shadow props to avoid recalculation on every render
+  const shadowProps = useMemo(() => getShadowProps(shadow), [shadow]);
+
+  // Determine if shadow should be applied directly to the image
+  const imageShadowProps = useMemo(() => {
+    if (!frame.enabled || DIRECT_IMAGE_SHADOW_FRAMES.has(frame.type)) {
+      return shadowProps;
+    }
+    return {};
+  }, [frame.enabled, frame.type, shadowProps]);
 
   // Build filters array based on active filters
   const activeFilters = useMemo(() => {
@@ -116,11 +129,18 @@ export function MainImageLayer({
     node.brightness((imageFilters.brightness - 100) / 100);
 
     // Set contrast (-100 to 100, where 0 is normal)
-    node.contrast((imageFilters.contrast - 100));
+    node.contrast(imageFilters.contrast - 100);
 
-    // Set saturation (-1 to 1 for desaturation, but we want 0-200 scale)
-    // At 0 = grayscale, 100 = normal, 200 = double saturation
-    node.saturation((imageFilters.saturate - 100) / 100);
+    // Calculate effective saturation combining saturate and grayscale
+    // grayscale: 0-100 (0 = no effect, 100 = full grayscale)
+    // saturate: 0-200 (0 = no saturation, 100 = normal, 200 = double)
+    // Konva saturation: -1 to 1+ (negative = desaturate, 0 = normal, positive = oversaturate)
+    const baseSaturation = (imageFilters.saturate - 100) / 100;
+    const grayscaleEffect = imageFilters.grayscale / 100; // 0 to 1
+    // When grayscale is 100, saturation should be -1 (fully desaturated)
+    // Combine: reduce saturation towards -1 based on grayscale amount
+    const effectiveSaturation = baseSaturation - grayscaleEffect * (1 + baseSaturation);
+    node.saturation(Math.max(-1, effectiveSaturation));
 
     // Set hue rotation (0-360)
     node.hue(imageFilters.hueRotate);
@@ -268,7 +288,7 @@ export function MainImageLayer({
               container.style.cursor = 'default';
             }
           }}
-          {...shadowProps}
+          {...imageShadowProps}
         />
 
       </Group>

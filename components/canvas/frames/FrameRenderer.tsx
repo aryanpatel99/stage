@@ -28,6 +28,17 @@ interface FrameRendererProps {
   has3DTransform: boolean;
 }
 
+// Enhanced shadow props for better visibility
+function getEnhancedShadow(shadowProps: ShadowProps | Record<string, never>): ShadowProps {
+  return {
+    shadowColor: shadowProps.shadowColor || 'rgba(0, 0, 0, 1)',
+    shadowBlur: Math.max(shadowProps.shadowBlur || 20, 20),
+    shadowOffsetX: shadowProps.shadowOffsetX ?? 8,
+    shadowOffsetY: shadowProps.shadowOffsetY ?? 12,
+    shadowOpacity: Math.max(shadowProps.shadowOpacity || 0.5, 0.5),
+  };
+}
+
 export function FrameRenderer({
   frame,
   showFrame,
@@ -42,27 +53,37 @@ export function FrameRenderer({
   }
 
   const isDark = frame.type.includes('dark');
-  const borderWidth = frame.width || 6;
+  const enhancedShadow = getEnhancedShadow(shadowProps);
 
   switch (frame.type) {
     case 'arc-light':
     case 'arc-dark':
-      // Arc frames: return null here - the border is rendered as part of the image
-      // in MainImageLayer to ensure proper visibility
+      // Arc frames: return null - shadow is applied directly to the image in MainImageLayer
+      // The border is also rendered in MainImageLayer on top of the image
       return null;
 
     case 'macos-light':
-    case 'macos-dark':
-      // macOS style title bar with traffic lights (22px height: 8px padding + 6px dots + 8px padding)
+    case 'macos-dark': {
+      // macOS style: full frame background with shadow + title bar
+      const titleBarHeight = 22;
       return (
         <Group>
+          {/* Full frame background with shadow */}
+          <Rect
+            x={0}
+            y={0}
+            width={framedW}
+            height={framedH}
+            fill={isDark ? 'rgb(30, 30, 33)' : '#f5f5f5'}
+            cornerRadius={8}
+            {...enhancedShadow}
+          />
           {/* Title bar background */}
           <Rect
             width={framedW}
-            height={22}
+            height={titleBarHeight}
             fill={isDark ? 'rgb(40, 40, 43)' : '#e8e8e8'}
             cornerRadius={[8, 8, 0, 0]}
-            {...shadowProps}
           />
           {/* Traffic lights - small dots (6px diameter, 3px radius) */}
           <Circle x={15} y={11} radius={3} fill="rgb(255, 95, 87)" />
@@ -74,7 +95,7 @@ export function FrameRenderer({
             x={0}
             y={0}
             width={framedW}
-            height={22}
+            height={titleBarHeight}
             align="center"
             verticalAlign="middle"
             fill={isDark ? 'rgb(159, 159, 159)' : '#4d4d4d'}
@@ -84,24 +105,36 @@ export function FrameRenderer({
           />
         </Group>
       );
+    }
 
     case 'windows-light':
-    case 'windows-dark':
+    case 'windows-dark': {
+      const titleBarHeight = 28;
       return (
         <Group>
+          {/* Full frame background with shadow */}
+          <Rect
+            x={0}
+            y={0}
+            width={framedW}
+            height={framedH}
+            fill={isDark ? '#1f1f1f' : '#ffffff'}
+            cornerRadius={8}
+            {...enhancedShadow}
+          />
+          {/* Title bar */}
           <Rect
             width={framedW}
-            height={28}
+            height={titleBarHeight}
             fill={isDark ? '#2d2d2d' : '#f3f3f3'}
             cornerRadius={[8, 8, 0, 0]}
-            {...shadowProps}
           />
           <Text
             text={frame.title || ''}
             x={16}
             y={0}
             width={framedW - 150}
-            height={28}
+            height={titleBarHeight}
             align="left"
             verticalAlign="middle"
             fill={isDark ? '#ffffff' : '#1a1a1a'}
@@ -122,6 +155,7 @@ export function FrameRenderer({
             height={12}
             stroke={isDark ? '#ffffff' : '#1a1a1a'}
             strokeWidth={1}
+            fillEnabled={false}
           />
           {/* Close */}
           <Group>
@@ -138,10 +172,11 @@ export function FrameRenderer({
           </Group>
         </Group>
       );
+    }
 
     case 'photograph': {
       // Polaroid style: 8px sides/top, 24px bottom
-      // Draw a single white background rect, image will be rendered on top
+      // Draw a single white background rect with prominent shadow
       return (
         <Group>
           <Rect
@@ -151,7 +186,7 @@ export function FrameRenderer({
             height={framedH}
             fill="white"
             cornerRadius={8}
-            {...shadowProps}
+            {...enhancedShadow}
           />
         </Group>
       );

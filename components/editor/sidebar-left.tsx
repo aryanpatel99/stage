@@ -11,9 +11,8 @@ import { useImageStore } from '@/lib/store';
 import { ExportDialog } from '@/components/canvas/dialogs/ExportDialog';
 import { StyleTabs } from './style-tabs';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download04Icon, GithubIcon } from 'hugeicons-react';
 import { useExport } from '@/hooks/useExport';
-import { FaGithub } from 'react-icons/fa';
 
 export function SidebarLeft({
   ...props
@@ -59,7 +58,7 @@ export function SidebarLeft({
                 variant="outline"
                 size="sm"
               >
-                <Download className="size-4 shrink-0" />
+                <Download04Icon className="size-4 shrink-0" />
                 <span className="truncate">Download</span>
               </Button>
             </div>
@@ -79,7 +78,7 @@ export function SidebarLeft({
               variant="outline"
               className="w-full h-10 justify-center gap-2.5 rounded-lg bg-background hover:bg-accent text-foreground border border-border hover:border-border/80 shadow-sm hover:shadow-md transition-all duration-200 font-medium text-sm px-4 overflow-hidden"
             >
-              <FaGithub className="size-4 shrink-0" />
+              <GithubIcon className="size-4 shrink-0" />
               <span className="truncate">Proudly Open Source</span>
             </Button>
           </a>

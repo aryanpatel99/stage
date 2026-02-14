@@ -109,32 +109,36 @@ export function EditorStoreSync() {
 
     // Sync shadow
     const shadow = imageStore.imageShadow
-    const offsetX = shadow.offsetX || 0
-    const offsetY = shadow.offsetY || 0
-    const elevation = Math.max(Math.abs(offsetX), Math.abs(offsetY)) || 4
-    
-    let side: 'bottom' | 'right' | 'bottom-right' = 'bottom'
-    if (Math.abs(offsetX) > Math.abs(offsetY)) {
+    const offsetX = shadow.offsetX || Math.round(shadow.blur * 0.3) // Default right offset
+    const offsetY = shadow.offsetY || Math.round(shadow.blur * 0.5) // Default bottom offset (heavier)
+    const elevation = Math.max(Math.abs(offsetX), Math.abs(offsetY), shadow.blur * 0.4) || 8
+
+    // Determine shadow side based on offsets
+    let side: 'bottom' | 'right' | 'bottom-right' = 'bottom-right' // Default for natural look
+    if (offsetX === 0 && offsetY > 0) {
+      side = 'bottom'
+    } else if (offsetX > 0 && offsetY === 0) {
       side = 'right'
-    } else if (Math.abs(offsetX) > 0 && Math.abs(offsetY) > 0) {
+    } else if (offsetX > 0 || offsetY > 0) {
       side = 'bottom-right'
     }
-    
+
     const colorMatch = shadow.color.match(/rgba?\(([^)]+)\)/)
     let shadowColor = shadow.color
-    let intensity = 1
+    let intensity = 0.6 // Higher default intensity for better visibility
     if (colorMatch) {
       const parts = colorMatch[1].split(',').map(s => s.trim())
       if (parts.length === 4) {
-        intensity = parseFloat(parts[3]) || 0.3
+        // Boost the intensity slightly for better visibility
+        intensity = Math.min(1, (parseFloat(parts[3]) || 0.5) * 1.2)
         shadowColor = `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, 1)`
       } else if (parts.length === 3) {
         shadowColor = `rgb(${parts[0]}, ${parts[1]}, ${parts[2]})`
-        intensity = 0.3
+        intensity = 0.6
       }
     } else if (shadow.color.startsWith('#')) {
       shadowColor = shadow.color
-      intensity = 0.3
+      intensity = 0.7 // Higher for hex colors
     }
     
     if (

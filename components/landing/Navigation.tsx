@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { FaGithub } from "react-icons/fa";
-import { SiX } from "react-icons/si";
+import { GithubIcon, NewTwitterIcon } from "hugeicons-react";
 import { motion, useSpring, useTransform } from "motion/react";
 
 interface NavigationProps {
@@ -68,9 +67,9 @@ export function Navigation({
           <Image
             src="/logo.png"
             alt="Stage"
-            width={32}
-            height={32}
-            className="h-8 w-8"
+            width={48}
+            height={48}
+            className="h-12 w-12"
           />
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -81,7 +80,7 @@ export function Navigation({
             className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-accent rounded-lg transition-colors touch-manipulation text-muted-foreground hover:text-foreground group"
             aria-label="GitHub repository"
           >
-            <FaGithub className="h-5 w-5 text-current" />
+            <GithubIcon className="h-5 w-5 text-current" />
             {!isLoading && stars !== null && (
               <span className="text-sm font-medium flex items-center gap-1">
                 <span className="text-sm">★</span>
@@ -96,7 +95,7 @@ export function Navigation({
             className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-accent rounded-lg transition-colors touch-manipulation text-muted-foreground hover:text-foreground group"
             aria-label="X (Twitter) profile"
           >
-            <SiX className="h-5 w-5 text-current" />
+            <NewTwitterIcon className="h-5 w-5 text-current" />
           </Link>
           <Link href={ctaHref} className="flex items-center">
             <Button variant="integration" className="text-sm px-3 sm:px-4 py-2">

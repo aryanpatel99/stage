@@ -25,26 +25,28 @@ export function ShadowSection() {
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
     const alphaMatch = imageShadow.color.match(/rgba\([^)]+,\s*([\d.]+)\)/);
-    const currentAlpha = alphaMatch ? alphaMatch[1] : '0.3';
+    const currentAlpha = alphaMatch ? alphaMatch[1] : '0.5';
     setImageShadow({ color: `rgba(${r}, ${g}, ${b}, ${currentAlpha})`, enabled: true });
   };
 
-  const shadowIntensity = imageShadow.blur;
+  const shadowBlur = imageShadow.blur;
 
   return (
     <SectionWrapper title="Shadow" defaultOpen={true}>
-      {/* Shadow Spread */}
+      {/* Shadow Blur/Size */}
       <div className="flex items-center gap-4">
-        <span className="text-sm text-text-secondary w-14 shrink-0">Spread</span>
+        <span className="text-sm text-text-secondary w-14 shrink-0">Size</span>
         <Slider
-          value={[shadowIntensity]}
+          value={[shadowBlur]}
           onValueChange={(value) => {
             const blur = value[0];
+            // Set shadow with offsets for natural bottom-right shadow effect
             setImageShadow({
               enabled: blur > 0,
               blur,
-              offsetY: Math.round(blur * 0.3),
-              spread: Math.round(blur * 0.1),
+              offsetX: Math.round(blur * 0.3), // Offset to the right
+              offsetY: Math.round(blur * 0.5), // Offset to the bottom (heavier)
+              spread: Math.round(blur * 0.2),
             });
           }}
           min={0}
@@ -52,7 +54,7 @@ export function ShadowSection() {
           step={1}
           className="flex-1"
         />
-        <span className="text-sm text-text-tertiary w-10 text-right tabular-nums">{shadowIntensity}</span>
+        <span className="text-sm text-text-tertiary w-10 text-right tabular-nums">{shadowBlur}</span>
       </div>
 
       {/* Shadow Color */}

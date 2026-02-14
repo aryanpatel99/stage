@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useDropzone } from "react-dropzone";
-import { FaImage } from "react-icons/fa";
+import { Image01Icon } from "hugeicons-react";
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "@/lib/constants";
 import { useEditorStore, useImageStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -184,8 +184,8 @@ export function UploadDropzone() {
                   active ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                <FaImage size={48} className="sm:hidden" />
-                <FaImage size={56} className="hidden sm:block" />
+                <Image01Icon className="size-12 sm:hidden" />
+                <Image01Icon className="size-14 hidden sm:block" />
               </div>
 
               {active ? (

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { X, Monitor } from 'lucide-react';
+import { Cancel01Icon, ComputerIcon } from 'hugeicons-react';
 
 const DISMISSED_KEY = 'stage-mobile-banner-dismissed';
 
@@ -33,7 +33,7 @@ export function MobileBanner() {
     <div className="w-full bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-sm border-b border-blue-500/20 px-4 py-3 z-50 relative">
       <div className="flex items-center justify-between gap-3 max-w-7xl mx-auto">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Monitor className="h-5 w-5 text-white shrink-0" />
+          <ComputerIcon className="h-5 w-5 text-white shrink-0" />
           <p className="text-sm text-white font-medium">
             For the best experience, please use Stage on a desktop device.
           </p>
@@ -45,7 +45,7 @@ export function MobileBanner() {
           className="h-8 w-8 text-white hover:bg-white/20 shrink-0"
           aria-label="Dismiss banner"
         >
-          <X className="h-4 w-4" />
+          <Cancel01Icon className="h-4 w-4" />
         </Button>
       </div>
     </div>

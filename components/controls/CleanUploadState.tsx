@@ -206,8 +206,8 @@ export function CleanUploadState() {
         onClick={open}
       >
         {/* Icon */}
-        <div className="mb-6 p-5 rounded-2xl bg-surface-4/60 border border-border/50">
-          <Image01Icon size={40} className="text-text-secondary" />
+        <div className="mb-6 p-6 rounded-2xl bg-surface-4/60 border border-border/50">
+          <Image01Icon size={56} className="text-text-secondary" />
         </div>
 
         {/* Title */}

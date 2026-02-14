@@ -3,8 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Instrument_Serif } from "next/font/google";
-import { Globe } from "lucide-react";
-import { FaXTwitter, FaGithub } from "react-icons/fa6";
+import { Globe02Icon, NewTwitterIcon, GithubIcon } from "hugeicons-react";
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -251,7 +250,7 @@ export function Sponsors({
                               }}
                               className="flex items-center gap-1.5 text-xs text-foreground/80 hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer"
                             >
-                              <FaGithub className="w-3.5 h-3.5" />
+                              <GithubIcon className="w-3.5 h-3.5" />
                               <span>github.com/{sponsor.github}</span>
                             </button>
                           )}
@@ -264,7 +263,7 @@ export function Sponsors({
                               }}
                               className="flex items-center gap-1.5 text-xs text-foreground/80 hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer"
                             >
-                              <FaXTwitter className="w-3.5 h-3.5" />
+                              <NewTwitterIcon className="w-3.5 h-3.5" />
                               <span className="truncate max-w-[120px]">
                                 x.com/{sponsor.twitter}
                               </span>
@@ -279,7 +278,7 @@ export function Sponsors({
                               }}
                               className="flex items-center gap-1.5 text-xs text-foreground/80 hover:text-foreground transition-colors bg-transparent border-0 p-0 cursor-pointer"
                             >
-                              <Globe className="w-3.5 h-3.5" />
+                              <Globe02Icon className="w-3.5 h-3.5" />
                               <span className="truncate max-w-[120px]">
                                 {sponsor.website.replace(/^https?:\/\//, '')}
                               </span>

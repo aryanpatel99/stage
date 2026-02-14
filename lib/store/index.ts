@@ -236,13 +236,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   shadow: {
     enabled: true,
-    elevation: 6,
-    side: "bottom",
-    softness: 24,
+    elevation: 12,
+    side: "bottom-right",
+    softness: 30,
     color: "rgba(0, 0, 0, 1)",
-    intensity: 0.25,
-    offsetX: 0,
-    offsetY: 6,
+    intensity: 0.5,
+    offsetX: 8,
+    offsetY: 12,
   },
 
   pattern: {
@@ -599,11 +599,11 @@ export const useImageStore = create<ImageState>()(
     },
     imageShadow: {
       enabled: true,
-      blur: 24,
-      offsetX: 0,
-      offsetY: 6,
-      spread: 3,
-      color: "rgba(0, 0, 0, 0.25)",
+      blur: 30,
+      offsetX: 10,
+      offsetY: 15,
+      spread: 5,
+      color: "rgba(0, 0, 0, 0.6)",
     },
     perspective3D: {
       perspective: 200, // em units, converted to px
@@ -652,11 +652,11 @@ export const useImageStore = create<ImageState>()(
         selectedGradient: "pink_orange",
         imageShadow: {
           enabled: true,
-          blur: 24,
-          offsetX: 0,
-          offsetY: 6,
-          spread: 3,
-          color: "rgba(0, 0, 0, 0.25)",
+          blur: 30,
+          offsetX: 10,
+          offsetY: 15,
+          spread: 5,
+          color: "rgba(0, 0, 0, 0.6)",
         },
         perspective3D: {
           perspective: 200,

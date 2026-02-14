@@ -2,8 +2,7 @@
  * Format selector component for export options
  */
 
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import type { ExportFormat } from '@/lib/export/types';
 
 interface FormatSelectorProps {
@@ -18,28 +17,29 @@ const FORMATS: { value: ExportFormat; label: string; description: string }[] = [
 
 export function FormatSelector({ format, onFormatChange }: FormatSelectorProps) {
   return (
-    <div className="space-y-2">
-      <Label className="text-sm font-semibold text-foreground">Format</Label>
-      <div className="flex gap-2">
+    <div className="space-y-3">
+      <label className="text-sm font-medium text-foreground">Format</label>
+      <div className="grid grid-cols-2 gap-2 p-1 bg-surface-1 dark:bg-surface-2/50 rounded-xl">
         {FORMATS.map((f) => {
           const isSelected = f.value === format;
           return (
-            <Button
+            <button
               key={f.value}
-              variant={isSelected ? 'default' : 'outline'}
               onClick={() => onFormatChange(f.value)}
-              className={`flex-1 h-11 touch-manipulation ${
+              className={cn(
+                'relative px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
                 isSelected
-                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
-                  : 'bg-background hover:bg-accent'
-              }`}
+                  ? 'bg-white dark:bg-surface-4 text-foreground shadow-sm'
+                  : 'text-text-secondary hover:text-foreground hover:bg-white/50 dark:hover:bg-surface-3/50'
+              )}
             >
               {f.label}
-            </Button>
+            </button>
           );
         })}
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-text-tertiary">
         {FORMATS.find((f) => f.value === format)?.description}
       </p>
     </div>

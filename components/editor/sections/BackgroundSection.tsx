@@ -15,8 +15,7 @@ import { solidColors, type SolidColorKey } from '@/lib/constants/solid-colors';
 import { meshGradients, magicGradients, type MeshGradientKey, type MagicGradientKey } from '@/lib/constants/mesh-gradients';
 import { Button } from '@/components/ui/button';
 import { SectionWrapper } from './SectionWrapper';
-import { X, Image as ImageIcon, Palette, Grid3X3 } from 'lucide-react';
-import { ShuffleIcon } from 'hugeicons-react';
+import { Cancel01Icon, Image01Icon, PaintBoardIcon, GridIcon, ShuffleIcon } from 'hugeicons-react';
 import { cn } from '@/lib/utils';
 
 // Arrow URLs
@@ -246,7 +245,7 @@ export function BackgroundSection() {
               )}
             >
               <input {...getBgInputProps()} />
-              <ImageIcon className="w-3.5 h-3.5" />
+              <Image01Icon size={14} />
               <span>Upload</span>
             </div>
             <Button
@@ -261,7 +260,7 @@ export function BackgroundSection() {
                 backgroundConfig.type === 'solid' && 'border-primary bg-primary/5'
               )}
             >
-              <Palette className="w-3.5 h-3.5" />
+              <PaintBoardIcon size={14} />
               Color
             </Button>
             <Button
@@ -273,7 +272,7 @@ export function BackgroundSection() {
               }}
               className="flex-1 h-9 text-xs gap-1.5"
             >
-              <Grid3X3 className="w-3.5 h-3.5" />
+              <GridIcon size={14} />
               Clear
             </Button>
           </div>
@@ -304,7 +303,7 @@ export function BackgroundSection() {
                     if (backgroundConfig.value.startsWith('blob:')) URL.revokeObjectURL(backgroundConfig.value);
                   }}
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <Cancel01Icon size={14} />
                 </button>
               </div>
             )}

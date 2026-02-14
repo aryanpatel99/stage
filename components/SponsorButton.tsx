@@ -7,9 +7,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { FaCoffee, FaDollarSign, FaMobileAlt, FaCopy, FaCheck, FaHeart } from 'react-icons/fa';
+import { FavouriteIcon, Coffee02Icon, DollarCircleIcon, SmartPhone01Icon, Copy01Icon, Tick02Icon } from 'hugeicons-react';
 import { cn } from '@/lib/utils';
-import { Heart } from 'lucide-react';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
 
 interface SponsorButtonProps {
@@ -41,7 +40,7 @@ export function SponsorButton({ className, variant = 'bar' }: SponsorButtonProps
               className="h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all"
               aria-label="Sponsor"
             >
-              <Heart className="h-6 w-6" />
+              <FavouriteIcon className="h-6 w-6" />
             </Button>
           </PopoverTrigger>
           <PopoverContent 
@@ -68,7 +67,7 @@ export function SponsorButton({ className, variant = 'bar' }: SponsorButtonProps
           gradientColor="var(--primary)"
           className="gap-2 bg-background hover:bg-accent text-foreground border border-border"
         >
-          <FaHeart className="h-6 w-6 text-red-400" />
+          <FavouriteIcon className="h-6 w-6 text-red-400" />
           <span>Sponsor</span>
         </MovingBorderButton>
       </PopoverTrigger>
@@ -103,7 +102,7 @@ function SponsorContent({
         className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors cursor-pointer group"
       >
         <div className="h-10 w-10 rounded-lg bg-yellow-400 flex items-center justify-center shrink-0">
-          <FaCoffee className="h-5 w-5 text-white" />
+          <Coffee02Icon className="h-5 w-5 text-white" />
         </div>
         <span className="text-sm font-medium text-foreground group-hover:text-foreground">
           Buy Me Coffee
@@ -118,7 +117,7 @@ function SponsorContent({
         className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors cursor-pointer group"
       >
         <div className="h-10 w-10 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
-          <FaDollarSign className="h-5 w-5 text-white" />
+          <DollarCircleIcon className="h-5 w-5 text-white" />
         </div>
         <span className="text-sm font-medium text-foreground group-hover:text-foreground">
           PayPal
@@ -129,7 +128,7 @@ function SponsorContent({
       <div className="p-3 rounded-lg border border-border bg-muted">
         <div className="flex items-center gap-3 mb-3">
           <div className="h-10 w-10 rounded-lg bg-green-500 flex items-center justify-center shrink-0">
-            <FaMobileAlt className="h-5 w-5 text-white" />
+            <SmartPhone01Icon className="h-5 w-5 text-white" />
           </div>
           <div className="flex-1">
             <span className="text-sm font-medium text-foreground block">
@@ -143,9 +142,9 @@ function SponsorContent({
                 aria-label="Copy UPI ID"
               >
                 {copied ? (
-                  <FaCheck className="h-3 w-3 text-green-500" />
+                  <Tick02Icon className="h-3 w-3 text-green-500" />
                 ) : (
-                  <FaCopy className="h-3 w-3 text-muted-foreground" />
+                  <Copy01Icon className="h-3 w-3 text-muted-foreground" />
                 )}
               </button>
             </div>

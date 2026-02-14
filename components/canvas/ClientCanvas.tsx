@@ -44,6 +44,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     backgroundNoise,
     perspective3D,
     imageOpacity,
+    imageFilters,
     textOverlays,
     imageOverlays,
     mockups,
@@ -321,6 +322,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
           canvasH={canvasH}
           image={image}
           imageOpacity={imageOpacity}
+          imageFilters={imageFilters}
         />
 
         <Stage

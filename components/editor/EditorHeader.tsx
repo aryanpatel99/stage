@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaXTwitter, FaGithub } from 'react-icons/fa6';
+import { NewTwitterIcon, GithubIcon } from 'hugeicons-react';
 import { Button } from '@/components/ui/button';
 import {
   Download04Icon,
@@ -48,11 +48,10 @@ export function EditorHeader() {
           <Image
             src="/logo.png"
             alt="Stage"
-            width={28}
-            height={28}
-            className="h-7 w-7"
+            width={48}
+            height={48}
+            className="h-12 w-12"
           />
-          <span className="text-sm font-semibold text-foreground/90 hidden sm:block">Stage</span>
         </Link>
 
         {/* Center - Action Buttons */}
@@ -101,7 +100,7 @@ export function EditorHeader() {
             rel="noopener noreferrer"
             className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
           >
-            <FaGithub className="h-4 w-4" />
+            <GithubIcon className="h-4 w-4" />
           </a>
           <a
             href="https://x.com/code_kartik"
@@ -109,7 +108,7 @@ export function EditorHeader() {
             rel="noopener noreferrer"
             className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
           >
-            <FaXTwitter className="h-4 w-4" />
+            <NewTwitterIcon className="h-4 w-4" />
           </a>
         </div>
       </header>
