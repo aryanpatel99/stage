@@ -18,12 +18,13 @@ interface TransformPreset {
   };
 }
 
+// Perspective in px (150em ≈ 2400px at 16px base)
 const PRESETS: TransformPreset[] = [
-  { name: 'Default', values: { perspective: 200, rotateX: 0, rotateY: 0, rotateZ: 0, translateX: 0, translateY: 0, scale: 1 } },
-  { name: 'Subtle Left', values: { perspective: 1000, rotateX: 3, rotateY: -8, rotateZ: 0, translateX: 0, translateY: 0, scale: 1 } },
-  { name: 'Subtle Right', values: { perspective: 1000, rotateX: 3, rotateY: 8, rotateZ: 0, translateX: 0, translateY: 0, scale: 1 } },
-  { name: 'Dramatic Left', values: { perspective: 800, rotateX: 10, rotateY: -20, rotateZ: 0, translateX: 0, translateY: 0, scale: 1 } },
-  { name: 'Dramatic Right', values: { perspective: 800, rotateX: 10, rotateY: 20, rotateZ: 0, translateX: 0, translateY: 0, scale: 1 } },
+  { name: 'Default', values: { perspective: 2400, rotateX: 0, rotateY: 0, rotateZ: 0, translateX: 0, translateY: 0, scale: 1 } },
+  { name: 'Tilted', values: { perspective: 2400, rotateX: 0, rotateY: 0, rotateZ: -8, translateX: 0, translateY: 0, scale: 0.95 } },
+  { name: 'Dramatic Left', values: { perspective: 2400, rotateX: 10, rotateY: -20, rotateZ: 8, translateX: -4, translateY: -2, scale: 0.95 } },
+  { name: 'Dramatic Right', values: { perspective: 2400, rotateX: 10, rotateY: 20, rotateZ: -8, translateX: 4, translateY: -2, scale: 0.95 } },
+  { name: 'Top Down', values: { perspective: 2400, rotateX: 40, rotateY: 0, rotateZ: 0, translateX: 0, translateY: -5, scale: 0.95 } },
 ];
 
 export function TransformsSection() {
@@ -48,15 +49,11 @@ export function TransformsSection() {
   };
 
   const getTransformStyle = (preset: TransformPreset) => {
-    const { rotateX, rotateY, rotateZ, scale } = preset.values;
+    const { perspective, rotateX, rotateY, rotateZ, translateX, translateY, scale } = preset.values;
     return {
-      transform: `scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`,
+      transform: `perspective(${perspective}px) translate(${translateX}%, ${translateY}%) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`,
     };
   };
-
-  const getPerspectiveStyle = (preset: TransformPreset) => ({
-    perspective: `${preset.values.perspective}px`,
-  });
 
   return (
     <SectionWrapper title="Transforms" defaultOpen={true}>
@@ -72,7 +69,6 @@ export function TransformsSection() {
                 'hover:bg-surface-3/60',
                 isSelected && 'ring-2 ring-surface-5'
               )}
-              style={getPerspectiveStyle(preset)}
               title={preset.name}
             >
               <div

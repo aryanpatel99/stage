@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button";
 import {
   Delete02Icon,
   Add01Icon,
-  Video01Icon
+  Video01Icon,
+  ArrowTurnBackwardIcon,
+  ArrowTurnForwardIcon,
 } from "hugeicons-react";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import React from "react";
+import { cn } from "@/lib/utils";
 import { ExportSlideshowDialog } from "@/lib/export-slideshow-dialog";
 import { ExportProgressOverlay } from "@/lib/export-progress-overlay";
 
@@ -41,6 +44,35 @@ export function EditorCanvas() {
   // Check both stores - imageStore is the source of truth (tracked by undo/redo)
   const hasImage = !!uploadedImageUrl && !!screenshot.src;
   const [exportOpen, setExportOpen] = useState(false);
+
+  // Track temporal state reactively for undo/redo
+  const [canUndo, setCanUndo] = React.useState(false);
+  const [canRedo, setCanRedo] = React.useState(false);
+
+  useEffect(() => {
+    const updateTemporalState = () => {
+      const { pastStates, futureStates } = useImageStore.temporal.getState();
+      setCanUndo(pastStates.length > 0);
+      setCanRedo(futureStates.length > 0);
+    };
+    updateTemporalState();
+    const unsubscribe = useImageStore.temporal.subscribe(updateTemporalState);
+    return unsubscribe;
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    const { undo, pastStates } = useImageStore.temporal.getState();
+    if (pastStates.length > 0) {
+      undo();
+    }
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    const { redo, futureStates } = useImageStore.temporal.getState();
+    if (futureStates.length > 0) {
+      redo();
+    }
+  }, []);
 
   React.useEffect(() => {
     if (!isPreviewing) return;
@@ -96,53 +128,91 @@ export function EditorCanvas() {
       <div className="flex flex-col h-full w-full">
         {/* Secondary toolbar for slides and image management */}
         {(slides.length > 0 || uploadedImageUrl) && (
-          <div className="flex items-center justify-end gap-2 p-2 border-b border-border/30 bg-surface-2/95 backdrop-blur-sm shrink-0">
-            {slides.length > 0 && (
-              <label className="cursor-pointer inline-flex">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files?.length) {
-                      useImageStore.getState().addImages(Array.from(e.target.files));
-                    }
-                  }}
-                />
-                <span className="h-8 inline-flex items-center justify-center gap-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-sm transition-all font-medium border border-border px-3">
-                  <Add01Icon size={14} />
-                  <span>Add Slide</span>
-                </span>
-              </label>
-            )}
-
-            {slides.length > 0 && (
-              <Button
-                onClick={() => setExportOpen(true)}
-                size="sm"
-                className="h-8 justify-center gap-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all font-medium px-3"
+          <div className="flex items-center justify-between gap-2 p-2 border-b border-border/30 bg-[#1e1e1e] shrink-0">
+            {/* Left side - Undo/Redo controls */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleUndo}
+                disabled={!canUndo}
+                className={cn(
+                  'flex items-center justify-center w-9 h-9 rounded-lg',
+                  'bg-surface-3/60 border border-border/30',
+                  'text-text-secondary transition-all duration-150',
+                  canUndo
+                    ? 'hover:bg-surface-4 hover:text-foreground active:scale-95'
+                    : 'opacity-40 cursor-not-allowed'
+                )}
+                title="Undo (Cmd+Z)"
               >
-                <Video01Icon size={14} />
-                <span>Export Video</span>
+                <ArrowTurnBackwardIcon size={16} />
+              </button>
+
+              <button
+                onClick={handleRedo}
+                disabled={!canRedo}
+                className={cn(
+                  'flex items-center justify-center w-9 h-9 rounded-lg',
+                  'bg-surface-3/60 border border-border/30',
+                  'text-text-secondary transition-all duration-150',
+                  canRedo
+                    ? 'hover:bg-surface-4 hover:text-foreground active:scale-95'
+                    : 'opacity-40 cursor-not-allowed'
+                )}
+                title="Redo (Cmd+Shift+Z)"
+              >
+                <ArrowTurnForwardIcon size={16} />
+              </button>
+            </div>
+
+            {/* Right side - Slide and export controls */}
+            <div className="flex items-center gap-2">
+              {slides.length > 0 && (
+                <label className="cursor-pointer inline-flex">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.length) {
+                        useImageStore.getState().addImages(Array.from(e.target.files));
+                      }
+                    }}
+                  />
+                  <span className="h-8 inline-flex items-center justify-center gap-2 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-sm transition-all font-medium border border-border px-3">
+                    <Add01Icon size={14} />
+                    <span>Add Slide</span>
+                  </span>
+                </label>
+              )}
+
+              {slides.length > 0 && (
+                <Button
+                  onClick={() => setExportOpen(true)}
+                  size="sm"
+                  className="h-8 justify-center gap-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all font-medium px-3"
+                >
+                  <Video01Icon size={14} />
+                  <span>Export Video</span>
+                </Button>
+              )}
+
+              <ExportSlideshowDialog
+                open={exportOpen}
+                onOpenChange={setExportOpen}
+              />
+
+              <Button
+                onClick={clearImage}
+                disabled={!uploadedImageUrl}
+                variant="ghost"
+                size="sm"
+                className="h-8 justify-center gap-2 px-3 text-muted-foreground hover:text-destructive"
+              >
+                <Delete02Icon size={14} />
+                <span>Remove</span>
               </Button>
-            )}
-
-            <ExportSlideshowDialog
-              open={exportOpen}
-              onOpenChange={setExportOpen}
-            />
-
-            <Button
-              onClick={clearImage}
-              disabled={!uploadedImageUrl}
-              variant="ghost"
-              size="sm"
-              className="h-8 justify-center gap-2 px-3 text-muted-foreground hover:text-destructive"
-            >
-              <Delete02Icon size={14} />
-              <span>Remove</span>
-            </Button>
+            </div>
           </div>
         )}
 

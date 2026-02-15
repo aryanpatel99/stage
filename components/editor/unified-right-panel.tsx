@@ -7,24 +7,26 @@ import {
   SlidersHorizontalIcon,
   ColorsIcon,
   MagicWand01Icon,
+  RotateSquareIcon,
 } from 'hugeicons-react';
 import {
   SettingsSection,
   EditSection,
   FramesSection,
-  TransformsSection,
   ShadowSection,
   BackgroundSection,
   TextSection,
+  TransformsGallery,
 } from './sections';
 import { cn } from '@/lib/utils';
 
-type TabType = 'settings' | 'edit' | 'background' | 'presets';
+type TabType = 'settings' | 'edit' | 'background' | 'transforms' | 'presets';
 
 const tabs: { id: TabType; icon: React.ReactNode; label: string }[] = [
   { id: 'settings', icon: <Settings02Icon size={20} />, label: 'Settings' },
   { id: 'edit', icon: <SlidersHorizontalIcon size={20} />, label: 'Edit' },
   { id: 'background', icon: <ColorsIcon size={20} />, label: 'BG' },
+  { id: 'transforms', icon: <RotateSquareIcon size={20} />, label: '3D' },
   { id: 'presets', icon: <MagicWand01Icon size={20} />, label: 'Presets' },
 ];
 
@@ -41,8 +43,8 @@ export function UnifiedRightPanel() {
           <div
             className="absolute top-1 bottom-1 bg-white dark:bg-surface-4 rounded-lg shadow-sm transition-all duration-250 ease-out"
             style={{
-              left: `calc(${activeIndex * 25}% + 4px)`,
-              width: `calc(25% - 8px)`,
+              left: `calc(${activeIndex * 20}% + 4px)`,
+              width: `calc(20% - 8px)`,
             }}
           />
           {tabs.map((tab) => (
@@ -76,7 +78,6 @@ export function UnifiedRightPanel() {
             <div className="space-y-2">
               <EditSection />
               <FramesSection />
-              <TransformsSection />
               <ShadowSection />
               <TextSection />
             </div>
@@ -87,6 +88,8 @@ export function UnifiedRightPanel() {
               <BackgroundSection />
             </div>
           )}
+
+          {activeTab === 'transforms' && <TransformsGallery />}
 
           {activeTab === 'presets' && <PresetGallery />}
         </div>

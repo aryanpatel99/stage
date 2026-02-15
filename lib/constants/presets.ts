@@ -65,6 +65,52 @@ export const presets: PresetConfig[] = [
     backgroundNoise: 0,
   },
 
+   // 8. Magazine Flatlay - Lying on textured surface with leaf shadows
+   {
+    id: 'magazine-flatlay',
+    name: 'Magazine Flatlay',
+    description: 'Isometric flatlay with leaf shadows',
+    aspectRatio: '16_9',
+    backgroundConfig: {
+      type: 'image',
+      value: 'backgrounds/paper/26.webp',
+      opacity: 1,
+    },
+    borderRadius: 16,
+    backgroundBorderRadius: 0,
+    imageOpacity: 1,
+    imageScale: 100,
+    imageBorder: {
+      enabled: true,
+      width: 3,
+      color: '#ffffff',
+      type: 'photograph',
+    },
+    imageShadow: {
+      enabled: true,
+      blur: 20,
+      offsetX: 10,
+      offsetY: 15,
+      spread: 0,
+      color: 'rgba(0, 0, 0, 0.4)',
+    },
+    backgroundBlur: 0,
+    backgroundNoise: 15,
+    perspective3D: {
+      perspective: 2400,
+      rotateX: 45,
+      rotateY: 0,
+      rotateZ: -45,
+      translateX: 0,
+      translateY: -5,
+      scale: 0.9,
+    },
+    shadowOverlay: {
+      src: '/overlay-shadow/041.webp',
+      opacity: 0.2,
+    },
+  },
+
   // 2. Lifted - Floating with hard shadow
   {
     id: 'lifted',
@@ -149,7 +195,7 @@ export const presets: PresetConfig[] = [
     borderRadius: 0,
     backgroundBorderRadius: 0,
     imageOpacity: 1,
-    imageScale: 100,
+    imageScale: 88,
     imageBorder: {
       enabled: true,
       width: 8,
@@ -169,6 +215,48 @@ export const presets: PresetConfig[] = [
     shadowOverlay: {
       src: '/overlay-shadow/019.webp',
       opacity: 0.5,
+    },
+  },
+
+   // 9. Desktop View - Tilted on magic gradient
+   {
+    id: 'desktop-view',
+    name: 'Desktop View',
+    description: 'Tilted view with magic gradient',
+    aspectRatio: '16_9',
+    backgroundConfig: {
+      type: 'gradient',
+      value: 'magic:magic_teal_dots',
+      opacity: 1,
+    },
+    borderRadius: 8,
+    backgroundBorderRadius: 0,
+    imageOpacity: 1,
+    imageScale: 100,
+    imageBorder: {
+      enabled: true,
+      width: 2,
+      color: '#2a2a2a',
+      type: 'arc-dark',
+    },
+    imageShadow: {
+      enabled: true,
+      blur: 20,
+      offsetX: -15,
+      offsetY: 25,
+      spread: -10,
+      color: 'rgba(0, 0, 0, 0.5)',
+    },
+    backgroundBlur: 0,
+    backgroundNoise: 0,
+    perspective3D: {
+      perspective: 2400,
+      rotateX: 0,
+      rotateY: 0,
+      rotateZ: -8,
+      translateX: 0,
+      translateY: 0,
+      scale: 0.95,
     },
   },
 
@@ -203,48 +291,6 @@ export const presets: PresetConfig[] = [
     },
     backgroundBlur: 0,
     backgroundNoise: 30,
-  },
-
-  // 6. Terminal - Developer aesthetic
-  {
-    id: 'terminal',
-    name: 'Terminal',
-    description: 'Dark dev aesthetic with green accent',
-    aspectRatio: '16_9',
-    backgroundConfig: {
-      type: 'solid',
-      value: '#0a0a0a',
-      opacity: 1,
-    },
-    borderRadius: 12,
-    backgroundBorderRadius: 0,
-    imageOpacity: 1,
-    imageScale: 100,
-    imageBorder: {
-      enabled: true,
-      width: 1,
-      color: '#1a1a1a',
-      type: 'macos-dark',
-    },
-    imageShadow: {
-      enabled: true,
-      blur: 40,
-      offsetX: 0,
-      offsetY: 25,
-      spread: 0,
-      color: 'rgba(34, 197, 94, 0.15)',
-    },
-    backgroundBlur: 0,
-    backgroundNoise: 30,
-    perspective3D: {
-      perspective: 1200,
-      rotateX: 8,
-      rotateY: -4,
-      rotateZ: 0,
-      translateX: 0,
-      translateY: 0,
-      scale: 1,
-    },
   },
 
   // 7. Sunset Fade - Warm gradient vibes
