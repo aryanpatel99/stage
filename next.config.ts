@@ -11,9 +11,9 @@ const nextConfig: NextConfig = {
         hostname: "**.r2.dev",
       },
       {
-        // R2 custom domain
+        // R2 custom domain (new)
         protocol: "https",
-        hostname: "assets.stagee.art",
+        hostname: "assets.screenshot-studio.com",
       },
     ],
   },
