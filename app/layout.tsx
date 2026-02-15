@@ -21,8 +21,8 @@ const caveat = Caveat({
 
 export const metadata: Metadata = {
   title: {
-    default: "Stage - Free Online Image Editor | Create Professional Graphics in Seconds",
-    template: "%s | Stage",
+    default: "Screenshot Studio - Free Online Image Editor | Create Professional Graphics in Seconds",
+    template: "%s | Screenshot Studio",
   },
   description: "Turn screenshots into stunning social media graphics in seconds. Free browser-based canvas editor with beautiful backgrounds, text overlays, and one-click export. No signup required.",
   keywords: [
@@ -40,11 +40,12 @@ export const metadata: Metadata = {
     "product screenshot editor",
     "SaaS screenshot tool",
     "developer portfolio images",
+    "screenshot studio",
   ],
-  authors: [{ name: "Stage", url: "https://stagee.art" }],
-  creator: "Stage",
-  publisher: "Stage",
-  metadataBase: new URL(process.env.BETTER_AUTH_URL || "https://stagee.art"),
+  authors: [{ name: "Screenshot Studio", url: "https://screenshot-studio.com" }],
+  creator: "Screenshot Studio",
+  publisher: "Screenshot Studio",
+  metadataBase: new URL(process.env.BETTER_AUTH_URL || "https://screenshot-studio.com"),
   alternates: {
     canonical: "/",
   },
@@ -52,23 +53,23 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "/",
-    siteName: "Stage",
-    title: "Stage - Turn Screenshots into Stunning Graphics (Free)",
+    siteName: "Screenshot Studio",
+    title: "Screenshot Studio - Turn Screenshots into Stunning Graphics (Free)",
     description: "Create professional social media images in seconds. Beautiful backgrounds, text overlays, and export up to 5x resolution. 100% free, no signup.",
     images: [
       {
-        url: "https://stagee.art/og.jpeg",
+        url: "https://screenshot-studio.com/og.jpeg",
         width: 1200,
         height: 630,
-        alt: "Stage - Free Online Image Editor for Stunning Graphics",
+        alt: "Screenshot Studio - Free Online Image Editor for Stunning Graphics",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Stage - Turn Screenshots into Stunning Graphics",
+    title: "Screenshot Studio - Turn Screenshots into Stunning Graphics",
     description: "Create professional social media images in seconds. Free, no signup required.",
-    images: ["https://stagee.art/og.jpeg"],
+    images: ["https://screenshot-studio.com/og.jpeg"],
     creator: "@code_kartik",
     site: "@code_kartik",
   },

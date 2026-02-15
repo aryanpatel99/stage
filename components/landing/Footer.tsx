@@ -7,7 +7,7 @@ interface FooterProps {
   brandName?: string;
 }
 
-export function Footer({ brandName = "Stage" }: FooterProps) {
+export function Footer({ brandName = "Screenshot Studio" }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
   return (

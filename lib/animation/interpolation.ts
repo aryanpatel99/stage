@@ -208,6 +208,9 @@ export function getClipLocalInterpolatedProperties(
  *
  * When clips overlap, properties are determined by the clip that started most recently
  * (last-in takes precedence). This allows for smooth transitions between animations.
+ *
+ * When no clips are active (before first clip or after last clip ends),
+ * properties return to their default values.
  */
 export function getClipInterpolatedProperties(
   clips: AnimationClip[],
@@ -222,34 +225,8 @@ export function getClipInterpolatedProperties(
     time >= clip.startTime && time < clip.startTime + clip.duration
   );
 
-  // If no active clips, return defaults
+  // If no active clips, return defaults (animation only plays during clip time range)
   if (activeClips.length === 0) {
-    // Check if we're past all clips - hold the last value
-    const sortedClips = [...clips].sort((a, b) =>
-      (b.startTime + b.duration) - (a.startTime + a.duration)
-    );
-
-    if (sortedClips.length > 0) {
-      const lastClip = sortedClips[0];
-      const clipEndTime = lastClip.startTime + lastClip.duration;
-
-      if (time >= clipEndTime) {
-        // We're past all clips, hold the final state of the last clip
-        const clipTracks = tracks.filter(t => t.clipId === lastClip.id && t.isVisible);
-        if (clipTracks.length > 0) {
-          const originalDuration = clipTracks[0].originalDuration || lastClip.duration;
-          // Get properties at the end of the clip
-          return getClipLocalInterpolatedProperties(
-            clipTracks,
-            lastClip.duration,
-            originalDuration,
-            lastClip.duration,
-            defaults
-          );
-        }
-      }
-    }
-
     return result;
   }
 

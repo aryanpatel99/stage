@@ -1,8 +1,10 @@
-# Stage
+# Screenshot Studio
 
 A free, browser-based editor for creating stunning screenshots and visuals. No signup, no watermarks.
 
-![Stage](https://img.shields.io/badge/Stage-Canvas%20Editor-blue)
+**Live:** [https://screenshot-studio.com](https://screenshot-studio.com)
+
+![Screenshot Studio](https://img.shields.io/badge/Screenshot%20Studio-Canvas%20Editor-blue)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
@@ -76,7 +78,7 @@ SCREENSHOT_API_URL=https://api.screen-shot.xyz
 ## Project Structure
 
 ```
-stage/
+screenshot-studio/
 ├── app/                 # Next.js pages and API routes
 ├── components/
 │   ├── canvas/         # Canvas rendering (HTML/CSS based)

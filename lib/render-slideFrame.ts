@@ -1,5 +1,5 @@
 import { useImageStore } from "@/lib/store";
-import { exportSlideFrame } from "./export-slideFrame";
+import { exportSlideFrame, exportSlideFrameAsCanvas } from "./export-slideFrame";
 import { getClipInterpolatedProperties } from "@/lib/animation/interpolation";
 import { DEFAULT_ANIMATABLE_PROPERTIES } from "@/types/animation";
 
@@ -128,4 +128,83 @@ export async function renderAnimationToFrames(
   }
 
   return frames;
+}
+
+/**
+ * Render animation timeline to canvas frames for WebCodecs encoding
+ * Returns array of canvases ready for encoding
+ */
+export async function renderAnimationToCanvasFrames(
+  fps: number = 60,
+  onProgress?: (progress: number) => void
+): Promise<{ canvases: HTMLCanvasElement[]; width: number; height: number }> {
+  const store = useImageStore.getState();
+  const { timeline, animationClips, setPerspective3D, setImageOpacity } = store;
+  const { duration, tracks } = timeline;
+
+  if (tracks.length === 0) {
+    throw new Error("No animation tracks to render");
+  }
+
+  const canvases: HTMLCanvasElement[] = [];
+  const frameIntervalMs = 1000 / fps;
+  const totalFrames = Math.ceil(duration / frameIntervalMs);
+
+  // Process frames in batches to keep UI responsive
+  const BATCH_SIZE = 5;
+
+  let width = 0;
+  let height = 0;
+
+  for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+    const time = frameIndex * frameIntervalMs;
+
+    // Calculate interpolated properties at this time using clip-aware interpolation
+    const interpolated = getClipInterpolatedProperties(
+      animationClips,
+      tracks,
+      time,
+      DEFAULT_ANIMATABLE_PROPERTIES
+    );
+
+    // Apply interpolated properties to store
+    setPerspective3D({
+      perspective: interpolated.perspective,
+      rotateX: interpolated.rotateX,
+      rotateY: interpolated.rotateY,
+      rotateZ: interpolated.rotateZ,
+      translateX: interpolated.translateX,
+      translateY: interpolated.translateY,
+      scale: interpolated.scale,
+    });
+
+    if (interpolated.imageOpacity !== undefined) {
+      setImageOpacity(interpolated.imageOpacity);
+    }
+
+    // Let React flush the changes
+    await wait(16);
+
+    // Capture the frame as canvas
+    const canvas = await exportSlideFrameAsCanvas();
+    canvases.push(canvas);
+
+    // Capture dimensions from first frame
+    if (frameIndex === 0) {
+      width = canvas.width;
+      height = canvas.height;
+    }
+
+    // Report progress
+    if (onProgress) {
+      onProgress((frameIndex + 1) / totalFrames * 100);
+    }
+
+    // Yield to main thread every BATCH_SIZE frames
+    if ((frameIndex + 1) % BATCH_SIZE === 0) {
+      await yieldToMain();
+    }
+  }
+
+  return { canvases, width, height };
 }

@@ -26,9 +26,9 @@ interface FAQProps {
 
 const defaultFAQs: FAQItem[] = [
   {
-    question: "Is Stage really free?",
+    question: "Is Screenshot Studio really free?",
     answer:
-      "Yes. Stage is 100% free with no hidden costs. Unlimited exports, all features, no watermarks. No signup required.",
+      "Yes. Screenshot Studio is 100% free with no hidden costs. Unlimited exports, all features, no watermarks. No signup required.",
   },
   {
     question: "Do I need to create an account?",
@@ -63,7 +63,7 @@ const defaultFAQs: FAQItem[] = [
   {
     question: "Is my data stored on your servers?",
     answer:
-      "No. Stage runs entirely in your browser. Your images never leave your device unless you export them yourself.",
+      "No. Screenshot Studio runs entirely in your browser. Your images never leave your device unless you export them yourself.",
   },
 ];
 

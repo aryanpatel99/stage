@@ -33,7 +33,7 @@ function VideoTestimonialCard({
   if (endTime) embedUrl.searchParams.set("end", endTime.toString());
   embedUrl.searchParams.set("rel", "0");
 
-  const videoTitle = title || "Stage testimonial";
+  const videoTitle = title || "Screenshot Studio testimonial";
 
   return (
     <article className="space-y-4">

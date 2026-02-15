@@ -65,7 +65,8 @@ export default function Landing() {
       featuresTitle="Simple by Design"
       howItWorks={howItWorks}
       videoTestimonials={videoTestimonials}
-      videoTestimonialsTitle="Creators Love Stage"
+      videoTestimonialsTitle="Creators Love Screenshot Studio"
+      brandName="Screenshot Studio"
     />
   );
 }

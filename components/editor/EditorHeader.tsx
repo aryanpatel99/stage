@@ -48,7 +48,7 @@ export function EditorHeader() {
         <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <Image
             src="/logo.png"
-            alt="Stage"
+            alt="Screenshot Studio"
             width={48}
             height={48}
             className="h-12 w-12"

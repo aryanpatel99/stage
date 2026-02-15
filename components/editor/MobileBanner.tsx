@@ -35,7 +35,7 @@ export function MobileBanner() {
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <ComputerIcon className="h-5 w-5 text-white shrink-0" />
           <p className="text-sm text-white font-medium">
-            For the best experience, please use Stage on a desktop device.
+            For the best experience, please use Screenshot Studio on a desktop device.
           </p>
         </div>
         <Button
