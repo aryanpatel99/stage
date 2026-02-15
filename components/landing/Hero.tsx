@@ -212,7 +212,7 @@ export function Hero({
       <HeroVideoDialog
         videoSrc={videoEmbedUrl}
         thumbnailSrc={videoThumbnailUrl}
-        thumbnailAlt="Stage editor demo"
+        thumbnailAlt="Screenshot Studio editor demo"
         open={isVideoOpen}
         onOpenChange={setIsVideoOpen}
         showThumbnail={false}

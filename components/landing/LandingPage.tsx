@@ -60,7 +60,7 @@ export function LandingPage({
   features,
   featuresTitle,
   howItWorks,
-  brandName = "Stage",
+  brandName = "Screenshot Studio",
   videoTestimonials,
   videoTestimonialsTitle,
   valueProposition,

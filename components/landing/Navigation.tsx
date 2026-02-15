@@ -171,7 +171,7 @@ export function Navigation({
         <Link href="/landing" className="flex items-center">
           <Image
             src="/logo.png"
-            alt="Stage"
+            alt="Screenshot Studio"
             width={36}
             height={36}
             className="h-8 w-8 sm:h-9 sm:w-9"

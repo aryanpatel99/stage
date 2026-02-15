@@ -77,7 +77,7 @@ interface ValuePropositionProps {
 
 export function ValueProposition({
   eyebrow = "OUR WHY",
-  headline = "We believe beautiful images shouldn't require expensive tools or design degrees. Stage puts professional-quality creation in everyone's hands.",
+  headline = "We believe beautiful images shouldn't require expensive tools or design degrees. Screenshot Studio puts professional-quality creation in everyone's hands.",
 }: ValuePropositionProps) {
   const cards = [
     {
