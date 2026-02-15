@@ -671,18 +671,32 @@ export const useImageStore = create<ImageState>()(
     },
 
     setImage: (file: File) => {
+      const { uploadedImageUrl: oldUrl } = get();
+      // Revoke old image URL to prevent memory leaks
+      if (oldUrl) {
+        URL.revokeObjectURL(oldUrl);
+      }
+
       const imageUrl = URL.createObjectURL(file);
+      // Reset ALL effects to defaults when uploading a new image
       set({
         uploadedImageUrl: imageUrl,
         imageName: file.name,
+        // Reset image settings
         imageScale: 100,
+        imageOpacity: 1,
         borderRadius: 10,
+        backgroundBorderRadius: 10,
+        // Reset background
         backgroundConfig: {
           type: "image",
           value: "backgrounds/mac/mac-asset-8.jpg",
           opacity: 1,
         },
-        selectedGradient: "pink_orange",
+        backgroundBlur: 0,
+        backgroundNoise: 0,
+        selectedGradient: "vibrant_orange_pink",
+        // Reset shadow
         imageShadow: {
           enabled: true,
           blur: 30,
@@ -691,6 +705,16 @@ export const useImageStore = create<ImageState>()(
           spread: 5,
           color: "rgba(0, 0, 0, 0.6)",
         },
+        // Reset border/frame
+        imageBorder: {
+          enabled: false,
+          width: 8,
+          color: "#000000",
+          type: "none",
+          padding: 20,
+          title: "",
+        },
+        // Reset 3D perspective
         perspective3D: {
           perspective: 200,
           rotateX: 0,
@@ -700,11 +724,30 @@ export const useImageStore = create<ImageState>()(
           translateY: 0,
           scale: 1,
         },
+        // Reset filters
+        imageFilters: {
+          brightness: 100,
+          contrast: 100,
+          grayscale: 0,
+          blur: 0,
+          hueRotate: 0,
+          invert: 0,
+          saturate: 100,
+          sepia: 0,
+        },
+        // Clear overlays
+        textOverlays: [],
+        imageOverlays: [],
+        mockups: [],
+        // Reset timeline/animation
+        timeline: { ...DEFAULT_TIMELINE_STATE },
+        animationClips: [],
+        showTimeline: false,
       });
     },
 
     clearImage: () => {
-      const { uploadedImageUrl, slides } = get();
+      const { uploadedImageUrl, slides, imageOverlays } = get();
       // Revoke main image URL
       if (uploadedImageUrl) {
         URL.revokeObjectURL(uploadedImageUrl);
@@ -715,7 +758,13 @@ export const useImageStore = create<ImageState>()(
           URL.revokeObjectURL(slide.src);
         }
       });
-      // Clear everything including slides to allow fresh uploads
+      // Revoke custom overlay URLs
+      imageOverlays.forEach((overlay) => {
+        if (overlay.isCustom && overlay.src) {
+          URL.revokeObjectURL(overlay.src);
+        }
+      });
+      // Clear everything and reset ALL effects to defaults
       set({
         uploadedImageUrl: null,
         imageName: null,
@@ -724,6 +773,67 @@ export const useImageStore = create<ImageState>()(
         isPreviewing: false,
         previewIndex: 0,
         previewStartedAt: null,
+        // Reset image settings
+        imageScale: 100,
+        imageOpacity: 1,
+        borderRadius: 10,
+        backgroundBorderRadius: 10,
+        // Reset background
+        backgroundConfig: {
+          type: "image",
+          value: "backgrounds/mac/mac-asset-8.jpg",
+          opacity: 1,
+        },
+        backgroundBlur: 0,
+        backgroundNoise: 0,
+        selectedGradient: "vibrant_orange_pink",
+        // Reset shadow
+        imageShadow: {
+          enabled: true,
+          blur: 30,
+          offsetX: 10,
+          offsetY: 15,
+          spread: 5,
+          color: "rgba(0, 0, 0, 0.6)",
+        },
+        // Reset border/frame
+        imageBorder: {
+          enabled: false,
+          width: 8,
+          color: "#000000",
+          type: "none",
+          padding: 20,
+          title: "",
+        },
+        // Reset 3D perspective
+        perspective3D: {
+          perspective: 200,
+          rotateX: 0,
+          rotateY: 0,
+          rotateZ: 0,
+          translateX: 0,
+          translateY: 0,
+          scale: 1,
+        },
+        // Reset filters
+        imageFilters: {
+          brightness: 100,
+          contrast: 100,
+          grayscale: 0,
+          blur: 0,
+          hueRotate: 0,
+          invert: 0,
+          saturate: 100,
+          sepia: 0,
+        },
+        // Clear overlays
+        textOverlays: [],
+        imageOverlays: [],
+        mockups: [],
+        // Reset timeline/animation
+        timeline: { ...DEFAULT_TIMELINE_STATE },
+        animationClips: [],
+        showTimeline: false,
       });
     },
 

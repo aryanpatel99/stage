@@ -13,12 +13,13 @@
 /* eslint-disable no-restricted-globals */
 
 // Worker message types
-export type ExportWorkerMessageType = 
+export type ExportWorkerMessageType =
   | 'generateNoise'
   | 'applyBlur'
   | 'applyOpacity'
   | 'composite'
-  | 'processImageData';
+  | 'processImageData'
+  | 'convertFormat';
 
 export interface ExportWorkerRequest {
   id: string;
@@ -65,6 +66,22 @@ export interface CompositePayload {
   overlayOpacity: number;
   width: number;
   height: number;
+}
+
+// Format conversion payload
+export interface ConvertFormatPayload {
+  imageData: ImageData;
+  format: 'png' | 'jpeg' | 'webp';
+  quality: number; // 0-1 for jpeg/webp
+  width: number;
+  height: number;
+}
+
+// Format conversion result
+export interface ConvertFormatResult {
+  blob: ArrayBuffer;
+  mimeType: string;
+  fileSize: number;
 }
 
 // Worker context type
@@ -287,13 +304,58 @@ function compositeImageData(
 }
 
 /**
+ * Convert ImageData to a specific format using OffscreenCanvas
+ */
+async function convertFormat(
+  imageData: ImageData,
+  format: 'png' | 'jpeg' | 'webp',
+  quality: number,
+  width: number,
+  height: number
+): Promise<ConvertFormatResult> {
+  // Check if OffscreenCanvas is available
+  if (typeof OffscreenCanvas === 'undefined') {
+    throw new Error('OffscreenCanvas not available in this environment');
+  }
+
+  const canvas = new OffscreenCanvas(width, height);
+  const canvasCtx = canvas.getContext('2d');
+
+  if (!canvasCtx) {
+    throw new Error('Failed to get 2D context from OffscreenCanvas');
+  }
+
+  // Put the image data onto the canvas
+  canvasCtx.putImageData(imageData, 0, 0);
+
+  // Determine MIME type
+  const mimeType = format === 'png' ? 'image/png' :
+                   format === 'webp' ? 'image/webp' : 'image/jpeg';
+
+  // Convert to blob with quality setting
+  const blob = await canvas.convertToBlob({
+    type: mimeType,
+    quality: format === 'png' ? undefined : quality,
+  });
+
+  // Convert blob to ArrayBuffer for transfer
+  const arrayBuffer = await blob.arrayBuffer();
+
+  return {
+    blob: arrayBuffer,
+    mimeType,
+    fileSize: arrayBuffer.byteLength,
+  };
+}
+
+/**
  * Handle incoming messages
  */
-ctx.onmessage = (event: MessageEvent<ExportWorkerRequest>) => {
+ctx.onmessage = async (event: MessageEvent<ExportWorkerRequest>) => {
   const { id, type, payload } = event.data;
 
   try {
-    let result: ImageData | undefined;
+    let result: ImageData | ConvertFormatResult | undefined;
 
     switch (type) {
       case 'generateNoise': {
@@ -320,6 +382,20 @@ ctx.onmessage = (event: MessageEvent<ExportWorkerRequest>) => {
         break;
       }
 
+      case 'convertFormat': {
+        const { imageData, format, quality, width, height } = payload as ConvertFormatPayload;
+        // Reconstruct ImageData from transferred data
+        let imgData: ImageData;
+        if (imageData instanceof ImageData) {
+          imgData = imageData;
+        } else {
+          const { data, width: w, height: h } = imageData as unknown as { data: Uint8ClampedArray; width: number; height: number };
+          imgData = new ImageData(new Uint8ClampedArray(data), w, h);
+        }
+        result = await convertFormat(imgData, format, quality, width, height);
+        break;
+      }
+
       default:
         throw new Error(`Unknown message type: ${type}`);
     }
@@ -332,9 +408,12 @@ ctx.onmessage = (event: MessageEvent<ExportWorkerRequest>) => {
       result
     };
 
-    // Transfer ImageData buffer for performance
+    // Transfer buffers for performance
     if (result instanceof ImageData) {
       ctx.postMessage(response, { transfer: [result.data.buffer] });
+    } else if (result && 'blob' in result) {
+      // Transfer ArrayBuffer for convertFormat result
+      ctx.postMessage(response, { transfer: [result.blob] });
     } else {
       ctx.postMessage(response);
     }

@@ -21,12 +21,14 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { ExportDialog } from '@/components/canvas/dialogs/ExportDialog';
+import { ComingSoonDialog } from '@/components/ui/coming-soon-dialog';
 
 export function EditorHeader() {
   const { screenshot } = useEditorStore();
-  const { selectedAspectRatio, showTimeline, toggleTimeline } = useImageStore();
+  const { selectedAspectRatio } = useImageStore();
   const [aspectRatioOpen, setAspectRatioOpen] = React.useState(false);
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
+  const [comingSoonOpen, setComingSoonOpen] = React.useState(false);
 
   const currentAspectRatio = aspectRatios.find((ar) => ar.id === selectedAspectRatio);
   const hasImage = !!screenshot.src;
@@ -93,12 +95,10 @@ export function EditorHeader() {
           </Popover>
 
           <Button
-            onClick={toggleTimeline}
+            onClick={() => setComingSoonOpen(true)}
             disabled={!hasImage}
-            variant={showTimeline ? 'default' : 'outline'}
-            className={`h-9 justify-center gap-2 rounded-lg font-medium px-4 ${
-              showTimeline ? 'bg-brand hover:bg-brand-hover text-brand-foreground' : ''
-            }`}
+            variant="outline"
+            className="h-9 justify-center gap-2 rounded-lg font-medium px-4"
           >
             <VideoReplayIcon size={16} />
             <span>Animate</span>
@@ -137,6 +137,13 @@ export function EditorHeader() {
         onScaleChange={updateScale}
         onFormatChange={updateFormat}
         onQualityPresetChange={updateQualityPreset}
+      />
+
+      <ComingSoonDialog
+        open={comingSoonOpen}
+        onOpenChange={setComingSoonOpen}
+        feature="Animation"
+        description="Create stunning animations with keyframes, transitions, and effects. This feature is coming soon!"
       />
     </>
   );

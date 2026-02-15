@@ -68,13 +68,26 @@ export function useOverlayImages(imageOverlays: ImageOverlay[]) {
   >({});
 
   useEffect(() => {
+    // Create AbortController for cleanup
+    const abortController = new AbortController();
+
     const loadOverlays = async () => {
-      const loadedImages: Record<string, HTMLImageElement> = {};
+      const visibleOverlays = imageOverlays.filter(overlay => overlay.isVisible);
 
-      for (const overlay of imageOverlays) {
-        if (!overlay.isVisible) continue;
+      if (visibleOverlays.length === 0) {
+        setLoadedOverlayImages({});
+        return;
+      }
 
-        try {
+      // Create loading promises for all overlays in parallel
+      const loadPromises = visibleOverlays.map(overlay => {
+        return new Promise<{ id: string; img: HTMLImageElement } | null>((resolve) => {
+          // Check if aborted before starting
+          if (abortController.signal.aborted) {
+            resolve(null);
+            return;
+          }
+
           const isR2Overlay =
             isOverlayPath(overlay.src) ||
             (typeof overlay.src === 'string' &&
@@ -88,19 +101,36 @@ export function useOverlayImages(imageOverlays: ImageOverlay[]) {
           const img = new window.Image();
           img.crossOrigin = 'anonymous';
 
-          await new Promise<void>((resolve, reject) => {
-            img.onload = () => {
-              loadedImages[overlay.id] = img;
-              resolve();
-            };
-            img.onerror = () => reject(new Error(`Failed to load overlay: ${overlay.id}`));
-            img.src = imageUrl;
-          });
-        } catch (error) {
-          console.error(
-            `Failed to load overlay image for ${overlay.id}:`,
-            error
-          );
+          img.onload = () => {
+            if (!abortController.signal.aborted) {
+              resolve({ id: overlay.id, img });
+            } else {
+              resolve(null);
+            }
+          };
+
+          img.onerror = () => {
+            console.error(`Failed to load overlay image for ${overlay.id}`);
+            resolve(null);
+          };
+
+          img.src = imageUrl;
+        });
+      });
+
+      // Load all overlays in parallel
+      const results = await Promise.allSettled(loadPromises);
+
+      // Check if still mounted (not aborted)
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      // Collect successful loads
+      const loadedImages: Record<string, HTMLImageElement> = {};
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+          loadedImages[result.value.id] = result.value.img;
         }
       }
 
@@ -108,6 +138,11 @@ export function useOverlayImages(imageOverlays: ImageOverlay[]) {
     };
 
     loadOverlays();
+
+    // Cleanup: abort ongoing loads when dependencies change
+    return () => {
+      abortController.abort();
+    };
   }, [imageOverlays]);
 
   return loadedOverlayImages;

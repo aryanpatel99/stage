@@ -17,6 +17,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { ExportSlideshowDialog } from "@/lib/export-slideshow-dialog";
 import { ExportProgressOverlay } from "@/lib/export-progress-overlay";
+import { ComingSoonDialog } from "@/components/ui/coming-soon-dialog";
 
 const ClientCanvas = dynamic(() => import("@/components/canvas/ClientCanvas"), {
   ssr: false,
@@ -44,6 +45,7 @@ export function EditorCanvas() {
   // Check both stores - imageStore is the source of truth (tracked by undo/redo)
   const hasImage = !!uploadedImageUrl && !!screenshot.src;
   const [exportOpen, setExportOpen] = useState(false);
+  const [videoComingSoonOpen, setVideoComingSoonOpen] = useState(false);
 
   // Track temporal state reactively for undo/redo
   const [canUndo, setCanUndo] = React.useState(false);
@@ -188,7 +190,7 @@ export function EditorCanvas() {
 
               {slides.length > 0 && (
                 <Button
-                  onClick={() => setExportOpen(true)}
+                  onClick={() => setVideoComingSoonOpen(true)}
                   size="sm"
                   className="h-8 justify-center gap-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all font-medium px-3"
                 >
@@ -196,6 +198,13 @@ export function EditorCanvas() {
                   <span>Export Video</span>
                 </Button>
               )}
+
+              <ComingSoonDialog
+                open={videoComingSoonOpen}
+                onOpenChange={setVideoComingSoonOpen}
+                feature="Video Export"
+                description="Export your slideshows as MP4 or WebM videos with custom transitions and timing. This feature is coming soon!"
+              />
 
               <ExportSlideshowDialog
                 open={exportOpen}

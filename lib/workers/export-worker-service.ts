@@ -5,22 +5,26 @@
  * Handles worker lifecycle, message passing, and provides Promise-based APIs.
  */
 
-import type { 
-  ExportWorkerRequest, 
+import type {
+  ExportWorkerRequest,
   ExportWorkerResponse,
   ExportWorkerMessageType,
   NoisePayload,
   BlurPayload,
   OpacityPayload,
-  CompositePayload 
+  CompositePayload,
+  ConvertFormatPayload,
+  ConvertFormatResult
 } from './export.worker';
 
 // Re-export types for consumers
-export type { 
-  NoisePayload, 
-  BlurPayload, 
-  OpacityPayload, 
-  CompositePayload 
+export type {
+  NoisePayload,
+  BlurPayload,
+  OpacityPayload,
+  CompositePayload,
+  ConvertFormatPayload,
+  ConvertFormatResult
 };
 
 type PendingRequest = {
@@ -485,6 +489,93 @@ class ExportWorkerService {
   }
 
   /**
+   * Convert image format using worker (OffscreenCanvas)
+   * Falls back to main thread canvas if worker unavailable
+   */
+  async convertFormat(
+    canvas: HTMLCanvasElement,
+    format: 'png' | 'jpeg' | 'webp',
+    quality: number
+  ): Promise<{ blob: Blob; mimeType: string; fileSize: number }> {
+    await this.initializeWorker();
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Failed to get 2D context from canvas');
+    }
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    // If worker not available, use main thread fallback
+    if (!this.isReady || !this.worker) {
+      return this.convertFormatFallback(canvas, format, quality);
+    }
+
+    try {
+      const dataCopy = new Uint8ClampedArray(imageData.data);
+      const payload: ConvertFormatPayload = {
+        imageData: {
+          data: dataCopy,
+          width: imageData.width,
+          height: imageData.height
+        } as unknown as ImageData,
+        format,
+        quality,
+        width: canvas.width,
+        height: canvas.height
+      };
+
+      const result = await this.sendMessage<ConvertFormatResult>(
+        'convertFormat',
+        payload,
+        [dataCopy.buffer]
+      );
+
+      // Convert ArrayBuffer back to Blob
+      const blob = new Blob([result.blob], { type: result.mimeType });
+
+      return {
+        blob,
+        mimeType: result.mimeType,
+        fileSize: result.fileSize
+      };
+    } catch (error) {
+      console.warn('Worker format conversion failed, using fallback:', error);
+      return this.convertFormatFallback(canvas, format, quality);
+    }
+  }
+
+  /**
+   * Fallback format conversion on main thread
+   */
+  private async convertFormatFallback(
+    canvas: HTMLCanvasElement,
+    format: 'png' | 'jpeg' | 'webp',
+    quality: number
+  ): Promise<{ blob: Blob; mimeType: string; fileSize: number }> {
+    const mimeType = format === 'png' ? 'image/png' :
+                     format === 'webp' ? 'image/webp' : 'image/jpeg';
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve({
+              blob,
+              mimeType,
+              fileSize: blob.size
+            });
+          } else {
+            reject(new Error('Failed to convert canvas to blob'));
+          }
+        },
+        mimeType,
+        format === 'png' ? undefined : quality
+      );
+    });
+  }
+
+  /**
    * Terminate the worker
    */
   terminate(): void {
@@ -494,7 +585,7 @@ class ExportWorkerService {
       this.isReady = false;
       this.initializationAttempted = false;
       this.readyPromise = null;
-      
+
       // Reject all pending requests
       for (const [id, pending] of this.pendingRequests) {
         pending.reject(new Error('Worker terminated'));
