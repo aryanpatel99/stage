@@ -13,6 +13,9 @@ import {
   getDraft,
   blobUrlToBase64,
   deleteDraft,
+  migrateFromLocalStorage,
+  checkStorageAndCleanup,
+  getStorageInfo,
 } from "@/lib/draft-storage";
 
 const AUTOSAVE_DELAY = 1000;
@@ -31,6 +34,16 @@ export function useAutosaveDraft() {
       if (hasLoadedRef.current) return;
 
       try {
+        // Migrate from localStorage to IndexedDB (one-time)
+        await migrateFromLocalStorage();
+
+        // Check storage on startup and log info
+        const storageInfo = await getStorageInfo();
+        console.log('📦 IndexedDB Storage:', storageInfo);
+
+        // Cleanup if storage is too high
+        await checkStorageAndCleanup();
+
         const draft = await getDraft();
         if (!draft) {
           hasLoadedRef.current = true;
@@ -130,6 +143,12 @@ export function useAutosaveDraft() {
       saveTimeoutRef.current = setTimeout(async () => {
         setIsSaving(true);
         try {
+          // Check storage and cleanup if needed before saving
+          const wasCleanedUp = await checkStorageAndCleanup();
+          if (wasCleanedUp) {
+            console.log('Storage was cleaned up due to limit. Continuing with save...');
+          }
+
           const {
             screenshot,
             background,
@@ -219,6 +238,21 @@ export function useAutosaveDraft() {
             imageBorder,
             imageShadow,
             perspective3D,
+            imageFilters: {
+              brightness: 100,
+              contrast: 100,
+              grayscale: 0,
+              blur: 0,
+              hueRotate: 0,
+              invert: 0,
+              saturate: 100,
+              sepia: 0,
+            },
+            exportSettings: {
+              quality: '2x',
+              format: 'png',
+              fileName: '',
+            },
             slides: [],
             activeSlideId: null,
             slideshow: {
@@ -229,6 +263,18 @@ export function useAutosaveDraft() {
             isPreviewing: false,
             previewIndex: 0,
             previewStartedAt: null,
+            timeline: {
+              duration: 3000,
+              playhead: 0,
+              isPlaying: false,
+              isLooping: true,
+              tracks: [],
+              zoom: 1,
+              snapToKeyframes: true,
+            },
+            showTimeline: false,
+            animationClips: [],
+            activeRightPanelTab: 'edit',
           };
 
           await saveDraft(editorState, imageState);

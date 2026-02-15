@@ -1,12 +1,11 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
 
 # Sitemap location
-Sitemap: https://stage-psi-one.vercel.app/sitemap.xml
-
-# Crawl-delay for respectful crawling
-Crawl-delay: 1
+Sitemap: https://screenshot-studio.com/sitemap.xml
 
 # Allow all major search engines
 User-agent: Googlebot
@@ -27,10 +26,16 @@ Allow: /
 User-agent: YandexBot
 Allow: /
 
-# Block bad bots
+# Crawl-delay for SEO tools (be friendly but protect resources)
 User-agent: AhrefsBot
 Crawl-delay: 10
 
 User-agent: SemrushBot
 Crawl-delay: 10
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
 

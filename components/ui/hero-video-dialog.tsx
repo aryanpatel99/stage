@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Play, XIcon } from "lucide-react"
+import { PlayIcon, Cancel01Icon } from "hugeicons-react"
 import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -111,7 +111,7 @@ export function HeroVideoDialog({
               <div
                 className={`from-primary/30 to-primary relative flex size-20 scale-100 items-center justify-center rounded-full bg-gradient-to-b shadow-md transition-all duration-200 ease-out group-hover:scale-[1.2]`}
               >
-                <Play
+                <PlayIcon
                   className="size-8 scale-100 fill-white text-white transition-transform duration-200 ease-out group-hover:scale-105"
                   style={{
                     filter:
@@ -145,7 +145,7 @@ export function HeroVideoDialog({
               className="relative mx-4 aspect-video w-full max-w-4xl md:mx-0"
             >
               <motion.button className="absolute -top-16 right-0 rounded-full bg-neutral-900/50 p-2 text-xl text-white ring-1 backdrop-blur-md dark:bg-neutral-100/50 dark:text-black">
-                <XIcon className="size-5" />
+                <Cancel01Icon className="size-5" />
               </motion.button>
               <div className="relative isolate z-[1] size-full overflow-hidden rounded-2xl border-2 border-white">
                 <iframe

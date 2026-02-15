@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { useImageStore } from '@/lib/store'
-import { Trash2, Eye, EyeOff } from 'lucide-react'
-import { getCldImageUrl } from '@/lib/cloudinary'
-import { OVERLAY_PUBLIC_IDS } from '@/lib/cloudinary-overlays'
+import { Delete02Icon, ViewIcon, ViewOffSlashIcon, RotateRight01Icon, RotateLeft01Icon, RefreshIcon } from 'hugeicons-react'
+import { getR2ImageUrl } from '@/lib/r2'
+import { OVERLAY_PATHS, isOverlayPath } from '@/lib/r2-overlays'
 
 export function OverlayControls() {
   const {
@@ -28,9 +28,24 @@ export function OverlayControls() {
     }
   }
 
+  // Normalize rotation to -180 to 180 range
+  const normalizeRotation = (rotation: number): number => {
+    let normalized = rotation % 360
+    if (normalized > 180) normalized -= 360
+    if (normalized < -180) normalized += 360
+    return normalized
+  }
+
   const handleUpdateRotation = (value: number[]) => {
     if (selectedOverlay) {
       updateImageOverlay(selectedOverlay.id, { rotation: value[0] })
+    }
+  }
+
+  const handleRotateBy = (degrees: number) => {
+    if (selectedOverlay) {
+      const newRotation = normalizeRotation(selectedOverlay.rotation + degrees)
+      updateImageOverlay(selectedOverlay.id, { rotation: newRotation })
     }
   }
 
@@ -109,30 +124,23 @@ export function OverlayControls() {
                   className="h-6 w-6 p-0"
                 >
                   {overlay.isVisible ? (
-                    <Eye className="h-3 w-3" />
+                    <ViewIcon className="h-3 w-3" />
                   ) : (
-                    <EyeOff className="h-3 w-3" />
+                    <ViewOffSlashIcon className="h-3 w-3" />
                   )}
                 </Button>
                 <div className="relative w-8 h-8 shrink-0 rounded overflow-hidden">
                   {(() => {
-                    // Check if this is a Cloudinary public ID or a custom upload
-                    const isCloudinaryId = OVERLAY_PUBLIC_IDS.includes(overlay.src as any) || 
-                                         (typeof overlay.src === 'string' && overlay.src.startsWith('overlays/'))
-                    
-                    // Get the image URL - use Cloudinary if it's a Cloudinary ID, otherwise use the src directly
-                    const imageUrl = isCloudinaryId && !overlay.isCustom
-                      ? getCldImageUrl({
-                          src: overlay.src,
-                          width: 32,
-                          height: 32,
-                          quality: 'auto',
-                          format: 'auto',
-                          crop: 'fit',
-                        })
+                    // Check if this is an R2 overlay path or a custom upload
+                    const isR2Overlay = isOverlayPath(overlay.src) ||
+                                       (typeof overlay.src === 'string' && overlay.src.startsWith('overlays/'))
+
+                    // Get the image URL - use R2 if it's a known path, otherwise use the src directly
+                    const imageUrl = isR2Overlay && !overlay.isCustom
+                      ? getR2ImageUrl({ src: overlay.src })
                       : overlay.src
-                    
-                    // Use regular img tag for Cloudinary URLs and data URLs
+
+                    // Use regular img tag
                     return (
                       <img
                         src={imageUrl}
@@ -155,7 +163,7 @@ export function OverlayControls() {
                   }}
                   className="h-6 w-6 p-0 text-destructive hover:text-destructive ml-auto"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Delete02Icon className="h-3 w-3" />
                 </Button>
               </div>
             ))}
@@ -184,16 +192,45 @@ export function OverlayControls() {
             </div>
 
             {/* Rotation */}
-            <div className="p-3 rounded-xl bg-muted border border-border">
+            <div className="p-3 rounded-xl bg-muted border border-border space-y-3">
               <Slider
                 value={[selectedOverlay.rotation]}
                 onValueChange={handleUpdateRotation}
-                max={360}
-                min={0}
+                max={180}
+                min={-180}
                 step={1}
                 label="Rotation"
                 valueDisplay={`${selectedOverlay.rotation}°`}
               />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleRotateBy(-90)}
+                  className="flex-1 h-8 rounded-lg"
+                  title="Rotate -90°"
+                >
+                  <RotateLeft01Icon className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateImageOverlay(selectedOverlay.id, { rotation: 0 })}
+                  className="flex-1 h-8 rounded-lg"
+                  title="Reset rotation"
+                >
+                  <RefreshIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleRotateBy(90)}
+                  className="flex-1 h-8 rounded-lg"
+                  title="Rotate +90°"
+                >
+                  <RotateRight01Icon className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Opacity */}
@@ -269,7 +306,7 @@ export function OverlayControls() {
               }}
               className="w-full h-10 rounded-xl"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Delete02Icon className="h-4 w-4 mr-2" />
               Remove Overlay
             </Button>
           </div>

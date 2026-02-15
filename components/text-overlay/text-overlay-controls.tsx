@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { GlassInputWrapper } from '@/components/ui/glass-input-wrapper';
 import { useImageStore } from '@/lib/store';
-import {  Trash2, Eye, EyeOff } from 'lucide-react';
+import { Delete02Icon, ViewIcon, ViewOffSlashIcon } from 'hugeicons-react';
 import { fontFamilies, getAvailableFontWeights } from '@/lib/constants/fonts';
 
 export const TextOverlayControls = () => {
@@ -204,9 +204,9 @@ export const TextOverlayControls = () => {
                   className="h-6 w-6 p-0"
                 >
                   {overlay.isVisible ? (
-                    <Eye className="h-3 w-3" />
+                    <ViewIcon className="h-3 w-3" />
                   ) : (
-                    <EyeOff className="h-3 w-3" />
+                    <ViewOffSlashIcon className="h-3 w-3" />
                   )}
                 </Button>
                 <span className="flex-1 text-xs truncate">{overlay.text}</span>
@@ -222,7 +222,7 @@ export const TextOverlayControls = () => {
                   }}
                   className="h-6 w-6 p-0 text-destructive hover:text-destructive"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Delete02Icon className="h-3 w-3" />
                 </Button>
               </div>
             ))}

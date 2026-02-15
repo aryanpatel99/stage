@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { getCldImageUrl } from '@/lib/cloudinary';
-import { OVERLAY_PUBLIC_IDS } from '@/lib/cloudinary-overlays';
-import { cloudinaryPublicIds } from '@/lib/cloudinary-backgrounds';
+import { getR2ImageUrl } from '@/lib/r2';
+import { isOverlayPath } from '@/lib/r2-overlays';
+import { backgroundPaths } from '@/lib/r2-backgrounds';
 import type { BackgroundConfig } from '@/lib/constants/backgrounds';
 import type { ImageOverlay } from '@/lib/store';
 
@@ -45,16 +45,8 @@ export function useBackgroundImage(
         !imageUrl.startsWith('blob:') &&
         !imageUrl.startsWith('data:')
       ) {
-        if (cloudinaryPublicIds.includes(imageUrl)) {
-          imageUrl = getCldImageUrl({
-            src: imageUrl,
-            width: Math.max(containerWidth, 1920),
-            height: Math.max(containerHeight, 1080),
-            quality: 'auto',
-            format: 'auto',
-            crop: 'fill',
-            gravity: 'auto',
-          });
+        if (backgroundPaths.includes(imageUrl)) {
+          imageUrl = getR2ImageUrl({ src: imageUrl });
         } else {
           setBgImage(null);
           return;
@@ -83,21 +75,14 @@ export function useOverlayImages(imageOverlays: ImageOverlay[]) {
         if (!overlay.isVisible) continue;
 
         try {
-          const isCloudinaryId =
-            (typeof overlay.src === 'string' && OVERLAY_PUBLIC_IDS.includes(overlay.src as typeof OVERLAY_PUBLIC_IDS[number])) ||
+          const isR2Overlay =
+            isOverlayPath(overlay.src) ||
             (typeof overlay.src === 'string' &&
               overlay.src.startsWith('overlays/'));
 
           const imageUrl =
-            isCloudinaryId && !overlay.isCustom
-              ? getCldImageUrl({
-                  src: overlay.src,
-                  width: overlay.size * 2,
-                  height: overlay.size * 2,
-                  quality: 'auto',
-                  format: 'auto',
-                  crop: 'fit',
-                })
+            isR2Overlay && !overlay.isCustom
+              ? getR2ImageUrl({ src: overlay.src })
               : overlay.src;
 
           const img = new window.Image();
@@ -127,4 +112,3 @@ export function useOverlayImages(imageOverlays: ImageOverlay[]) {
 
   return loadedOverlayImages;
 }
-

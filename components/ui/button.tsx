@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight01Icon } from "hugeicons-react"
 
 import { cn } from "@/lib/utils"
 
@@ -60,7 +60,7 @@ function Button({
   const content = (
     <>
       {children}
-      {shouldShowArrow && !asChild && <ArrowRight className="size-5" />}
+      {shouldShowArrow && !asChild && <ArrowRight01Icon size={20} />}
     </>
   )
 

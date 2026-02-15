@@ -1,6 +1,6 @@
-# Contributing to Stage
+# Contributing to Screenshot Studio
 
-Thank you for your interest in contributing to Stage! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to Screenshot Studio! This document provides guidelines and instructions for contributing to the project.
 
 ## Table of Contents
 
@@ -74,7 +74,7 @@ Thank you for your interest in contributing to Stage! This document provides gui
 Understanding the project structure will help you navigate the codebase:
 
 ```
-stage/
+screenshot-studio/
 ├── app/                 # Next.js pages and API routes
 ├── components/         # React components
 │   ├── canvas/        # Canvas rendering components
@@ -527,5 +527,5 @@ By contributing, you agree that your contributions will be licensed under the sa
 
 ---
 
-Thank you for contributing to Stage! 🎨
+Thank you for contributing to Screenshot Studio! 🎨
 

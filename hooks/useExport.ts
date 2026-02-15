@@ -9,7 +9,7 @@ import { getAspectRatioPreset } from '@/lib/aspect-ratio-utils';
 import { exportElement, type ExportOptions } from '@/lib/export/export-service';
 import { saveExportPreferences, getExportPreferences, saveExportedImage } from '@/lib/export-storage';
 import { useImageStore, useEditorStore } from '@/lib/store';
-import { getKonvaStage } from '@/components/canvas/ClientCanvas';
+import { getCanvasContainer } from '@/components/canvas/ClientCanvas';
 import { trackEvent } from '@/lib/analytics';
 import type { ExportFormat, QualityPreset } from '@/lib/export/types';
 
@@ -87,8 +87,8 @@ export function useExport(selectedAspectRatio: string) {
     setIsExporting(true);
 
     try {
-      // Get Konva stage
-      const konvaStage = getKonvaStage();
+      // Get HTML canvas container
+      const canvasContainer = getCanvasContainer();
 
       // Get actual pixel dimensions from aspect ratio preset
       const preset = getAspectRatioPreset(selectedAspectRatio);
@@ -107,7 +107,7 @@ export function useExport(selectedAspectRatio: string) {
       const result = await exportElement(
         'image-render-card',
         exportOptions,
-        konvaStage,
+        canvasContainer,
         backgroundConfig,
         backgroundBorderRadius,
         textOverlays,
@@ -173,7 +173,7 @@ export function useExport(selectedAspectRatio: string) {
       });
 
       // Show success toast
-      toast('Image downloaded successfully!', {
+      toast.success('Image downloaded successfully!', {
         description: `Saved as ${fileName}`,
       });
     } catch (error) {
@@ -181,12 +181,12 @@ export function useExport(selectedAspectRatio: string) {
       const errorMessage = error instanceof Error
         ? error.message
         : 'Failed to export image. Please try again.';
-      
+
       // Show error toast
-      toast('Export failed', {
+      toast.error('Export failed', {
         description: errorMessage,
       });
-      
+
       throw new Error(errorMessage);
     } finally {
       setIsExporting(false);
@@ -197,8 +197,8 @@ export function useExport(selectedAspectRatio: string) {
     setIsExporting(true);
 
     try {
-      // Get Konva stage
-      const konvaStage = getKonvaStage();
+      // Get HTML canvas container
+      const canvasContainer = getCanvasContainer();
 
       // Get actual pixel dimensions from aspect ratio preset
       const preset = getAspectRatioPreset(selectedAspectRatio);
@@ -208,8 +208,8 @@ export function useExport(selectedAspectRatio: string) {
 
       const exportOptions: ExportOptions = {
         format: 'png', // Always use PNG for clipboard to preserve transparency
-        qualityPreset: 'high', // Use highest quality for clipboard
-        scale: 5,
+        qualityPreset: 'medium', // Use medium quality for easier sharing
+        scale: 2,
         exportWidth: preset.width,
         exportHeight: preset.height,
       };
@@ -217,7 +217,7 @@ export function useExport(selectedAspectRatio: string) {
       const result = await exportElement(
         'image-render-card',
         exportOptions,
-        konvaStage,
+        canvasContainer,
         backgroundConfig,
         backgroundBorderRadius,
         textOverlays,
@@ -285,7 +285,7 @@ export function useExport(selectedAspectRatio: string) {
         });
 
         // Show success toast
-        toast('Image copied to clipboard!', {
+        toast.success('Image copied to clipboard!', {
           description: 'You can now paste it anywhere',
         });
       } else {
@@ -296,12 +296,12 @@ export function useExport(selectedAspectRatio: string) {
       const errorMessage = error instanceof Error
         ? error.message
         : 'Failed to copy image to clipboard. Please try again.';
-      
+
       // Show error toast
-      toast('Copy failed', {
+      toast.error('Copy failed', {
         description: errorMessage,
       });
-      
+
       throw new Error(errorMessage);
     } finally {
       setIsExporting(false);
@@ -318,4 +318,3 @@ export function useExport(selectedAspectRatio: string) {
     copyImage,
   };
 }
-

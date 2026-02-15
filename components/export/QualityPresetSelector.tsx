@@ -2,8 +2,7 @@
  * Quality preset selector component for export options
  */
 
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import type { ExportFormat, QualityPreset } from '@/lib/export/types';
 import { QUALITY_PRESET_LABELS } from '@/lib/export/types';
 
@@ -23,28 +22,29 @@ export function QualityPresetSelector({
   const currentLabel = QUALITY_PRESET_LABELS[qualityPreset];
 
   return (
-    <div className="space-y-2">
-      <Label className="text-sm font-semibold text-foreground">Quality</Label>
-      <div className="flex gap-2">
+    <div className="space-y-3">
+      <label className="text-sm font-medium text-foreground">Quality</label>
+      <div className="grid grid-cols-3 gap-2 p-1 bg-surface-1 dark:bg-surface-2/50 rounded-xl">
         {PRESETS.map((preset) => {
           const isSelected = preset === qualityPreset;
           return (
-            <Button
+            <button
               key={preset}
-              variant={isSelected ? 'default' : 'outline'}
               onClick={() => onQualityPresetChange(preset)}
-              className={`flex-1 h-11 touch-manipulation ${
+              className={cn(
+                'relative px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
                 isSelected
-                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
-                  : 'bg-background hover:bg-accent'
-              }`}
+                  ? 'bg-white dark:bg-surface-4 text-foreground shadow-sm'
+                  : 'text-text-secondary hover:text-foreground hover:bg-white/50 dark:hover:bg-surface-3/50'
+              )}
             >
               {QUALITY_PRESET_LABELS[preset].label}
-            </Button>
+            </button>
           );
         })}
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-text-tertiary">
         {currentLabel.description[format]}
       </p>
     </div>

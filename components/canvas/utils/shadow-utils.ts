@@ -21,45 +21,65 @@ export function getShadowProps(shadow: ShadowConfig): ShadowProps | Record<strin
   if (!shadow.enabled) return {};
 
   const { elevation, side, softness, color, intensity, offsetX, offsetY } = shadow;
-  
+
   let x = 0;
   let y = 0;
-  
+
   if (offsetX !== undefined && offsetY !== undefined) {
     x = offsetX;
     y = offsetY;
   } else {
+    // Default to bottom-right shadow for natural lighting effect
     const diag = elevation * 0.707;
     const offset =
       side === 'bottom'
-        ? { x: 0, y: elevation }
+        ? { x: elevation * 0.3, y: elevation } // Slight right offset for natural look
         : side === 'right'
-        ? { x: elevation, y: 0 }
+        ? { x: elevation, y: elevation * 0.3 } // Slight bottom offset
         : side === 'bottom-right'
         ? { x: diag, y: diag }
-        : { x: 0, y: 0 };
+        : { x: elevation * 0.5, y: elevation * 0.8 }; // Default: more bottom, some right
     x = offset.x;
     y = offset.y;
   }
 
+  // Parse color and darken it for better shadow visibility
   const colorMatch = color.match(/rgba?\(([^)]+)\)/)
-  let shadowColor = color
-  
+  let shadowColor = 'rgba(0, 0, 0, 1)' // Default to black for best visibility
+
   if (colorMatch) {
     const parts = colorMatch[1].split(',').map(s => s.trim())
-    if (parts.length === 4) {
-      shadowColor = `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, 1)`
-    } else if (parts.length === 3) {
-      shadowColor = `rgb(${parts[0]}, ${parts[1]}, ${parts[2]})`
-    }
+    const r = parseInt(parts[0]) || 0;
+    const g = parseInt(parts[1]) || 0;
+    const b = parseInt(parts[2]) || 0;
+    // Darken the color for shadow (multiply by 0.3 to make it darker)
+    const darkR = Math.floor(r * 0.3);
+    const darkG = Math.floor(g * 0.3);
+    const darkB = Math.floor(b * 0.3);
+    shadowColor = `rgba(${darkR}, ${darkG}, ${darkB}, 1)`
+  } else if (color.startsWith('#')) {
+    const hex = color.replace('#', '')
+    const r = parseInt(hex.slice(0, 2), 16) || 0;
+    const g = parseInt(hex.slice(2, 4), 16) || 0;
+    const b = parseInt(hex.slice(4, 6), 16) || 0;
+    // Darken the color
+    const darkR = Math.floor(r * 0.3);
+    const darkG = Math.floor(g * 0.3);
+    const darkB = Math.floor(b * 0.3);
+    shadowColor = `rgba(${darkR}, ${darkG}, ${darkB}, 1)`
   }
+
+  // Ensure minimum blur for soft shadows
+  const effectiveBlur = Math.max(softness, 12);
+  // Use high intensity for visible shadows
+  const effectiveIntensity = Math.min(1, Math.max(0.4, intensity * 1.5));
 
   return {
     shadowColor,
-    shadowBlur: softness,
+    shadowBlur: effectiveBlur,
     shadowOffsetX: x,
     shadowOffsetY: y,
-    shadowOpacity: Math.min(1, Math.max(0, intensity)),
+    shadowOpacity: effectiveIntensity,
   };
 }
 

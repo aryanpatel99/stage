@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useEditorStore, useImageStore } from '@/lib/store'
-import { Loader2, Globe, Monitor, Smartphone } from 'lucide-react'
+import { Loading03Icon, Globe02Icon, ComputerIcon, SmartPhone01Icon } from 'hugeicons-react'
 
 type DeviceType = 'desktop' | 'mobile'
 
@@ -157,7 +157,7 @@ export function WebsiteScreenshotInput() {
         </Label>
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Globe02Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               id="website-url"
               type="url"
@@ -188,7 +188,7 @@ export function WebsiteScreenshotInput() {
           >
             {isLoading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loading03Icon className="h-4 w-4 mr-2 animate-spin" />
                 Capturing...
               </>
             ) : (
@@ -205,12 +205,12 @@ export function WebsiteScreenshotInput() {
               <SelectValue>
                 {deviceType === 'desktop' ? (
                   <span className="flex items-center gap-2">
-                    <Monitor className="h-4 w-4" />
+                    <ComputerIcon className="h-4 w-4" />
                     Desktop
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    <Smartphone className="h-4 w-4" />
+                    <SmartPhone01Icon className="h-4 w-4" />
                     Mobile
                   </span>
                 )}
@@ -219,13 +219,13 @@ export function WebsiteScreenshotInput() {
             <SelectContent>
               <SelectItem value="desktop">
                 <span className="flex items-center gap-2">
-                  <Monitor className="h-4 w-4" />
+                  <ComputerIcon className="h-4 w-4" />
                   Desktop
                 </span>
               </SelectItem>
               <SelectItem value="mobile">
                 <span className="flex items-center gap-2">
-                  <Smartphone className="h-4 w-4" />
+                  <SmartPhone01Icon className="h-4 w-4" />
                   Mobile
                 </span>
               </SelectItem>
@@ -245,7 +245,7 @@ export function WebsiteScreenshotInput() {
 
       {isLoading && (
         <div className="rounded-lg border border-border bg-muted p-8 flex flex-col items-center justify-center min-h-[200px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <Loading03Icon className="h-8 w-8 animate-spin text-primary mb-4" />
           <p className="text-sm text-muted-foreground">
             Capturing screenshot...
           </p>

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Caveat } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/lib/query-client";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,37 +21,67 @@ const caveat = Caveat({
 
 export const metadata: Metadata = {
   title: {
-    default: "Stage",
-    template: "%s | Stage",
+    default: "Screenshot Studio - Free Online Image Editor | Create Stunning Graphics in Seconds",
+    template: "%s | Screenshot Studio",
   },
-  description: "Create stunning showcase images for your projects with customizable templates and layouts. A fully in-browser canvas editor for adding images, text, and backgrounds—no external services required.",
-  keywords: ["image editor", "canvas editor", "design tool", "image showcase", "template builder", "in-browser editor", "client-side export"],
-  authors: [{ name: "Stage" }],
-  creator: "Stage",
-  publisher: "Stage",
-  metadataBase: new URL(process.env.BETTER_AUTH_URL || "https://stage-psi-one.vercel.app"),
+  description: "Transform screenshots into professional social media graphics instantly. Free browser-based editor with 100+ backgrounds, animations, 3D effects, and video export. No signup needed.",
+  keywords: [
+    // Primary keywords
+    "free image editor",
+    "online image editor",
+    "screenshot beautifier",
+    "screenshot editor",
+    "screenshot studio",
+    // Feature keywords
+    "social media graphics maker",
+    "image background editor",
+    "screenshot animation maker",
+    "browser image editor",
+    "canvas editor online",
+    // Use case keywords
+    "product screenshot tool",
+    "SaaS screenshot maker",
+    "developer portfolio images",
+    "Twitter card generator",
+    "Instagram post creator",
+    "LinkedIn banner maker",
+    // Long-tail keywords
+    "free design tool no signup",
+    "beautify screenshots online",
+    "add background to screenshot",
+    "screenshot to video converter",
+    "animated slideshow maker",
+  ],
+  authors: [{ name: "Screenshot Studio", url: "https://screenshot-studio.com" }],
+  creator: "Screenshot Studio",
+  publisher: "Screenshot Studio",
+  metadataBase: new URL(process.env.BETTER_AUTH_URL || "https://screenshot-studio.com"),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "/",
-    siteName: "Stage",
-    title: "Stage - Image Showcase Builder",
-    description: "Create stunning showcase images for your projects with customizable templates and layouts",
+    siteName: "Screenshot Studio",
+    title: "Screenshot Studio - Free Screenshot Beautifier & Image Editor",
+    description: "Create stunning social media graphics in seconds. 100+ backgrounds, animations, 3D effects, video export. 100% free, no signup required.",
     images: [
       {
-        url: "https://stage-psi-one.vercel.app/og.jpeg",
+        url: "https://screenshot-studio.com/og.png",
         width: 1200,
         height: 630,
-        alt: "Stage - Image Showcase Builder",
+        alt: "Screenshot Studio - Transform Screenshots into Professional Graphics",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Stage - Image Showcase Builder",
-    description: "Create stunning showcase images for your projects with customizable templates and layouts",
-    images: ["https://stage-psi-one.vercel.app/og.jpeg"],
-    creator: "@stage",
+    title: "Screenshot Studio - Free Screenshot Beautifier",
+    description: "Transform screenshots into stunning graphics. Animations, 3D effects, video export. Free, no signup.",
+    images: ["https://screenshot-studio.com/og.png"],
+    creator: "@code_kartik",
+    site: "@code_kartik",
   },
   robots: {
     index: true,
@@ -68,6 +99,7 @@ export const metadata: Metadata = {
     shortcut: "/logo.png",
     apple: "/logo.png",
   },
+  category: "Design Tools",
 };
 
 export const viewport: Viewport = {
@@ -90,8 +122,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${caveat.variable} antialiased`}
       >
-        {children}
-        <Toaster />
+        <QueryProvider>
+          {children}
+          <Toaster />
+        </QueryProvider>
       </body>
     </html>
   );

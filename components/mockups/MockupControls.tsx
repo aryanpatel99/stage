@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { useImageStore } from '@/lib/store'
-import { Trash2, Eye, EyeOff } from 'lucide-react'
+import { Delete02Icon, ViewIcon, ViewOffSlashIcon } from 'hugeicons-react'
 import { getMockupDefinition } from '@/lib/constants/mockups'
 import Image from 'next/image'
 
@@ -103,9 +103,9 @@ export function MockupControls() {
                     className="h-6 w-6 p-0"
                   >
                     {mockup.isVisible ? (
-                      <Eye className="h-3 w-3" />
+                      <ViewIcon className="h-3 w-3" />
                     ) : (
-                      <EyeOff className="h-3 w-3" />
+                      <ViewOffSlashIcon className="h-3 w-3" />
                     )}
                   </Button>
                   <div className="relative w-8 h-8 shrink-0 rounded overflow-hidden">
@@ -134,7 +134,7 @@ export function MockupControls() {
                     }}
                     className="h-6 w-6 p-0 text-destructive hover:text-destructive"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Delete02Icon className="h-3 w-3" />
                   </Button>
                 </div>
               )
@@ -222,7 +222,7 @@ export function MockupControls() {
               }}
               className="w-full h-10 rounded-xl"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Delete02Icon className="h-4 w-4 mr-2" />
               Remove Mockup
             </Button>
           </div>

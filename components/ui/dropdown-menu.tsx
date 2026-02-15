@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
-import { FaCheck, FaChevronRight, FaCircle } from "react-icons/fa"
+import { Tick02Icon, ArrowRight01Icon, RecordIcon } from "hugeicons-react"
 
 import { cn } from "@/lib/utils"
 
@@ -100,7 +100,7 @@ function DropdownMenuCheckboxItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <FaCheck size={16} />
+          <Tick02Icon className="size-4" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -135,7 +135,7 @@ function DropdownMenuRadioItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <FaCircle size={8} />
+          <RecordIcon className="size-2" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -217,7 +217,7 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <FaChevronRight size={16} className="ml-auto" />
+      <ArrowRight01Icon className="size-4 ml-auto" />
     </DropdownMenuPrimitive.SubTrigger>
   )
 }

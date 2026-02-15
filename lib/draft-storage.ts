@@ -1,12 +1,16 @@
-// autosave drafts
+// Draft storage using IndexedDB for large data support
 
 import { EditorState, ImageState, OmitFunctions } from './store';
 
-const DB_NAME = 'stage-draft';
-const STORE_NAME = 'draft';
-const VERSION_KEY = 'stage-draft-version';
+const DB_NAME = 'screenshotstudio-db';
+const DB_VERSION = 1;
+const STORE_NAME = 'drafts';
+const DRAFT_KEY = 'screenshotstudio-draft';
 
-// image store + editor store
+// Storage limits
+const MAX_STORAGE_MB = 50; // Max storage in MB before cleanup
+const MAX_STORAGE_BYTES = MAX_STORAGE_MB * 1024 * 1024;
+
 export interface DraftStorage {
   id: string;
   editorState: OmitFunctions<EditorState>;
@@ -14,23 +18,7 @@ export interface DraftStorage {
   timestamp: number;
 }
 
-// helper function that converts File into base64 string
-export const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => {
-      if (fr.result) {
-        resolve(fr.result as string);
-      } else {
-        reject(new Error('Failed to read file'));
-      }
-    };
-    fr.onerror = () => reject(fr.error);
-    fr.readAsDataURL(file);
-  });
-};
-
-// helper to convert blob URL to base64
+// Helper to convert blob URL to base64
 export const blobUrlToBase64 = async (blobUrl: string): Promise<string> => {
   try {
     const response = await fetch(blobUrl);
@@ -47,68 +35,22 @@ export const blobUrlToBase64 = async (blobUrl: string): Promise<string> => {
   }
 };
 
-// Get current version from localStorage or default to 1
-function getCurrentVersion(): number {
-  const stored = localStorage.getItem(VERSION_KEY);
-  return stored ? parseInt(stored, 10) : 1;
-}
-
-// Save version to localStorage
-function saveVersion(version: number): void {
-  localStorage.setItem(VERSION_KEY, version.toString());
-}
-
-// initialize indexeddb
-async function openDB(): Promise<IDBDatabase> {
+// Open IndexedDB connection
+function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const version = getCurrentVersion();
-    const request = indexedDB.open(DB_NAME, version);
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = () => {
-      console.error('IndexedDB error:', request.error);
+      console.error('Failed to open IndexedDB:', request.error);
       reject(request.error);
     };
 
     request.onsuccess = () => {
-      const db = request.result;
-
-      // If object store doesn't exist, we need to upgrade the database
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.close();
-
-        // Increment version to trigger onupgradeneeded
-        const newVersion = db.version + 1;
-        saveVersion(newVersion);
-
-        const upgradeRequest = indexedDB.open(DB_NAME, newVersion);
-
-        upgradeRequest.onupgradeneeded = (event) => {
-          const upgradeDb = (event.target as IDBOpenDBRequest).result;
-          if (!upgradeDb.objectStoreNames.contains(STORE_NAME)) {
-            upgradeDb.createObjectStore(STORE_NAME, { keyPath: 'id' });
-          }
-        };
-
-        upgradeRequest.onsuccess = () => {
-          resolve(upgradeRequest.result);
-        };
-
-        upgradeRequest.onerror = () => {
-          console.error('IndexedDB upgrade error:', upgradeRequest.error);
-          reject(upgradeRequest.error);
-        };
-      } else {
-        resolve(db);
-      }
+      resolve(request.result);
     };
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-
-      // Save the new version
-      saveVersion(db.version);
-
-      // Create object store if it doesn't exist
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: 'id' });
       }
@@ -116,16 +58,15 @@ async function openDB(): Promise<IDBDatabase> {
   });
 }
 
-// save draft to indexeddb
+// Save draft to IndexedDB
 export async function saveDraft(
   editorState: OmitFunctions<EditorState>,
   imageState: OmitFunctions<ImageState>,
 ): Promise<void> {
   try {
     const db = await openDB();
-
     const draft: DraftStorage = {
-      id: 'draft',
+      id: DRAFT_KEY,
       editorState,
       imageState,
       timestamp: Date.now(),
@@ -134,24 +75,28 @@ export async function saveDraft(
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
-
       const request = store.put(draft);
 
       request.onsuccess = () => {
         resolve();
       };
+
       request.onerror = () => {
-        console.error('Error saving draft:', request.error);
+        console.error('Failed to save draft to IndexedDB:', request.error);
         reject(request.error);
+      };
+
+      transaction.oncomplete = () => {
+        db.close();
       };
     });
   } catch (error) {
     console.error('Failed to save draft:', error);
-    throw error;
+    // Silently fail - don't throw to prevent app crashes
   }
 }
 
-// get draft from indexeddb
+// Get draft from IndexedDB
 export async function getDraft(): Promise<DraftStorage | null> {
   try {
     const db = await openDB();
@@ -159,16 +104,19 @@ export async function getDraft(): Promise<DraftStorage | null> {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readonly');
       const store = transaction.objectStore(STORE_NAME);
-      const request = store.get('draft');
+      const request = store.get(DRAFT_KEY);
 
       request.onsuccess = () => {
-        const draft = request.result as DraftStorage | undefined;
-        resolve(draft ?? null);
+        resolve(request.result as DraftStorage | null);
       };
 
       request.onerror = () => {
-        console.error('Error loading draft:', request.error);
+        console.error('Failed to get draft from IndexedDB:', request.error);
         reject(request.error);
+      };
+
+      transaction.oncomplete = () => {
+        db.close();
       };
     });
   } catch (error) {
@@ -177,7 +125,7 @@ export async function getDraft(): Promise<DraftStorage | null> {
   }
 }
 
-// delete draft from indexeddb
+// Delete draft from IndexedDB
 export async function deleteDraft(): Promise<void> {
   try {
     const db = await openDB();
@@ -185,18 +133,150 @@ export async function deleteDraft(): Promise<void> {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
       const store = transaction.objectStore(STORE_NAME);
-      const request = store.delete('draft');
+      const request = store.delete(DRAFT_KEY);
 
       request.onsuccess = () => {
         resolve();
       };
+
       request.onerror = () => {
-        console.error('Error deleting draft:', request.error);
+        console.error('Failed to delete draft from IndexedDB:', request.error);
         reject(request.error);
+      };
+
+      transaction.oncomplete = () => {
+        db.close();
       };
     });
   } catch (error) {
     console.error('Failed to delete draft:', error);
-    throw error;
+    // Don't throw - allow the operation to continue
   }
+}
+
+// Clear all data from IndexedDB (useful for debugging)
+export async function clearAllDrafts(): Promise<void> {
+  try {
+    const db = await openDB();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.clear();
+
+      request.onsuccess = () => {
+        resolve();
+      };
+
+      request.onerror = () => {
+        console.error('Failed to clear drafts from IndexedDB:', request.error);
+        reject(request.error);
+      };
+
+      transaction.oncomplete = () => {
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('Failed to clear drafts:', error);
+  }
+}
+
+// Migrate from localStorage to IndexedDB (one-time migration)
+export async function migrateFromLocalStorage(): Promise<void> {
+  try {
+    const oldData = localStorage.getItem('stage-draft');
+    if (oldData) {
+      const draft = JSON.parse(oldData) as DraftStorage;
+      await saveDraft(draft.editorState, draft.imageState);
+      localStorage.removeItem('stage-draft');
+      console.log('Migrated draft from localStorage to IndexedDB');
+    }
+  } catch (error) {
+    console.error('Failed to migrate from localStorage:', error);
+    // Clear the old localStorage data to prevent future errors
+    try {
+      localStorage.removeItem('stage-draft');
+    } catch {
+      // Ignore
+    }
+  }
+}
+
+// Get current IndexedDB storage usage estimate
+export async function getStorageUsage(): Promise<{ used: number; quota: number; percentage: number }> {
+  try {
+    if ('storage' in navigator && 'estimate' in navigator.storage) {
+      const estimate = await navigator.storage.estimate();
+      const used = estimate.usage || 0;
+      const quota = estimate.quota || 0;
+      const percentage = quota > 0 ? Math.round((used / quota) * 100) : 0;
+      return { used, quota, percentage };
+    }
+  } catch (error) {
+    console.error('Failed to estimate storage:', error);
+  }
+  return { used: 0, quota: 0, percentage: 0 };
+}
+
+// Check if storage exceeds limit and needs cleanup
+export async function checkStorageAndCleanup(): Promise<boolean> {
+  try {
+    const { used, percentage } = await getStorageUsage();
+
+    // Clean up if storage exceeds limit or usage is above 80%
+    if (used > MAX_STORAGE_BYTES || percentage > 80) {
+      console.warn(`Storage limit reached (${Math.round(used / 1024 / 1024)}MB / ${MAX_STORAGE_MB}MB). Cleaning up...`);
+      await clearAllDrafts();
+      return true; // Cleanup performed
+    }
+
+    return false; // No cleanup needed
+  } catch (error) {
+    console.error('Failed to check storage:', error);
+    return false;
+  }
+}
+
+// Get size of stored draft in bytes
+export async function getDraftSize(): Promise<number> {
+  try {
+    const draft = await getDraft();
+    if (draft) {
+      const jsonString = JSON.stringify(draft);
+      return new Blob([jsonString]).size;
+    }
+  } catch (error) {
+    console.error('Failed to get draft size:', error);
+  }
+  return 0;
+}
+
+// Format bytes to human readable string
+export function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Storage info for debugging
+export async function getStorageInfo(): Promise<{
+  draftSize: string;
+  totalUsed: string;
+  quota: string;
+  percentage: number;
+}> {
+  const [draftSize, storage] = await Promise.all([
+    getDraftSize(),
+    getStorageUsage(),
+  ]);
+
+  return {
+    draftSize: formatBytes(draftSize),
+    totalUsed: formatBytes(storage.used),
+    quota: formatBytes(storage.quota),
+    percentage: storage.percentage,
+  };
 }
