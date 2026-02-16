@@ -14,7 +14,7 @@ import {
 import { GlassInputWrapper } from '@/components/ui/glass-input-wrapper';
 import { useImageStore } from '@/lib/store';
 import { Delete02Icon, ViewIcon, ViewOffSlashIcon } from 'hugeicons-react';
-import { fontFamilies, getAvailableFontWeights } from '@/lib/constants/fonts';
+import { fontFamilies, getAvailableFontWeights, fontCategories, getFontsByCategory, getFontCSS } from '@/lib/constants/fonts';
 
 export const TextOverlayControls = () => {
   const {
@@ -266,15 +266,135 @@ export const TextOverlayControls = () => {
               <SelectTrigger className="w-full h-11 rounded-xl border-border focus:border-primary focus:ring-2 focus:ring-ring">
                 <SelectValue placeholder="Font family" />
               </SelectTrigger>
-                <SelectContent>
-                  {fontFamilies.map((font) => (
-                    <SelectItem key={font.id} value={font.id}>
+              <SelectContent className="max-h-80">
+                {/* Modern Sans-Serif */}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                  {fontCategories['sans-serif']}
+                </div>
+                {getFontsByCategory('sans-serif').map((font) => (
+                  <SelectItem
+                    key={font.id}
+                    value={font.id}
+                    className="cursor-pointer"
+                  >
+                    <span style={{ fontFamily: getFontCSS(font.id) }}>
                       {font.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                    </span>
+                    {font.description && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {font.description}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+
+                {/* Display & Headlines */}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">
+                  {fontCategories['display']}
+                </div>
+                {getFontsByCategory('display').map((font) => (
+                  <SelectItem
+                    key={font.id}
+                    value={font.id}
+                    className="cursor-pointer"
+                  >
+                    <span style={{ fontFamily: getFontCSS(font.id) }}>
+                      {font.name}
+                    </span>
+                    {font.description && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {font.description}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+
+                {/* Serif */}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">
+                  {fontCategories['serif']}
+                </div>
+                {getFontsByCategory('serif').map((font) => (
+                  <SelectItem
+                    key={font.id}
+                    value={font.id}
+                    className="cursor-pointer"
+                  >
+                    <span style={{ fontFamily: getFontCSS(font.id) }}>
+                      {font.name}
+                    </span>
+                    {font.description && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {font.description}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+
+                {/* Handwriting */}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">
+                  {fontCategories['handwriting']}
+                </div>
+                {getFontsByCategory('handwriting').map((font) => (
+                  <SelectItem
+                    key={font.id}
+                    value={font.id}
+                    className="cursor-pointer"
+                  >
+                    <span style={{ fontFamily: getFontCSS(font.id) }}>
+                      {font.name}
+                    </span>
+                    {font.description && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {font.description}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+
+                {/* Monospace */}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">
+                  {fontCategories['monospace']}
+                </div>
+                {getFontsByCategory('monospace').map((font) => (
+                  <SelectItem
+                    key={font.id}
+                    value={font.id}
+                    className="cursor-pointer"
+                  >
+                    <span style={{ fontFamily: getFontCSS(font.id) }}>
+                      {font.name}
+                    </span>
+                    {font.description && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {font.description}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+
+                {/* System */}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">
+                  {fontCategories['system']}
+                </div>
+                {getFontsByCategory('system').map((font) => (
+                  <SelectItem
+                    key={font.id}
+                    value={font.id}
+                    className="cursor-pointer"
+                  >
+                    <span style={{ fontFamily: getFontCSS(font.id) }}>
+                      {font.name}
+                    </span>
+                    {font.description && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        {font.description}
+                      </span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
             <Select
               value={selectedOverlay.fontWeight}
