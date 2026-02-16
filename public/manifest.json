@@ -1,0 +1,20 @@
+{
+  "name": "Screenshot Studio",
+  "short_name": "Screenshot Studio",
+  "description": "Free browser-based image editor for creating professional graphics. Transform screenshots into stunning social media images.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#c9ff2e",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["design", "graphics", "productivity"],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
