@@ -21,14 +21,16 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { ExportDialog } from '@/components/canvas/dialogs/ExportDialog';
-import { ComingSoonDialog } from '@/components/ui/coming-soon-dialog';
+import { ExportSlideshowDialog } from '@/lib/export-slideshow-dialog';
 
 export function EditorHeader() {
   const { screenshot } = useEditorStore();
-  const { selectedAspectRatio } = useImageStore();
+  const { selectedAspectRatio, timeline, animationClips } = useImageStore();
   const [aspectRatioOpen, setAspectRatioOpen] = React.useState(false);
   const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
-  const [comingSoonOpen, setComingSoonOpen] = React.useState(false);
+  const [animateExportOpen, setAnimateExportOpen] = React.useState(false);
+
+  const hasAnimation = timeline.tracks.length > 0 || animationClips.length > 0;
 
   const currentAspectRatio = aspectRatios.find((ar) => ar.id === selectedAspectRatio);
   const hasImage = !!screenshot.src;
@@ -95,8 +97,8 @@ export function EditorHeader() {
           </Popover>
 
           <Button
-            onClick={() => setComingSoonOpen(true)}
-            disabled={!hasImage}
+            onClick={() => setAnimateExportOpen(true)}
+            disabled={!hasImage || !hasAnimation}
             variant="outline"
             className="h-9 justify-center gap-2 rounded-lg font-medium px-4"
           >
@@ -139,11 +141,9 @@ export function EditorHeader() {
         onQualityPresetChange={updateQualityPreset}
       />
 
-      <ComingSoonDialog
-        open={comingSoonOpen}
-        onOpenChange={setComingSoonOpen}
-        feature="Animation"
-        description="Create stunning animations with keyframes, transitions, and effects. This feature is coming soon!"
+      <ExportSlideshowDialog
+        open={animateExportOpen}
+        onOpenChange={setAnimateExportOpen}
       />
     </>
   );

@@ -270,7 +270,7 @@ function MediaTrack({ width }: { width: number }) {
                 )}
 
                 {/* Info overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end pointer-events-none">
                   <div className="flex items-center gap-1 p-1.5 text-white/80">
                     <ViewIcon size={10} />
                     <span className="text-[8px]">{itemDurationSeconds.toFixed(1)}s</span>
@@ -282,7 +282,7 @@ function MediaTrack({ width }: { width: number }) {
         </div>
 
         {/* Slide count label */}
-        <div className="absolute top-1 right-2 px-1.5 py-0.5 bg-black/50 rounded text-[9px] text-white/70">
+        <div className="absolute top-1 right-2 px-1.5 py-0.5 bg-black/50 rounded text-[9px] text-white/70 pointer-events-none">
           {mediaItems.length > 1 ? `${mediaItems.length} slides` : imageName || 'Image'} · {durationSeconds.toFixed(1)}s
         </div>
       </div>
