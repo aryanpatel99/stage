@@ -1,9 +1,10 @@
 import { useExportProgress } from "@/hooks/useExportProgress";
-import { streamSlidesToEncoder, renderSlidesToFrames, renderAnimationToFrames, streamAnimationToEncoder } from "./render-slideFrame";
+import { streamSlidesToEncoder, streamAnimationToEncoder, switchToSlideAndWait } from "./render-slideFrame";
+import { exportSlideFrameAsCanvas } from "./export-slideFrame";
 import {
-  exportVideo,
   type VideoFormat,
   type VideoQuality,
+  isMp4Supported,
 } from "./export/video-encoder";
 import {
   WebCodecsVideoEncoder,
@@ -13,12 +14,12 @@ import {
 import {
   FFmpegVideoEncoder,
   loadFFmpeg,
-  isFFmpegLoaded,
   type FFmpegFormat,
 } from "./export/ffmpeg-encoder";
 import { useImageStore } from "@/lib/store";
 
-const FPS = 60;
+const ANIMATION_FPS = 60;
+const SLIDESHOW_FPS = 30; // Static frames don't need 60fps — halves all frame work
 
 // Bitrates for different quality levels (for WebCodecs)
 const QUALITY_BITRATES: Record<VideoQuality, number> = {
@@ -106,6 +107,30 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+function getMediaRecorderCodec(preferFormat: VideoFormat): { mimeType: string; format: VideoFormat } {
+  if (typeof MediaRecorder === "undefined") {
+    throw new Error("MediaRecorder is not supported in this browser");
+  }
+
+  if (preferFormat === "mp4" && isMp4Supported()) {
+    return { mimeType: "video/mp4; codecs=avc1", format: "mp4" };
+  }
+  if (MediaRecorder.isTypeSupported("video/webm; codecs=vp9")) {
+    return { mimeType: "video/webm; codecs=vp9", format: "webm" };
+  }
+  return { mimeType: "video/webm; codecs=vp8", format: "webm" };
+}
+
+function yieldToMain(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(() => resolve(), { timeout: 16 });
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
 /**
  * Export slideshow as video — routes to appropriate encoder based on format
  */
@@ -151,13 +176,13 @@ async function exportSlideshowWithWebCodecs(
   };
 
   await streamSlidesToEncoder(
-    FPS,
+    SLIDESHOW_FPS,
     async (canvas, idx) => {
       if (!state.encoder) {
         state.encoder = new WebCodecsVideoEncoder({
           width: canvas.width,
           height: canvas.height,
-          fps: FPS,
+          fps: SLIDESHOW_FPS,
           bitrate: QUALITY_BITRATES[quality],
         });
         await state.encoder.initialize();
@@ -184,41 +209,63 @@ async function exportSlideshowWithWebCodecs(
 }
 
 /**
- * Export slideshow using FFmpeg (supports MP4, WebM, GIF)
+ * Export slideshow using FFmpeg concat demuxer.
+ * Writes 1 JPEG per unique slide + duration script — no duplicate frame files.
  */
 async function exportSlideshowWithFFmpeg(
   format: FFmpegFormat,
   quality: VideoQuality,
   progress: ReturnType<typeof useExportProgress.getState>
 ) {
-  const state: { encoder: FFmpegVideoEncoder | null } = { encoder: null };
+  const { slides, slideshow, uploadedImageUrl } = useImageStore.getState();
 
-  await streamSlidesToEncoder(
-    FPS,
-    async (canvas) => {
-      if (!state.encoder) {
-        state.encoder = new FFmpegVideoEncoder({
-          width: canvas.width,
-          height: canvas.height,
-          fps: FPS,
-          format,
-          quality,
-          onProgress: (p) => progress.set(40 + p * 0.6),
-          onLog: (msg) => console.debug('[FFmpeg]', msg),
-        });
-        await state.encoder.initialize();
-      }
+  // Build ordered slide list
+  const orderedSlides = [...slides];
+  const slideList: (typeof orderedSlides[number] | null)[] =
+    orderedSlides.length > 0 ? orderedSlides : uploadedImageUrl ? [null] : [];
 
-      await state.encoder.addFrame(canvas);
-    },
-    (p) => progress.set(p * 0.4)
-  );
-
-  if (!state.encoder) {
+  if (slideList.length === 0) {
     throw new Error("No frames to export");
   }
 
-  const blob = await state.encoder.encode();
+  let encoder: FFmpegVideoEncoder | null = null;
+
+  for (let si = 0; si < slideList.length; si++) {
+    const slide = slideList[si];
+
+    if (slide) {
+      await switchToSlideAndWait(slide.id, slide.src, 50);
+    }
+
+    const canvas = await exportSlideFrameAsCanvas();
+
+    if (!encoder) {
+      encoder = new FFmpegVideoEncoder({
+        width: canvas.width,
+        height: canvas.height,
+        fps: SLIDESHOW_FPS,
+        format,
+        quality,
+        onProgress: (p) => progress.set(40 + p * 0.6),
+        onLog: () => {},
+      });
+      encoder.enableConcatMode();
+      await encoder.initialize();
+    }
+
+    const duration = slide
+      ? (slide.duration || slideshow.defaultDuration || 2)
+      : (slideshow.defaultDuration || 2);
+
+    await encoder.addSlide(canvas, duration);
+    progress.set((si + 1) / slideList.length * 40);
+  }
+
+  if (!encoder) {
+    throw new Error("No frames to export");
+  }
+
+  const blob = await encoder.encode();
   progress.done();
   downloadBlob(blob, `screenshotstudio-video-${Date.now()}.${format}`);
   return { format };
@@ -232,27 +279,71 @@ async function exportSlideshowWithMediaRecorder(
   quality: VideoQuality,
   progress: ReturnType<typeof useExportProgress.getState>
 ) {
-  const frames = await renderSlidesToFrames();
+  const bitrate = QUALITY_BITRATES[quality];
+  const { mimeType, format: actualFormat } = getMediaRecorderCodec(format);
 
-  if (!frames.length) {
-    throw new Error("No frames to export");
+  const canvas = document.createElement("canvas");
+  canvas.style.cssText = "position:fixed;left:-99999px;top:0;pointer-events:none;";
+  document.body.appendChild(canvas);
+
+  let stream: MediaStream | null = null;
+
+  try {
+    stream = canvas.captureStream(SLIDESHOW_FPS);
+    const recorder = new MediaRecorder(stream, {
+      mimeType,
+      videoBitsPerSecond: bitrate,
+    });
+    const chunks: BlobPart[] = [];
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+    recorder.start();
+
+    let frameCount = 0;
+    const frameInterval = 1000 / SLIDESHOW_FPS;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) throw new Error("Failed to initialize canvas context for recording");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    await streamSlidesToEncoder(
+      SLIDESHOW_FPS,
+      async (sourceCanvas) => {
+        if (canvas.width !== sourceCanvas.width || canvas.height !== sourceCanvas.height) {
+          canvas.width = sourceCanvas.width;
+          canvas.height = sourceCanvas.height;
+        }
+
+        ctx.drawImage(sourceCanvas, 0, 0, canvas.width, canvas.height);
+        await new Promise((r) => setTimeout(r, Math.min(frameInterval, 16)));
+
+        frameCount++;
+        if (frameCount % 10 === 0) {
+          await yieldToMain();
+        }
+      },
+      (p) => progress.set(p * 0.95)
+    );
+
+    await new Promise((r) => setTimeout(r, 200));
+    recorder.stop();
+    await new Promise<void>((resolve) => {
+      recorder.onstop = () => resolve();
+    });
+
+    progress.done();
+    const blobType = actualFormat === "mp4" ? "video/mp4" : "video/webm";
+    const blob = new Blob(chunks, { type: blobType });
+    downloadBlob(blob, `screenshotstudio-video-${Date.now()}.${actualFormat}`);
+    return { format: actualFormat };
+  } finally {
+    if (stream) {
+      stream.getTracks().forEach((t) => t.stop());
+    }
+    canvas.remove();
   }
-
-  const width = frames[0].img.width;
-  const height = frames[0].img.height;
-
-  const { blob, format: actualFormat } = await exportVideo(frames, {
-    width,
-    height,
-    fps: FPS,
-    format,
-    quality,
-    onProgress: (p) => progress.set(50 + p * 0.5),
-  });
-
-  progress.done();
-  downloadBlob(blob, `screenshotstudio-video-${Date.now()}.${actualFormat}`);
-  return { format: actualFormat };
 }
 
 /**
@@ -334,18 +425,18 @@ async function exportAnimationWithFFmpeg(
   const state: { encoder: FFmpegVideoEncoder | null } = { encoder: null };
 
   await streamAnimationToEncoder(
-    FPS,
+    ANIMATION_FPS,
     async (canvas) => {
       // Initialize encoder on first frame
       if (!state.encoder) {
         state.encoder = new FFmpegVideoEncoder({
           width: canvas.width,
           height: canvas.height,
-          fps: FPS,
+          fps: ANIMATION_FPS,
           format,
           quality,
           onProgress: (p) => progress.set(40 + p * 0.6),
-          onLog: (msg) => console.debug('[FFmpeg]', msg),
+          onLog: () => {},
         });
         await state.encoder.initialize();
       }
@@ -381,14 +472,14 @@ async function exportAnimationWithWebCodecs(
   };
 
   await streamAnimationToEncoder(
-    FPS,
+    ANIMATION_FPS,
     async (canvas, frameIndex) => {
       // Initialize encoder on first frame
       if (!state.encoder) {
         state.encoder = new WebCodecsVideoEncoder({
           width: canvas.width,
           height: canvas.height,
-          fps: FPS,
+          fps: ANIMATION_FPS,
           bitrate: QUALITY_BITRATES[quality],
         });
         await state.encoder.initialize();
@@ -425,30 +516,69 @@ async function exportAnimationWithMediaRecorder(
   quality: VideoQuality,
   progress: ReturnType<typeof useExportProgress.getState>
 ) {
-  const frames = await renderAnimationToFrames(FPS, (p) => {
-    // Rendering is ~60% of the work
-    progress.set(p * 0.6);
-  });
+  const bitrate = QUALITY_BITRATES[quality];
+  const { mimeType, format: actualFormat } = getMediaRecorderCodec(format);
 
-  if (!frames.length) {
-    throw new Error("No frames to export");
+  const canvas = document.createElement("canvas");
+  canvas.style.cssText = "position:fixed;left:-99999px;top:0;pointer-events:none;";
+  document.body.appendChild(canvas);
+
+  let stream: MediaStream | null = null;
+
+  try {
+    stream = canvas.captureStream(ANIMATION_FPS);
+    const recorder = new MediaRecorder(stream, {
+      mimeType,
+      videoBitsPerSecond: bitrate,
+    });
+    const chunks: BlobPart[] = [];
+
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+    recorder.start();
+
+    let frameCount = 0;
+    const frameInterval = 1000 / ANIMATION_FPS;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) throw new Error("Failed to initialize canvas context for recording");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    await streamAnimationToEncoder(
+      ANIMATION_FPS,
+      async (sourceCanvas) => {
+        if (canvas.width !== sourceCanvas.width || canvas.height !== sourceCanvas.height) {
+          canvas.width = sourceCanvas.width;
+          canvas.height = sourceCanvas.height;
+        }
+
+        ctx.drawImage(sourceCanvas, 0, 0, canvas.width, canvas.height);
+        await new Promise((r) => setTimeout(r, Math.min(frameInterval, 16)));
+
+        frameCount++;
+        if (frameCount % 10 === 0) {
+          await yieldToMain();
+        }
+      },
+      (p) => progress.set(p * 0.95)
+    );
+
+    await new Promise((r) => setTimeout(r, 200));
+    recorder.stop();
+    await new Promise<void>((resolve) => {
+      recorder.onstop = () => resolve();
+    });
+
+    progress.done();
+    const blobType = actualFormat === "mp4" ? "video/mp4" : "video/webm";
+    const blob = new Blob(chunks, { type: blobType });
+    downloadBlob(blob, `screenshotstudio-animation-${Date.now()}.${actualFormat}`);
+    return { format: actualFormat };
+  } finally {
+    if (stream) {
+      stream.getTracks().forEach((t) => t.stop());
+    }
+    canvas.remove();
   }
-
-  const width = frames[0].img.width;
-  const height = frames[0].img.height;
-
-  const { blob, format: actualFormat } = await exportVideo(frames, {
-    width,
-    height,
-    fps: FPS,
-    format,
-    quality,
-    onProgress: (p) => progress.set(60 + p * 0.4), // Encoding is ~40% of work
-  });
-
-  progress.done();
-
-  downloadBlob(blob, `screenshotstudio-animation-${Date.now()}.${actualFormat}`);
-
-  return { format: actualFormat };
 }

@@ -12,7 +12,7 @@ function wait(ms: number) {
  */
 function forceReflow(): void {
   // Reading offsetHeight forces a synchronous reflow
-  document.body.offsetHeight;
+  void document.body.offsetHeight;
 }
 
 /**
@@ -69,7 +69,7 @@ async function waitForDOMImageUpdate(expectedSrc: string, maxWaitMs: number = 30
         }
       }
     }
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 10));
   }
   console.warn('DOM image update timeout, proceeding anyway');
 }
@@ -81,7 +81,7 @@ async function waitForDOMImageUpdate(expectedSrc: string, maxWaitMs: number = 30
 function yieldToMain(): Promise<void> {
   return new Promise((resolve) => {
     if (typeof requestIdleCallback !== 'undefined') {
-      requestIdleCallback(() => resolve(), { timeout: 50 });
+      requestIdleCallback(() => resolve(), { timeout: 1 });
     } else {
       setTimeout(resolve, 0);
     }
@@ -114,8 +114,27 @@ function getActiveSlideAtTime(
   return slides[slides.length - 1].id;
 }
 
+/**
+ * Switch active slide and wait until the DOM image is fully updated.
+ */
+export async function switchToSlideAndWait(
+  slideId: string,
+  slideSrc: string,
+  settleMs: number = 50
+): Promise<void> {
+  const { setActiveSlide } = useImageStore.getState();
+  setActiveSlide(slideId);
+  forceReflow();
+  await waitForImageLoad(slideSrc, 3000);
+  await waitForDOMImageUpdate(slideSrc, 3000);
+  if (settleMs > 0) {
+    await wait(settleMs);
+  }
+  forceReflow();
+}
+
 export async function renderSlidesToFrames() {
-  const { slides, setActiveSlide, slideshow, uploadedImageUrl } = useImageStore.getState();
+  const { slides, slideshow, uploadedImageUrl } = useImageStore.getState();
 
   const frames: { img: HTMLImageElement; duration: number }[] = [];
 
@@ -130,15 +149,7 @@ export async function renderSlidesToFrames() {
   }
 
   for (const slide of slides) {
-    setActiveSlide(slide.id);
-
-    // Force DOM reflow to ensure slide change is rendered
-    forceReflow();
-
-    // Wait for image to load - this is critical for slide stitching
-    await waitForImageLoad(slide.src, 3000);
-    await waitForDOMImageUpdate(slide.src, 3000);
-    await wait(100);
+    await switchToSlideAndWait(slide.id, slide.src, 100);
 
     const img = await exportSlideFrame();
 
@@ -162,7 +173,7 @@ export async function streamSlidesToEncoder(
   onProgress?: (progress: number) => void
 ): Promise<{ width: number; height: number; totalFrames: number }> {
   // Read a fresh snapshot of the store each time
-  const { slides, setActiveSlide, slideshow, uploadedImageUrl } = useImageStore.getState();
+  const { slides, slideshow, uploadedImageUrl } = useImageStore.getState();
 
   // Make an ordered copy so iteration order is deterministic
   const orderedSlides = [...slides];
@@ -174,25 +185,12 @@ export async function streamSlidesToEncoder(
   const slideList: (typeof orderedSlides[number] | null)[] =
     orderedSlides.length > 0 ? orderedSlides : uploadedImageUrl ? [null] : [];
 
-  // Calculate total frames up front for progress reporting
-  let totalFrames = 0;
-  for (const slide of slideList) {
-    const duration = slide ? (slide.duration || slideshow.defaultDuration || 2) : (slideshow.defaultDuration || 2);
-    totalFrames += Math.max(1, Math.round(duration * fps));
-  }
-
   for (let si = 0; si < slideList.length; si++) {
     const slide = slideList[si];
 
     if (slide) {
-      // Always force-switch to this slide, even if it appears to be active already.
-      // This ensures a clean state between repeated exports.
-      setActiveSlide(slide.id);
-      forceReflow();
-      await waitForImageLoad(slide.src, 3000);
-      await waitForDOMImageUpdate(slide.src, 3000);
-      await wait(150);
-      forceReflow();
+      // Always force-switch and wait, even if it appears active already.
+      await switchToSlideAndWait(slide.id, slide.src, 50);
     }
 
     const canvas = await exportSlideFrameAsCanvas();
@@ -294,8 +292,8 @@ export async function renderAnimationToFrames(
     // Force DOM reflow to ensure CSS transforms are applied
     forceReflow();
 
-    // Let React flush the changes - longer wait for transforms to render
-    await wait(50);
+    // Wait for next animation frame so the browser paints the CSS changes
+    await new Promise<void>(r => requestAnimationFrame(() => r()));
 
     // Capture the frame
     const img = await exportSlideFrame();
@@ -390,8 +388,8 @@ export async function streamAnimationToEncoder(
     // Force DOM reflow to ensure CSS transforms are applied
     forceReflow();
 
-    // Let React flush the changes
-    await wait(50);
+    // Wait for next animation frame so the browser paints the CSS changes
+    await new Promise<void>(r => requestAnimationFrame(() => r()));
 
     // Capture and immediately stream to encoder
     const canvas = await exportSlideFrameAsCanvas();
