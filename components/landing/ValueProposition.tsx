@@ -1,9 +1,28 @@
 "use client";
 
+import { Component, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { Instrument_Serif } from "next/font/google";
 import { Player } from "@remotion/player";
 import { LightningFastDemo, Transform3DDemo, AnimateDemo } from "@/remotion";
+
+// Silent error boundary for Remotion players
+class PlayerErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -14,18 +33,20 @@ const instrumentSerif = Instrument_Serif({
 function LightningFastVisual() {
   return (
     <div className="h-32 mb-6 overflow-hidden rounded-xl">
-      <Player
-        component={LightningFastDemo}
-        durationInFrames={180}
-        fps={60}
-        compositionWidth={400}
-        compositionHeight={160}
-        autoPlay
-        loop
-        controls={false}
-        acknowledgeRemotionLicense
-        style={{ width: '100%', height: '100%' }}
-      />
+      <PlayerErrorBoundary>
+        <Player
+          component={LightningFastDemo}
+          durationInFrames={180}
+          fps={60}
+          compositionWidth={400}
+          compositionHeight={160}
+          autoPlay
+          loop
+          controls={false}
+          acknowledgeRemotionLicense
+          style={{ width: '100%', height: '100%' }}
+        />
+      </PlayerErrorBoundary>
     </div>
   );
 }
@@ -34,18 +55,20 @@ function LightningFastVisual() {
 function Transform3DVisual() {
   return (
     <div className="h-32 mb-6 overflow-hidden rounded-xl">
-      <Player
-        component={Transform3DDemo}
-        durationInFrames={180}
-        fps={60}
-        compositionWidth={400}
-        compositionHeight={160}
-        autoPlay
-        loop
-        controls={false}
-        acknowledgeRemotionLicense
-        style={{ width: '100%', height: '100%' }}
-      />
+      <PlayerErrorBoundary>
+        <Player
+          component={Transform3DDemo}
+          durationInFrames={180}
+          fps={60}
+          compositionWidth={400}
+          compositionHeight={160}
+          autoPlay
+          loop
+          controls={false}
+          acknowledgeRemotionLicense
+          style={{ width: '100%', height: '100%' }}
+        />
+      </PlayerErrorBoundary>
     </div>
   );
 }
@@ -54,18 +77,20 @@ function Transform3DVisual() {
 function AnimateVisual() {
   return (
     <div className="h-32 mb-6 overflow-hidden rounded-xl">
-      <Player
-        component={AnimateDemo}
-        durationInFrames={180}
-        fps={60}
-        compositionWidth={400}
-        compositionHeight={160}
-        autoPlay
-        loop
-        controls={false}
-        acknowledgeRemotionLicense
-        style={{ width: '100%', height: '100%' }}
-      />
+      <PlayerErrorBoundary>
+        <Player
+          component={AnimateDemo}
+          durationInFrames={180}
+          fps={60}
+          compositionWidth={400}
+          compositionHeight={160}
+          autoPlay
+          loop
+          controls={false}
+          acknowledgeRemotionLicense
+          style={{ width: '100%', height: '100%' }}
+        />
+      </PlayerErrorBoundary>
     </div>
   );
 }

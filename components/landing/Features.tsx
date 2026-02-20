@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Component, type ReactNode } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Instrument_Serif } from "next/font/google";
 import {
@@ -10,6 +10,24 @@ import {
 } from "hugeicons-react";
 import { Player, PlayerRef } from "@remotion/player";
 import { EditorDemo, BackgroundsDemo, ExportDemo } from "@/remotion";
+
+// Silent error boundary for Remotion players
+class PlayerErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -181,19 +199,21 @@ export function Features({ features, title, eyebrow = "FEATURES" }: FeaturesProp
 
                   if (remotionPreview) {
                     return (
-                      <Player
-                        ref={playerRef}
-                        component={remotionPreview.component}
-                        durationInFrames={remotionPreview.durationInFrames}
-                        fps={60}
-                        compositionWidth={800}
-                        compositionHeight={600}
-                        autoPlay
-                        loop
-                        controls={false}
-                        acknowledgeRemotionLicense
-                        style={{ width: '100%', height: '100%' }}
-                      />
+                      <PlayerErrorBoundary>
+                        <Player
+                          ref={playerRef}
+                          component={remotionPreview.component}
+                          durationInFrames={remotionPreview.durationInFrames}
+                          fps={60}
+                          compositionWidth={800}
+                          compositionHeight={600}
+                          autoPlay
+                          loop
+                          controls={false}
+                          acknowledgeRemotionLicense
+                          style={{ width: '100%', height: '100%' }}
+                        />
+                      </PlayerErrorBoundary>
                     );
                   }
 

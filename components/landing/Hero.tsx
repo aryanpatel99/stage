@@ -1,11 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, lazy, Suspense, Component, type ReactNode } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
 import { Instrument_Serif } from "next/font/google";
-import { ShaderGradientCanvas, ShaderGradient } from "@shadergradient/react";
+
+// Lazy-load ShaderGradient to prevent client-side crashes from killing the whole page
+const ShaderGradientCanvas = lazy(() =>
+  import("@shadergradient/react").then((m) => ({ default: m.ShaderGradientCanvas }))
+);
+const ShaderGradient = lazy(() =>
+  import("@shadergradient/react").then((m) => ({ default: m.ShaderGradient }))
+);
+
+// Silent error boundary for the gradient background - falls back to CSS gradient
+class GradientErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -39,49 +64,53 @@ export function Hero({
     >
       {/* Shader Gradient Background */}
       <div className="absolute inset-0 z-0">
-        <ShaderGradientCanvas
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
-          pixelDensity={1}
-          pointerEvents="none"
-        >
-          <ShaderGradient
-            animate="on"
-            type="sphere"
-            wireframe={false}
-            shader="defaults"
-            uTime={0}
-            uSpeed={0.3}
-            uStrength={0.3}
-            uDensity={0.8}
-            uFrequency={5.5}
-            uAmplitude={3.2}
-            positionX={-0.1}
-            positionY={0}
-            positionZ={0}
-            rotationX={0}
-            rotationY={130}
-            rotationZ={70}
-            color1="#73bfc4"
-            color2="#ff810a"
-            color3="#8da0ce"
-            reflection={0.4}
-            cAzimuthAngle={270}
-            cPolarAngle={180}
-            cDistance={0.5}
-            cameraZoom={15.1}
-            lightType="env"
-            brightness={0.8}
-            envPreset="city"
-            grain="on"
-            toggleAxis={false}
-            zoomOut={false}
-            hoverState=""
-            enableTransition={false}
-          />
-        </ShaderGradientCanvas>
+        <GradientErrorBoundary>
+          <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-[#73bfc4]/30 via-[#ff810a]/20 to-[#8da0ce]/30" />}>
+            <ShaderGradientCanvas
+              style={{
+                width: "100%",
+                height: "100%",
+              }}
+              pixelDensity={1}
+              pointerEvents="none"
+            >
+              <ShaderGradient
+                animate="on"
+                type="sphere"
+                wireframe={false}
+                shader="defaults"
+                uTime={0}
+                uSpeed={0.3}
+                uStrength={0.3}
+                uDensity={0.8}
+                uFrequency={5.5}
+                uAmplitude={3.2}
+                positionX={-0.1}
+                positionY={0}
+                positionZ={0}
+                rotationX={0}
+                rotationY={130}
+                rotationZ={70}
+                color1="#73bfc4"
+                color2="#ff810a"
+                color3="#8da0ce"
+                reflection={0.4}
+                cAzimuthAngle={270}
+                cPolarAngle={180}
+                cDistance={0.5}
+                cameraZoom={15.1}
+                lightType="env"
+                brightness={0.8}
+                envPreset="city"
+                grain="on"
+                toggleAxis={false}
+                zoomOut={false}
+                hoverState=""
+                enableTransition={false}
+              />
+            </ShaderGradientCanvas>
+          </Suspense>
+        </GradientErrorBoundary>
       </div>
 
       {/* Dark overlay for better text readability */}
