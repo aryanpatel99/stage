@@ -11,6 +11,7 @@ import { FinalCTA } from "./FinalCTA";
 import { StructuredData } from "./StructuredData";
 import { ValueProposition } from "./ValueProposition";
 import { Marquee } from "./Marquee";
+import { BackedBy } from "./BackedBy";
 
 interface Feature {
   title: string;
@@ -79,6 +80,8 @@ export function LandingPage({
         ctaLabel={ctaLabel}
         ctaHref={ctaHref}
       />
+
+      <BackedBy />
 
       <MasonryGrid />
 

@@ -1,3 +1,7 @@
+<a href="https://vercel.com/oss">
+  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
+</a>
+
 # Screenshot Studio
 
 <img width="3600" height="1890" alt="og" src="https://github.com/user-attachments/assets/59704a08-b6b3-4537-b4b7-0bbadd839e99" />
