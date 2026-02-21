@@ -80,6 +80,16 @@ const useCases = [
 ];
 
 export default function ThreeDEffectsPage() {
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://screenshot-studio.com" },
+      { "@type": "ListItem", position: 2, name: "Features", item: "https://screenshot-studio.com/features" },
+      { "@type": "ListItem", position: 3, name: "3D Effects", item: "https://screenshot-studio.com/features/3d-effects" },
+    ],
+  };
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -107,6 +117,10 @@ export default function ThreeDEffectsPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
 
       <Navigation ctaLabel="Try Free" ctaHref="/home" />

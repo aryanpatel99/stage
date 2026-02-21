@@ -9,7 +9,7 @@
 <img width="3600" height="1890" alt="og" src="https://github.com/user-attachments/assets/59704a08-b6b3-4537-b4b7-0bbadd839e99" />
 
 
-A free, browser-based editor for creating stunning screenshots and visuals. No signup, no watermarks.
+A free, browser-based editor for creating stunning screenshots, animated visuals, and videos. No signup, no watermarks.
 
 **Live:** [https://screenshot-studio.com](https://screenshot-studio.com)
 
@@ -20,6 +20,7 @@ A free, browser-based editor for creating stunning screenshots and visuals. No s
 
 ## Features
 
+### Editor
 - **Drag & Drop Upload** - PNG, JPG, WEBP up to 100MB
 - **Website Screenshots** - Capture any URL via [Screen-Shot.xyz](https://screen-shot.xyz)
 - **50+ Backgrounds** - Gradients, solid colors, images, blur, and noise effects
@@ -31,6 +32,20 @@ A free, browser-based editor for creating stunning screenshots and visuals. No s
 - **Aspect Ratios** - Instagram, YouTube, Twitter, LinkedIn, Open Graph
 - **High-Res Export** - PNG/JPG up to 5x scale, fully in-browser
 - **Undo/Redo** - Unlimited history with keyboard shortcuts
+
+### Animation & Timeline
+- **Timeline Editor** - Interactive timeline with playhead, ruler, and tracks
+- **20+ Animation Presets** - Reveal, Flip, Perspective, Orbit, and Depth categories
+- **Keyframe Animation** - Per-property keyframes with 8 easing functions
+- **Real-time Preview** - Scrub and play animations directly in the editor
+- **Multi-clip Support** - Layer multiple animations with overlap handling
+
+### Video Export
+- **MP4, WebM, GIF** - Export animations as video in multiple formats
+- **Hardware-accelerated Encoding** - WebCodecs with mp4-muxer for fast H.264
+- **FFmpeg Fallback** - Multi-threaded WASM encoder for broad compatibility
+- **Quality Presets** - High (25 Mbps), Medium (10 Mbps), Low (5 Mbps)
+- **Progress Tracking** - Real-time export progress with frame count
 
 ## Quick Start
 
@@ -77,6 +92,7 @@ SCREENSHOT_API_URL=https://api.screen-shot.xyz
 | Components | [Radix UI](https://www.radix-ui.com/) |
 | State | [Zustand](https://github.com/pmndrs/zustand) + [Zundo](https://github.com/charkour/zundo) (undo/redo) |
 | Animations | [Motion](https://motion.dev/) |
+| Video Export | [FFmpeg WASM](https://ffmpegwasm.netlify.app/) + [WebCodecs](https://developer.mozilla.org/en-US/docs/Web/API/WebCodecs_API) |
 | Data Fetching | [TanStack Query](https://tanstack.com/query) |
 | Canvas Export | [modern-screenshot](https://github.com/nichenqin/modern-screenshot) |
 | Image Processing | [Sharp](https://sharp.pixelplumbing.com/) |
@@ -92,11 +108,13 @@ screenshot-studio/
 ├── components/
 │   ├── canvas/         # Canvas rendering (HTML/CSS based)
 │   ├── editor/         # Editor panels and controls
+│   ├── timeline/       # Timeline editor, tracks, and playback
 │   ├── landing/        # Landing page components
 │   └── ui/             # Shared UI components
 ├── lib/
 │   ├── store/          # Zustand state management
-│   ├── export/         # Export pipeline
+│   ├── animation/      # Animation engine, presets, interpolation
+│   ├── export/         # Image & video export pipeline
 │   └── constants/      # Backgrounds, presets, fonts
 ├── hooks/              # Custom React hooks
 └── types/              # TypeScript definitions

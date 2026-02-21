@@ -48,18 +48,20 @@ Thank you for your interest in contributing to Screenshot Studio! This document 
 3. **Set Up Environment Variables**
    Create a `.env.local` file in the root directory:
    ```env
-   # Required for screenshot caching: Cloudinary Configuration
-   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud-name
-   CLOUDINARY_API_KEY=your-api-key
-   CLOUDINARY_API_SECRET=your-api-secret
+   # Cloudflare R2 (for asset storage - optional)
+   R2_ACCESS_KEY_ID=your-access-key
+   R2_SECRET_ACCESS_KEY=your-secret-key
+   R2_BUCKET_NAME=your-bucket
+   R2_ACCOUNT_ID=your-account-id
 
-   # Optional: Screenshot API URL (defaults to free Screen-Shot.xyz API)
-   # Uses https://api.screen-shot.xyz by default (no API key required)
-   # Can be set to your own Cloudflare Worker instance
+   # Database (for screenshot caching - optional)
+   DATABASE_URL="postgresql://user:password@host:port/dbname"
+
+   # Screenshot API (optional, defaults to free Screen-Shot.xyz)
    SCREENSHOT_API_URL=https://api.screen-shot.xyz
    ```
 
-   Note: The app works without Cloudinary, but screenshot caching will be limited. The screenshot API uses the free Screen-Shot.xyz service by default (no API key required).
+   Note: Core features (editor, animations, video export) work without any configuration. R2 and database are only needed for website screenshots and asset optimization.
 
 4. **Start Development Server**
    ```bash
@@ -80,15 +82,18 @@ screenshot-studio/
 │   ├── canvas/        # Canvas rendering components
 │   ├── controls/      # Editor control panels
 │   ├── editor/        # Editor layout components
+│   ├── timeline/      # Animation timeline, tracks, playback
+│   ├── export/        # Export dialogs and progress UI
 │   ├── ui/            # Reusable UI components
 │   └── ...
 ├── lib/               # Core libraries and utilities
 │   ├── store/         # Zustand state management
-│   ├── export/        # Export functionality
-│   └── constants/    # Configuration constants
-├── hooks/            # Custom React hooks
-├── types/            # TypeScript definitions
-└── public/           # Static assets
+│   ├── animation/     # Animation engine, presets, interpolation
+│   ├── export/        # Image & video export pipeline
+│   └── constants/     # Configuration constants
+├── hooks/             # Custom React hooks
+├── types/             # TypeScript definitions (incl. animation.ts)
+└── public/            # Static assets
 ```
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed architecture documentation.
@@ -277,12 +282,29 @@ export function NewControl() {
 2. Ensure all referenced values exist (aspect ratios, backgrounds, etc.)
 3. Preset will automatically appear in preset selector
 
+#### Adding a New Animation Preset
+
+1. Add preset definition to `lib/animation/presets.ts`
+2. Define keyframes with timing, properties, and easing
+3. Assign to a category (Reveal, Flip, Perspective, Orbit, Depth)
+4. Use `clonePresetTracks()` when applying to ensure unique IDs
+5. Preset will automatically appear in the AnimationPresetGallery
+
+#### Modifying the Timeline
+
+1. Timeline components live in `components/timeline/`
+2. Playback logic is in `components/timeline/hooks/useTimelinePlayback.tsx`
+3. Animation types are defined in `types/animation.ts`
+4. Timeline state is managed in the main Zustand store (`useImageStore`)
+
 #### Modifying Export Logic
 
-1. Edit `lib/export/export-service.ts`
-2. Test with various configurations
-3. Ensure backward compatibility
-4. Update export utilities if needed
+1. Image export: Edit `lib/export/export-service.ts`
+2. Video export: Edit `lib/export/export-slideshow-video.ts`
+3. Encoder-specific changes: `ffmpeg-encoder.ts`, `webcodecs-encoder.ts`, or `video-encoder.ts`
+4. Test with various configurations and formats
+5. Ensure backward compatibility
+6. Update export utilities if needed
 
 ## Testing
 
@@ -304,6 +326,12 @@ Before submitting changes, test:
 - [ ] Border and shadow controls work
 - [ ] 3D perspective transforms work
 - [ ] Aspect ratio changes work
+- [ ] Timeline opens and closes correctly
+- [ ] Animation presets apply and preview correctly
+- [ ] Playback controls work (play, pause, loop, scrub)
+- [ ] Keyframes can be added and removed on tracks
+- [ ] Video export works (MP4, WebM, GIF formats)
+- [ ] Export progress dialog shows correctly
 
 ### Type Checking
 

@@ -79,6 +79,16 @@ const useCases = [
 ];
 
 export default function ScreenshotBeautifierPage() {
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://screenshot-studio.com" },
+      { "@type": "ListItem", position: 2, name: "Features", item: "https://screenshot-studio.com/features" },
+      { "@type": "ListItem", position: 3, name: "Screenshot Beautifier", item: "https://screenshot-studio.com/features/screenshot-beautifier" },
+    ],
+  };
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -106,6 +116,10 @@ export default function ScreenshotBeautifierPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
 
       <Navigation ctaLabel="Try Free" ctaHref="/home" />

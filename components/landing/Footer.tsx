@@ -20,6 +20,12 @@ export function Footer({ brandName = "Screenshot Studio" }: FooterProps) {
 
           <div className="flex items-center gap-6">
             <Link
+              href="/changelog"
+              className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+            >
+              Changelog
+            </Link>
+            <Link
               href="https://github.com/KartikLabhshetwar/stage"
               target="_blank"
               rel="noopener noreferrer"
@@ -37,14 +43,6 @@ export function Footer({ brandName = "Screenshot Studio" }: FooterProps) {
             >
               <NewTwitterIcon className="w-5 h-5" />
             </Link>
-            <a
-              href="https://www.producthunt.com/products/stage-4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-            >
-              Product Hunt
-            </a>
           </div>
         </div>
       </div>

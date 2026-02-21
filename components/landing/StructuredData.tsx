@@ -7,7 +7,7 @@ export function StructuredData() {
         "@id": "https://screenshot-studio.com/#application",
         name: "Screenshot Studio",
         description:
-          "Free browser-based image editor for creating professional graphics. Transform screenshots into stunning social media images with backgrounds, text overlays, and one-click export.",
+          "Free browser-based image editor for creating professional graphics. Transform screenshots into stunning visuals with backgrounds, animations, 3D effects, and video export.",
         url: "https://screenshot-studio.com",
         applicationCategory: "DesignApplication",
         operatingSystem: "Any (Web Browser)",
@@ -21,7 +21,11 @@ export function StructuredData() {
           "Screenshot beautification",
           "Custom backgrounds",
           "Text overlays",
-          "High-resolution export",
+          "3D perspective transforms",
+          "Timeline animation editor",
+          "20+ animation presets",
+          "Video export (MP4, WebM, GIF)",
+          "High-resolution image export",
           "No signup required",
           "Browser-based editing",
         ],
@@ -78,7 +82,15 @@ export function StructuredData() {
             name: "What export formats does Screenshot Studio support?",
             acceptedAnswer: {
               "@type": "Answer",
-              text: "Export your designs as PNG (with full transparency support) or JPG. Choose from quality presets or scale your export up to 5x the original size for high-resolution output.",
+              text: "Export images as PNG (with transparency) or JPG at up to 5x resolution. For animations, export as MP4, WebM, or GIF with quality presets ranging from 5 to 25 Mbps.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Can I create animations and videos?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Yes. Screenshot Studio includes a timeline editor with 20+ animation presets including zoom, pan, rotate, and 3D perspective effects. You can add keyframes, preview in real-time, and export as MP4, WebM, or GIF.",
             },
           },
         ],

@@ -51,5 +51,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.8,
     },
+    // Changelog
+    {
+      url: `${baseUrl}/changelog`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
   ]
 }
