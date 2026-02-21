@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
 import { Instrument_Serif } from "next/font/google";
+import { trackCTAClick } from "@/lib/analytics";
 
 // Lazy-load ShaderGradient to prevent client-side crashes from killing the whole page
 const ShaderGradientCanvas = lazy(() =>
@@ -151,7 +152,7 @@ export function Hero({
 
         {/* CTA Buttons */}
         <div className="mt-10 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href={ctaHref}>
+          <Link href={ctaHref} onClick={() => trackCTAClick('hero', ctaLabel)}>
             <Button
               size="lg"
               className="text-base sm:text-lg px-10 py-6 min-h-[56px] font-medium bg-brand text-brand-foreground hover:bg-brand-hover rounded-full shadow-lg shadow-brand/25 hover:shadow-brand/40 transition-all duration-300"
@@ -160,7 +161,10 @@ export function Hero({
             </Button>
           </Link>
           <button
-            onClick={() => setIsVideoOpen(true)}
+            onClick={() => {
+              trackCTAClick('hero', 'Watch demo');
+              setIsVideoOpen(true);
+            }}
             className="text-foreground/70 hover:text-foreground transition-colors text-sm flex items-center gap-3 group px-6 py-3 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10"
             aria-label="Watch demo video"
           >

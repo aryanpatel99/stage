@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Instrument_Serif } from "next/font/google";
+import { trackCTAClick } from "@/lib/analytics";
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
@@ -47,7 +48,7 @@ export function FinalCTA({
 
             {/* CTA Button */}
             <div className="flex-shrink-0">
-              <Link href={ctaHref}>
+              <Link href={ctaHref} onClick={() => trackCTAClick('final_cta', ctaLabel)}>
                 <Button
                   size="lg"
                   className="text-base sm:text-lg px-8 py-6 min-h-[56px] font-medium bg-brand-foreground text-brand hover:bg-brand-foreground/90 rounded-full"

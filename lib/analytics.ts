@@ -1,27 +1,12 @@
 /**
- * Analytics utility for tracking events with Umami
+ * Analytics utility — PostHog only
  *
- * Umami API Reference:
- * - umami.track(event_name) - Track simple event
- * - umami.track(event_name, data) - Track event with properties
- * - umami.identify(session_data) - Identify session
- *
- * Limits:
- * - Event names: max 50 characters
- * - Strings: max 500 characters
- * - Numbers: max 4 decimal precision
- * - Objects: max 50 properties
+ * PostHog is initialized in instrumentation-client.ts with defaults: '2026-01-30'.
+ * Import posthog from 'posthog-js' anywhere to capture custom events.
+ * Pageviews, clicks, and interactions are captured automatically.
  */
 
-declare global {
-  interface Window {
-    umami?: {
-      track: ((eventName: string, eventData?: Record<string, string | number | boolean>) => void) &
-             ((callback: (props: Record<string, unknown>) => Record<string, unknown>) => void);
-      identify: (data: Record<string, string | number | boolean>) => void;
-    };
-  }
-}
+import posthog from 'posthog-js';
 
 // =============================================================================
 // Core Tracking Functions
@@ -33,7 +18,6 @@ declare global {
 function shouldTrack(): boolean {
   if (typeof window === 'undefined') return false;
 
-  // Skip localhost
   const hostname = window.location.hostname;
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
     return false;
@@ -43,7 +27,7 @@ function shouldTrack(): boolean {
 }
 
 /**
- * Safely track an event with Umami
+ * Safely track a custom event with PostHog
  */
 export function trackEvent(
   eventName: string,
@@ -51,21 +35,40 @@ export function trackEvent(
 ): void {
   if (!shouldTrack()) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Analytics] Skipped:', eventName, eventData);
+      console.log('[PostHog] Skipped:', eventName, eventData);
     }
     return;
   }
 
-  if (typeof window !== 'undefined' && window.umami) {
-    try {
-      if (eventData) {
-        window.umami.track(eventName, eventData);
-      } else {
-        window.umami.track(eventName, {});
-      }
-    } catch (error) {
-      console.warn('[Analytics] Failed:', error);
-    }
+  try {
+    posthog.capture(eventName, eventData);
+  } catch (error) {
+    console.warn('[PostHog] Failed:', error);
+  }
+}
+
+/**
+ * Identify a user in PostHog (for future auth integration)
+ */
+export function identifyUser(
+  userId: string,
+  properties?: Record<string, string | number | boolean>
+): void {
+  try {
+    posthog.identify(userId, properties);
+  } catch (error) {
+    console.warn('[PostHog] Identify failed:', error);
+  }
+}
+
+/**
+ * Reset user identity (call on logout)
+ */
+export function resetUser(): void {
+  try {
+    posthog.reset();
+  } catch (error) {
+    console.warn('[PostHog] Reset failed:', error);
   }
 }
 
@@ -115,7 +118,7 @@ export function trackExportComplete(
 export function trackExportError(format: string, error: string): void {
   trackEvent('export_error', {
     format,
-    error: error.substring(0, 100), // Limit error message length
+    error: error.substring(0, 100),
   });
 }
 
@@ -222,6 +225,10 @@ export function trackSessionStart(): void {
   });
 }
 
+export function trackEditorOpen(): void {
+  trackEvent('editor_open', {});
+}
+
 // =============================================================================
 // Error Events
 // =============================================================================
@@ -231,4 +238,84 @@ export function trackError(errorType: string, message: string): void {
     error_type: errorType,
     message: message.substring(0, 200),
   });
+}
+
+// =============================================================================
+// Animation Clip Events
+// =============================================================================
+
+export function trackAnimationClipAdd(presetId: string, presetName: string, duration: number): void {
+  trackEvent('animation_clip_add', {
+    preset_id: presetId,
+    preset_name: presetName.substring(0, 50),
+    duration_ms: duration,
+  });
+}
+
+export function trackAnimationClipRemove(clipId: string): void {
+  trackEvent('animation_clip_remove', {
+    clip_id: clipId,
+  });
+}
+
+export function trackAnimationPlay(): void {
+  trackEvent('animation_play', {});
+}
+
+export function trackAnimationPause(): void {
+  trackEvent('animation_pause', {});
+}
+
+// =============================================================================
+// Timeline Events
+// =============================================================================
+
+export function trackTimelineOpen(): void {
+  trackEvent('timeline_open', {});
+}
+
+export function trackTimelineClose(): void {
+  trackEvent('timeline_close', {});
+}
+
+export function trackTimelinePlayback(action: 'play' | 'pause' | 'skip_start' | 'skip_end' | 'toggle_loop'): void {
+  trackEvent('timeline_playback', {
+    action,
+  });
+}
+
+// =============================================================================
+// Landing Page CTA Events
+// =============================================================================
+
+export function trackCTAClick(location: string, label: string): void {
+  trackEvent('cta_click', {
+    location,
+    label: label.substring(0, 50),
+  });
+}
+
+// =============================================================================
+// Filter Events
+// =============================================================================
+
+export function trackFilterChange(filterType: string, value: number): void {
+  trackEvent('filter_change', {
+    filter_type: filterType,
+    value,
+  });
+}
+
+// =============================================================================
+// Slide Events
+// =============================================================================
+
+export function trackSlideAdd(count: number): void {
+  trackEvent('slide_add', {
+    count,
+  });
+}
+
+export function trackSlideRemove(): void {
+  trackEvent('slide_remove', {});
 }

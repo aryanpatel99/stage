@@ -23,6 +23,15 @@ import {
   trackOverlayRemove,
   trackAspectRatioChange,
   trackPresetApply,
+  trackAnimationClipAdd,
+  trackAnimationClipRemove,
+  trackAnimationPlay,
+  trackAnimationPause,
+  trackTimelineOpen,
+  trackTimelineClose,
+  trackFilterChange,
+  trackSlideAdd,
+  trackSlideRemove,
 } from "@/lib/analytics";
 
 interface TextShadow {
@@ -1081,6 +1090,7 @@ export const useImageStore = create<ImageState>()(
     },
 
     setImageFilter: (key: keyof ImageFilters, value: number) => {
+      trackFilterChange(key, value);
       const currentFilters = get().imageFilters;
       set({
         imageFilters: {
@@ -1124,6 +1134,7 @@ export const useImageStore = create<ImageState>()(
       }
     },
     addImages: (files: File[]) => {
+      trackSlideAdd(files.length);
       const { slides, slideshow, timeline } = get();
 
       const newSlides = files.map((file) => ({
@@ -1170,6 +1181,7 @@ export const useImageStore = create<ImageState>()(
     },
 
     removeSlide: (id) => {
+      trackSlideRemove();
       const { slides, activeSlideId } = get();
       const slide = slides.find((s) => s.id === id);
       if (slide) URL.revokeObjectURL(slide.src);
@@ -1220,6 +1232,12 @@ export const useImageStore = create<ImageState>()(
     },
 
     toggleTimeline: () => {
+      const current = get().showTimeline;
+      if (current) {
+        trackTimelineClose();
+      } else {
+        trackTimelineOpen();
+      }
       set((state) => ({ showTimeline: !state.showTimeline }));
     },
 
@@ -1230,18 +1248,26 @@ export const useImageStore = create<ImageState>()(
     },
 
     togglePlayback: () => {
+      const wasPlaying = get().timeline.isPlaying;
+      if (wasPlaying) {
+        trackAnimationPause();
+      } else {
+        trackAnimationPlay();
+      }
       set((state) => ({
         timeline: { ...state.timeline, isPlaying: !state.timeline.isPlaying },
       }));
     },
 
     startPlayback: () => {
+      trackAnimationPlay();
       set((state) => ({
         timeline: { ...state.timeline, isPlaying: true },
       }));
     },
 
     stopPlayback: () => {
+      trackAnimationPause();
       set((state) => ({
         timeline: { ...state.timeline, isPlaying: false },
       }));
@@ -1376,6 +1402,8 @@ export const useImageStore = create<ImageState>()(
       const preset = ANIMATION_PRESETS.find(p => p.id === presetId);
       if (!preset) return;
 
+      trackAnimationClipAdd(presetId, preset.name, preset.duration);
+
       const id = `clip-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       // Brand-matching green color palette
       const colors = ['#c9ff2e', '#10B981', '#22c55e', '#84cc16', '#34d399'];
@@ -1460,6 +1488,7 @@ export const useImageStore = create<ImageState>()(
     },
 
     removeAnimationClip: (clipId) => {
+      trackAnimationClipRemove(clipId);
       set((state) => ({
         animationClips: state.animationClips.filter((clip) => clip.id !== clipId),
         timeline: {

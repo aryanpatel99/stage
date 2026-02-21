@@ -14,6 +14,7 @@ import { useAutosaveDraft } from "@/hooks/useAutosaveDraft";
 import { MobileBanner } from "./MobileBanner";
 import { TimelineEditor } from "@/components/timeline";
 import { useImageStore } from "@/lib/store";
+import { trackEditorOpen } from "@/lib/analytics";
 
 function EditorMain() {
   const isMobile = useIsMobile();
@@ -27,6 +28,7 @@ function EditorMain() {
 
   React.useEffect(() => {
     document.body.style.overflow = "hidden";
+    trackEditorOpen();
     return () => {
       document.body.style.overflow = "";
     };
