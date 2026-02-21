@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { motion } from "motion/react";
 import { Instrument_Serif } from "next/font/google";
 
@@ -23,11 +24,12 @@ export function HowItWorks({
   steps,
   title = "How It Works",
 }: HowItWorksProps) {
+  const titleId = useId();
   return (
-    <section aria-labelledby="how-it-works-title" className="py-20 sm:py-28 md:py-32 px-6 bg-background">
+    <section aria-labelledby={titleId} className="py-20 sm:py-28 md:py-32 px-6 bg-background">
       <div className="container mx-auto max-w-4xl">
         <motion.h2
-          id="how-it-works-title"
+          id={titleId}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
