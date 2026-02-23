@@ -32,6 +32,8 @@ function DraggableImage({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [initialPos, setInitialPos] = useState({ x: 0, y: 0 });
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeStartRef = useRef<{ mouseX: number; mouseY: number; size: number; handle: string } | null>(null);
 
   // Check if it's an arrow overlay (needs inversion)
   const isArrow = useMemo(() =>
@@ -46,13 +48,27 @@ function DraggableImage({
   );
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (isResizing) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
     setInitialPos({ x: overlay.position.x, y: overlay.position.y });
     onSelect();
-  }, [overlay.position.x, overlay.position.y, onSelect]);
+  }, [isResizing, overlay.position.x, overlay.position.y, onSelect]);
+
+  const handleResizeMouseDown = useCallback((e: React.MouseEvent, handle: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    resizeStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      size: overlay.size,
+      handle,
+    };
+    onSelect();
+  }, [overlay.size, onSelect]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -78,6 +94,41 @@ function DraggableImage({
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isDragging, dragStart, initialPos, onUpdate]);
+
+  // Handle resize move
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const start = resizeStartRef.current;
+      if (!start) return;
+
+      const dx = e.clientX - start.mouseX;
+      const dy = e.clientY - start.mouseY;
+
+      let dirX = 1, dirY = 1;
+      if (start.handle === 'tl') { dirX = -1; dirY = -1; }
+      else if (start.handle === 'tr') { dirX = 1; dirY = -1; }
+      else if (start.handle === 'bl') { dirX = -1; dirY = 1; }
+
+      const diagonal = (dx * dirX + dy * dirY) / 2;
+      const newSize = Math.round(Math.min(800, Math.max(20, start.size + diagonal)));
+      onUpdate({ size: newSize });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      resizeStartRef.current = null;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, onUpdate]);
 
   if (!overlay.isVisible) return null;
 
@@ -132,7 +183,7 @@ function DraggableImage({
         transform: `translate(-50%, -50%) ${transform}`,
         transformOrigin: 'center center',
         opacity: overlay.opacity,
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: isResizing ? 'default' : isDragging ? 'grabbing' : 'grab',
         userSelect: 'none',
         outline: isSelected ? '2px solid rgba(59, 130, 246, 0.5)' : 'none',
         outlineOffset: '2px',
@@ -153,6 +204,39 @@ function DraggableImage({
           filter: isArrow ? 'brightness(0) invert(1)' : undefined,
         }}
       />
+
+      {/* Resize handles — visible when selected, excluded from export */}
+      {isSelected && (
+        <>
+          {(['tl', 'tr', 'bl', 'br'] as const).map((handle) => {
+            const isTop = handle[0] === 't';
+            const isLeft = handle[1] === 'l';
+            const cursor = (handle === 'tl' || handle === 'br') ? 'nwse-resize' : 'nesw-resize';
+            return (
+              <div
+                key={handle}
+                data-resize-handle="true"
+                onMouseDown={(e) => handleResizeMouseDown(e, handle)}
+                style={{
+                  position: 'absolute',
+                  width: '10px',
+                  height: '10px',
+                  backgroundColor: 'white',
+                  border: '2px solid rgba(59, 130, 246, 0.8)',
+                  borderRadius: '2px',
+                  top: isTop ? '-5px' : undefined,
+                  bottom: isTop ? undefined : '-5px',
+                  left: isLeft ? '-5px' : undefined,
+                  right: isLeft ? undefined : '-5px',
+                  cursor,
+                  zIndex: 20,
+                  pointerEvents: 'auto',
+                }}
+              />
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }

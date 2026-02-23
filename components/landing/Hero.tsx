@@ -184,6 +184,21 @@ export function Hero({
           </button>
         </div>
 
+        {/* Peerlist Embed */}
+        <div className="mt-8 flex items-center justify-center">
+          <a
+            href="https://peerlist.io/code_kartik/project/screenshot-studio"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <img
+              src="https://peerlist.io/api/v1/projects/embed/PRJH8OEOPOG8O67GAHP877KMPOPMER?showUpvote=true&theme=dark"
+              alt="Screenshot Studio"
+              style={{ width: "auto", height: "72px" }}
+            />
+          </a>
+        </div>
+
         {/* Trust indicators */}
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-foreground/50">
           <div className="flex items-center gap-2">

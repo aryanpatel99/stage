@@ -7,6 +7,9 @@ import { aspectRatios, type AspectRatioKey } from '@/lib/constants/aspect-ratios
 import { getBackgroundCSS } from '@/lib/constants/backgrounds';
 import { cn } from '@/lib/utils';
 import { trackPresetApply } from '@/lib/analytics';
+import { useCustomPresets } from '@/hooks/useCustomPresets';
+import { Delete02Icon } from 'hugeicons-react';
+import { Input } from '@/components/ui/input';
 
 interface PresetGalleryProps {
   onPresetSelect?: (preset: PresetConfig) => void;
@@ -31,21 +34,25 @@ function getFrameImageStyle(
   const arcBorderWidth = borderConfig.width || 8;
 
   switch (borderConfig.type) {
-    case 'arc-light':
+    case 'arc-light': {
+      const lightOpacity = borderConfig.opacity ?? 0.5;
       return {
-        border: `${arcBorderWidth}px solid rgba(255, 255, 255, 0.5)`,
+        border: `${arcBorderWidth}px solid rgba(255, 255, 255, ${lightOpacity})`,
         borderRadius: `${borderRadius}px`,
         overflow: 'hidden',
         boxSizing: 'border-box' as const,
       };
+    }
 
-    case 'arc-dark':
+    case 'arc-dark': {
+      const darkOpacity = borderConfig.opacity ?? 0.7;
       return {
-        border: `${arcBorderWidth}px solid rgba(0, 0, 0, 0.7)`,
+        border: `${arcBorderWidth}px solid rgba(0, 0, 0, ${darkOpacity})`,
         borderRadius: `${borderRadius}px`,
         overflow: 'hidden',
         boxSizing: 'border-box' as const,
       };
+    }
 
     case 'photograph':
       return {
@@ -119,6 +126,157 @@ function has3DTransform(perspective3D?: PresetConfig['perspective3D']): boolean 
   );
 }
 
+function PresetCard({
+  preset,
+  isActive,
+  previewImageUrl,
+  onApply,
+}: {
+  preset: PresetConfig;
+  isActive: boolean;
+  previewImageUrl: string | null;
+  onApply: () => void;
+}) {
+  const bgStyle = getBackgroundCSS(preset.backgroundConfig);
+  const frameStyle = getFrameImageStyle(preset.imageBorder, preset.borderRadius);
+  const is3D = has3DTransform(preset.perspective3D);
+  const shadowFilter = is3D ? buildShadowFilter(preset.imageShadow) : '';
+
+  const transform3D = preset.perspective3D
+    ? `translate(${preset.perspective3D.translateX}%, ${preset.perspective3D.translateY}%) scale(${preset.perspective3D.scale}) rotateX(${preset.perspective3D.rotateX}deg) rotateY(${preset.perspective3D.rotateY}deg) rotateZ(${preset.perspective3D.rotateZ}deg)`
+    : 'translate(0%, 0%) scale(1) rotateX(0deg) rotateY(0deg) rotateZ(0deg)';
+
+  return (
+    <button
+      onClick={onApply}
+      className={cn(
+        'w-full rounded-lg border-2 transition-all overflow-hidden text-left',
+        'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+        isActive
+          ? 'border-primary shadow-lg shadow-primary/20'
+          : 'border-border hover:border-border/80 hover:shadow-md'
+      )}
+    >
+      <div
+        style={{
+          position: 'relative',
+          aspectRatio: getAspectRatioValue(preset.aspectRatio),
+          overflow: 'hidden',
+          borderRadius: `${preset.backgroundBorderRadius}px`,
+          isolation: 'isolate',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            ...bgStyle,
+            filter: (preset.backgroundBlur ?? 0) > 0 ? `blur(${preset.backgroundBlur}px)` : undefined,
+            transform: 'scale(1.1)',
+            zIndex: 0,
+          }}
+        />
+
+        {preset.shadowOverlay && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              opacity: preset.shadowOverlay.opacity,
+              pointerEvents: 'none',
+              zIndex: 5,
+            }}
+          >
+            <img
+              src={preset.shadowOverlay.src}
+              alt=""
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          </div>
+        )}
+
+        {previewImageUrl && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              perspective: `${preset.perspective3D?.perspective || 2400}px`,
+              transformStyle: 'preserve-3d',
+              zIndex: 15,
+              pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: '75%',
+                transform: transform3D,
+                transformOrigin: 'center center',
+                willChange: 'transform',
+                transition: 'transform 0.125s linear',
+                filter: shadowFilter || undefined,
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  borderRadius: `${preset.borderRadius}px`,
+                  overflow: 'hidden',
+                  ...frameStyle,
+                  boxShadow: preset.imageShadow.enabled && !is3D
+                    ? `${preset.imageShadow.offsetX}px ${preset.imageShadow.offsetY}px ${preset.imageShadow.blur}px ${preset.imageShadow.spread}px ${preset.imageShadow.color}`
+                    : undefined,
+                }}
+              >
+                <img
+                  src={previewImageUrl}
+                  alt={preset.name}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    opacity: preset.imageOpacity,
+                    transform: `scale(${preset.imageScale / 100})`,
+                    transformOrigin: 'center center',
+                    borderRadius: frameStyle ? undefined : `${preset.borderRadius}px`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!previewImageUrl && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10,
+            }}
+          >
+            <div className="text-xs text-muted-foreground/50">{preset.name}</div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-3 bg-background/95 backdrop-blur-sm border-t border-border/50">
+        <div className="text-sm font-medium text-foreground">{preset.name}</div>
+        <div className="text-xs text-muted-foreground mt-0.5">{preset.description}</div>
+      </div>
+    </button>
+  );
+}
+
 export function PresetGallery({ onPresetSelect }: PresetGalleryProps) {
   const {
     uploadedImageUrl,
@@ -133,6 +291,7 @@ export function PresetGallery({ onPresetSelect }: PresetGalleryProps) {
     imageBorder,
     imageShadow,
     imageOverlays,
+    perspective3D,
     setAspectRatio,
     setBackgroundConfig,
     setBackgroundType,
@@ -152,6 +311,9 @@ export function PresetGallery({ onPresetSelect }: PresetGalleryProps) {
   } = useImageStore();
 
   const { screenshot } = useEditorStore();
+  const { customPresets, savePreset, deletePreset } = useCustomPresets();
+  const [showSaveForm, setShowSaveForm] = React.useState(false);
+  const [presetName, setPresetName] = React.useState('');
 
   const isPresetActive = React.useCallback((preset: PresetConfig) => {
     return (
@@ -181,7 +343,6 @@ export function PresetGallery({ onPresetSelect }: PresetGalleryProps) {
   ]);
 
   const applyPreset = React.useCallback((preset: PresetConfig) => {
-    // Track preset application
     trackPresetApply(preset.id, preset.name);
 
     setBackgroundConfig(preset.backgroundConfig);
@@ -207,7 +368,6 @@ export function PresetGallery({ onPresetSelect }: PresetGalleryProps) {
       scale: 1,
     });
 
-    // Handle shadow overlays
     imageOverlays.forEach((overlay) => {
       if (typeof overlay.src === 'string' && overlay.src.includes('overlay-shadow')) {
         removeImageOverlay(overlay.id);
@@ -249,162 +409,120 @@ export function PresetGallery({ onPresetSelect }: PresetGalleryProps) {
     onPresetSelect,
   ]);
 
+  const handleSavePreset = React.useCallback(() => {
+    if (!presetName.trim()) return;
+
+    savePreset(presetName.trim(), {
+      aspectRatio: selectedAspectRatio,
+      backgroundConfig,
+      borderRadius,
+      backgroundBorderRadius,
+      imageOpacity,
+      imageScale,
+      imageBorder,
+      imageShadow,
+      backgroundBlur,
+      backgroundNoise,
+      perspective3D,
+    });
+
+    setPresetName('');
+    setShowSaveForm(false);
+  }, [
+    presetName,
+    savePreset,
+    selectedAspectRatio,
+    backgroundConfig,
+    borderRadius,
+    backgroundBorderRadius,
+    imageOpacity,
+    imageScale,
+    imageBorder,
+    imageShadow,
+    backgroundBlur,
+    backgroundNoise,
+    perspective3D,
+  ]);
+
   const previewImageUrl = uploadedImageUrl || (screenshot?.src ?? null);
 
   return (
     <div className="space-y-3">
-      {presets.map((preset) => {
-        const isActive = isPresetActive(preset);
-        const bgStyle = getBackgroundCSS(preset.backgroundConfig);
-        const frameStyle = getFrameImageStyle(preset.imageBorder, preset.borderRadius);
-        const is3D = has3DTransform(preset.perspective3D);
-        const shadowFilter = is3D ? buildShadowFilter(preset.imageShadow) : '';
-
-        // Build 3D transform string
-        const transform3D = preset.perspective3D
-          ? `translate(${preset.perspective3D.translateX}%, ${preset.perspective3D.translateY}%) scale(${preset.perspective3D.scale}) rotateX(${preset.perspective3D.rotateX}deg) rotateY(${preset.perspective3D.rotateY}deg) rotateZ(${preset.perspective3D.rotateZ}deg)`
-          : 'translate(0%, 0%) scale(1) rotateX(0deg) rotateY(0deg) rotateZ(0deg)';
-
-        return (
+      {/* Save Current as Preset */}
+      <div>
+        {!showSaveForm ? (
           <button
-            key={preset.id}
-            onClick={() => applyPreset(preset)}
-            className={cn(
-              'w-full rounded-lg border-2 transition-all overflow-hidden',
-              'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-              isActive
-                ? 'border-primary shadow-lg shadow-primary/20'
-                : 'border-border hover:border-border/80 hover:shadow-md'
-            )}
+            onClick={() => setShowSaveForm(true)}
+            className="w-full rounded-lg border-2 border-dashed border-border/60 hover:border-border p-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            {/* Canvas Preview Container - exact replica of HTMLCanvasRenderer */}
-            <div
-              style={{
-                position: 'relative',
-                aspectRatio: getAspectRatioValue(preset.aspectRatio),
-                overflow: 'hidden',
-                borderRadius: `${preset.backgroundBorderRadius}px`,
-                isolation: 'isolate',
-              }}
-            >
-              {/* Layer 1: Background with blur (matching HTMLBackgroundLayer) */}
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  ...bgStyle,
-                  filter: (preset.backgroundBlur ?? 0) > 0 ? `blur(${preset.backgroundBlur}px)` : undefined,
-                  transform: 'scale(1.1)', // Prevent blur edge artifacts
-                  zIndex: 0,
-                }}
-              />
-
-              {/* Layer 2: Shadow overlay (matching HTMLImageOverlayLayer for shadows) */}
-              {preset.shadowOverlay && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    opacity: preset.shadowOverlay.opacity,
-                    pointerEvents: 'none',
-                    zIndex: 5,
-                  }}
-                >
-                  <img
-                    src={preset.shadowOverlay.src}
-                    alt=""
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Layer 3: 3D Perspective Container (matching Perspective3DOverlay) */}
-              {previewImageUrl && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    perspective: `${preset.perspective3D?.perspective || 2400}px`,
-                    transformStyle: 'preserve-3d',
-                    zIndex: 15,
-                    pointerEvents: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {/* Transform wrapper */}
-                  <div
-                    style={{
-                      width: '75%',
-                      transform: transform3D,
-                      transformOrigin: 'center center',
-                      willChange: 'transform',
-                      transition: 'transform 0.125s linear',
-                      filter: shadowFilter || undefined,
-                    }}
-                  >
-                    {/* Image with frame */}
-                    <div
-                      style={{
-                        position: 'relative',
-                        borderRadius: `${preset.borderRadius}px`,
-                        overflow: 'hidden',
-                        ...frameStyle,
-                        // Box shadow for non-3D or as fallback
-                        boxShadow: preset.imageShadow.enabled && !is3D
-                          ? `${preset.imageShadow.offsetX}px ${preset.imageShadow.offsetY}px ${preset.imageShadow.blur}px ${preset.imageShadow.spread}px ${preset.imageShadow.color}`
-                          : undefined,
-                      }}
-                    >
-                      <img
-                        src={previewImageUrl}
-                        alt={preset.name}
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          display: 'block',
-                          opacity: preset.imageOpacity,
-                          transform: `scale(${preset.imageScale / 100})`,
-                          transformOrigin: 'center center',
-                          borderRadius: frameStyle ? undefined : `${preset.borderRadius}px`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Empty state placeholder */}
-              {!previewImageUrl && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 10,
-                  }}
-                >
-                  <div className="text-xs text-muted-foreground/50">{preset.name}</div>
-                </div>
-              )}
-            </div>
-
-            {/* Preset info */}
-            <div className="p-3 bg-background/95 backdrop-blur-sm border-t border-border/50">
-              <div className="text-sm font-medium text-foreground">{preset.name}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">{preset.description}</div>
-            </div>
+            + Save Current as Preset
           </button>
-        );
-      })}
+        ) : (
+          <div className="flex gap-2">
+            <Input
+              autoFocus
+              type="text"
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSavePreset();
+                if (e.key === 'Escape') { setShowSaveForm(false); setPresetName(''); }
+              }}
+              placeholder="Preset name"
+              className="h-9 text-sm"
+            />
+            <button
+              onClick={handleSavePreset}
+              disabled={!presetName.trim()}
+              className="shrink-0 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              Save
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* My Presets */}
+      {customPresets.length > 0 && (
+        <>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+            My Presets
+          </div>
+          {customPresets.map((preset) => (
+            <div key={preset.id} className="group relative">
+              <PresetCard
+                preset={preset}
+                isActive={isPresetActive(preset)}
+                previewImageUrl={previewImageUrl}
+                onApply={() => applyPreset(preset)}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deletePreset(preset.id);
+                }}
+                className="absolute top-2 right-2 z-10 p-1.5 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
+              >
+                <Delete02Icon size={14} />
+              </button>
+            </div>
+          ))}
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+            Built-in Presets
+          </div>
+        </>
+      )}
+
+      {/* Built-in Presets */}
+      {presets.map((preset) => (
+        <PresetCard
+          key={preset.id}
+          preset={preset}
+          isActive={isPresetActive(preset)}
+          previewImageUrl={previewImageUrl}
+          onApply={() => applyPreset(preset)}
+        />
+      ))}
 
       {!uploadedImageUrl && !screenshot?.src && (
         <div className="p-4 rounded-lg bg-muted/50 border border-border text-center">

@@ -1,84 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScaleSlider, FormatSelector, QualityPresetSelector } from "@/components/export";
 import { Download01Icon } from "hugeicons-react";
+import { ImageExportProgressView } from "./ImageProgressView";
 import type { ExportFormat, QualityPreset } from "@/lib/export/types";
-
-function getStatusMessage(progress: number): string {
-  if (progress < 15) return "Preparing your canvas...";
-  if (progress < 35) return "Capturing every pixel...";
-  if (progress < 55) return "Applying the finishing touches...";
-  if (progress < 80) return "Almost there, hang tight...";
-  return "Polishing your masterpiece...";
-}
-
-function ImageExportProgressView({ progress, format }: { progress: number; format: ExportFormat }) {
-  const statusMessage = useMemo(() => getStatusMessage(progress), [progress]);
-  const formatLabel = format === "jpeg" ? "JPEG" : "PNG";
-
-  return (
-    <div className="flex flex-col items-center py-8 space-y-6">
-      {/* Bouncing ball loader */}
-      <style>{`
-        .bounce-loader {
-          height: 60px;
-          aspect-ratio: 2;
-          border-bottom: 3px solid hsl(var(--muted-foreground) / 0.3);
-          position: relative;
-          overflow: hidden;
-        }
-        .bounce-loader::before {
-          content: "";
-          position: absolute;
-          inset: auto 42.5% 0;
-          aspect-ratio: 1;
-          border-radius: 50%;
-          background: var(--brand);
-          animation:
-            bounce-y 0.5s cubic-bezier(0, 900, 1, 900) infinite,
-            bounce-x 2s linear infinite alternate;
-        }
-        @keyframes bounce-y {
-          0%, 2% { bottom: 0% }
-          98%, to { bottom: 0.1% }
-        }
-        @keyframes bounce-x {
-          0% { translate: -500% }
-          to { translate: 500% }
-        }
-      `}</style>
-      <div className="bounce-loader" />
-
-      {/* Percentage */}
-      <span className="text-2xl font-bold text-brand tabular-nums">{progress}%</span>
-
-      {/* Progress bar */}
-      <div className="w-full">
-        <div className="h-1.5 bg-surface-3 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-brand rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-
-      {/* Status message */}
-      <p className="text-sm text-muted-foreground">
-        {statusMessage}
-      </p>
-
-      {/* Format tag */}
-      <div className="px-3 py-1 rounded-full bg-surface-3 border border-border/50">
-        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
-          Exporting as {formatLabel}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 interface ExportDialogProps {
   open: boolean;

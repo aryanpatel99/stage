@@ -100,6 +100,7 @@ export interface ImageBorder {
     | "photograph";
   padding?: number;
   title?: string;
+  opacity?: number;
 }
 
 export interface ImageShadow {
@@ -214,6 +215,7 @@ export interface EditorState {
     color: string;
     padding?: number;
     title?: string;
+    opacity?: number;
   };
 
   // Canvas state
@@ -408,7 +410,8 @@ export function useEditorStoreSync() {
       editorStore.frame.width !== frame.width ||
       editorStore.frame.color !== frame.color ||
       editorStore.frame.padding !== frame.padding ||
-      editorStore.frame.title !== frame.title
+      editorStore.frame.title !== frame.title ||
+      editorStore.frame.opacity !== frame.opacity
     ) {
       editorStore.setFrame({
         enabled: frame.enabled,
@@ -417,6 +420,7 @@ export function useEditorStoreSync() {
         color: frame.color,
         padding: frame.padding,
         title: frame.title,
+        opacity: frame.opacity,
       });
     }
 

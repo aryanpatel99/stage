@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
 import { type ShadowConfig } from '../utils/shadow-utils';
-import { type ImageFilters } from '@/lib/store';
+import { type ImageFilters, useImageStore } from '@/lib/store';
 
 export interface FrameConfig {
   enabled: boolean;
@@ -11,6 +11,7 @@ export interface FrameConfig {
   color: string;
   padding?: number;
   title?: string;
+  opacity?: number;
 }
 
 interface HTMLMainImageLayerProps {
@@ -156,6 +157,8 @@ export function HTMLMainImageLayer({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeStartRef = useRef<{ mouseX: number; mouseY: number; scale: number; handle: string } | null>(null);
 
   const imageFilter = useMemo(() => buildImageFilter(imageFilters), [imageFilters]);
   const boxShadow = useMemo(() => buildBoxShadow(shadow), [shadow]);
@@ -168,6 +171,7 @@ export function HTMLMainImageLayer({
 
   // Handle drag start
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (isResizing) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
@@ -178,7 +182,20 @@ export function HTMLMainImageLayer({
     setIsMainImageSelected(true);
     setSelectedOverlayId(null);
     setSelectedTextId(null);
-  }, [screenshot.offsetX, screenshot.offsetY, setIsMainImageSelected, setSelectedOverlayId, setSelectedTextId]);
+  }, [isResizing, screenshot.offsetX, screenshot.offsetY, setIsMainImageSelected, setSelectedOverlayId, setSelectedTextId]);
+
+  // Handle resize start
+  const handleResizeMouseDown = useCallback((e: React.MouseEvent, handle: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    resizeStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      scale: useImageStore.getState().imageScale,
+      handle,
+    };
+  }, []);
 
   // Handle drag move
   useEffect(() => {
@@ -203,6 +220,48 @@ export function HTMLMainImageLayer({
     };
   }, [isDragging, dragStart, setScreenshot]);
 
+  // Handle resize move
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const start = resizeStartRef.current;
+      if (!start) return;
+
+      // Calculate diagonal movement based on handle position
+      const dx = e.clientX - start.mouseX;
+      const dy = e.clientY - start.mouseY;
+
+      // Determine direction multiplier based on handle corner
+      let dirX = 1, dirY = 1;
+      if (start.handle === 'tl') { dirX = -1; dirY = -1; }
+      else if (start.handle === 'tr') { dirX = 1; dirY = -1; }
+      else if (start.handle === 'bl') { dirX = -1; dirY = 1; }
+      // 'br' is default (1, 1)
+
+      // Project mouse movement onto diagonal direction
+      const diagonal = (dx * dirX + dy * dirY) / 2;
+      // Sensitivity: ~1 scale unit per 2px of movement
+      const scaleDelta = diagonal * 0.5;
+      const newScale = Math.round(Math.min(200, Math.max(10, start.scale + scaleDelta)));
+
+      useImageStore.getState().setImageScale(newScale);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      resizeStartRef.current = null;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
   // Calculate position
   const centerX = canvasW / 2 + screenshot.offsetX;
   const centerY = canvasH / 2 + screenshot.offsetY;
@@ -221,10 +280,12 @@ export function HTMLMainImageLayer({
   };
 
   // Arc frame styles
-  const arcBorderWidth = 8;
+  const arcBorderWidth = frame.width || 8;
+  const arcDefaultOpacity = frame.type === 'arc-light' ? 0.5 : 0.7;
+  const arcOpacity = frame.opacity ?? arcDefaultOpacity;
   const arcBorderColor = frame.type === 'arc-light'
-    ? 'rgba(255, 255, 255, 0.5)'
-    : 'rgba(0, 0, 0, 0.7)';
+    ? `rgba(255, 255, 255, ${arcOpacity})`
+    : `rgba(0, 0, 0, ${arcOpacity})`;
 
   // Render macOS title bar
   const renderMacOSTitleBar = () => (
@@ -446,7 +507,7 @@ export function HTMLMainImageLayer({
         height: `${framedH}px`,
         transform: `rotate(${screenshot.rotation}deg) scale(${screenshot.scale})`,
         transformOrigin: 'center center',
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: isResizing ? 'default' : isDragging ? 'grabbing' : 'grab',
         zIndex: 10,
         outline: isMainImageSelected ? '2px solid rgba(59, 130, 246, 0.5)' : 'none',
         outlineOffset: '2px',
@@ -478,6 +539,39 @@ export function HTMLMainImageLayer({
           />
         </div>
       </div>
+
+      {/* Resize handles — visible when selected, excluded from export */}
+      {isMainImageSelected && (
+        <>
+          {(['tl', 'tr', 'bl', 'br'] as const).map((handle) => {
+            const isTop = handle[0] === 't';
+            const isLeft = handle[1] === 'l';
+            const cursor = (handle === 'tl' || handle === 'br') ? 'nwse-resize' : 'nesw-resize';
+            return (
+              <div
+                key={handle}
+                data-resize-handle="true"
+                onMouseDown={(e) => handleResizeMouseDown(e, handle)}
+                style={{
+                  position: 'absolute',
+                  width: '10px',
+                  height: '10px',
+                  backgroundColor: 'white',
+                  border: '2px solid rgba(59, 130, 246, 0.8)',
+                  borderRadius: '2px',
+                  top: isTop ? '-5px' : undefined,
+                  bottom: isTop ? undefined : '-5px',
+                  left: isLeft ? '-5px' : undefined,
+                  right: isLeft ? undefined : '-5px',
+                  cursor,
+                  zIndex: 20,
+                  pointerEvents: 'auto',
+                }}
+              />
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }

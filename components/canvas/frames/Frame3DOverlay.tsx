@@ -7,6 +7,7 @@ export interface FrameConfig {
   color: string;
   padding?: number;
   title?: string;
+  opacity?: number;
 }
 
 /**
@@ -17,25 +18,28 @@ export function getFrameImageStyle(
   frame: FrameConfig,
   screenshotRadius: number
 ): React.CSSProperties | null {
-  // Arc frames use fixed 8px semi-transparent border with higher opacity
-  const arcBorderWidth = 8;
+  const arcBorderWidth = frame.width || 8;
 
   switch (frame.type) {
-    case 'arc-light':
+    case 'arc-light': {
+      const lightOpacity = frame.opacity ?? 0.5;
       return {
-        border: `${arcBorderWidth}px solid rgba(255, 255, 255, 0.5)`,
+        border: `${arcBorderWidth}px solid rgba(255, 255, 255, ${lightOpacity})`,
         borderRadius: `${screenshotRadius}px`,
         overflow: 'hidden',
         boxSizing: 'border-box',
       };
+    }
 
-    case 'arc-dark':
+    case 'arc-dark': {
+      const darkOpacity = frame.opacity ?? 0.7;
       return {
-        border: `${arcBorderWidth}px solid rgba(0, 0, 0, 0.7)`,
+        border: `${arcBorderWidth}px solid rgba(0, 0, 0, ${darkOpacity})`,
         borderRadius: `${screenshotRadius}px`,
         overflow: 'hidden',
         boxSizing: 'border-box',
       };
+    }
 
     case 'photograph':
       // Polaroid style: 8px top/sides, 24px bottom
@@ -78,8 +82,7 @@ export function Frame3DOverlay({
 
   const isDark = frame.type.includes('dark');
 
-  // Arc frames use 8px border
-  const borderWidth = 8;
+  const borderWidth = frame.width || 8;
 
   // For arc frames, the border should wrap tightly around the image
   // The outer radius = inner radius + border width

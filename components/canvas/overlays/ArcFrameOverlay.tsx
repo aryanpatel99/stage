@@ -10,6 +10,7 @@ export interface FrameConfig {
   color: string;
   padding?: number;
   title?: string;
+  opacity?: number;
 }
 
 interface ArcFrameOverlayProps {
@@ -139,11 +140,13 @@ export function ArcFrameOverlay({
     return null;
   }
 
-  // Arc frames use 8px semi-transparent border
-  const borderWidth = 8;
+  // Arc frames use configurable semi-transparent border
+  const borderWidth = frame.width || 8;
+  const defaultOpacity = frame.type === 'arc-light' ? 0.5 : 0.7;
+  const borderOpacity = frame.opacity ?? defaultOpacity;
   const borderColor = frame.type === 'arc-light'
-    ? 'rgba(255, 255, 255, 0.5)'
-    : 'rgba(0, 0, 0, 0.7)';
+    ? `rgba(255, 255, 255, ${borderOpacity})`
+    : `rgba(0, 0, 0, ${borderOpacity})`;
 
   const boxShadow = buildBoxShadow(shadow);
   const imageFilter = buildImageFilter(imageFilters);

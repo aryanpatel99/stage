@@ -21,6 +21,7 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { ExportDialog } from '@/components/canvas/dialogs/ExportDialog';
+import { CopyProgressDialog } from '@/components/canvas/dialogs/CopyProgressDialog';
 
 export function EditorHeader() {
   const { screenshot } = useEditorStore();
@@ -34,7 +35,9 @@ export function EditorHeader() {
   const {
     copyImage,
     isExporting,
+    isCopying,
     progress,
+    copyProgress,
     settings: exportSettings,
     exportImage,
     updateScale,
@@ -70,7 +73,7 @@ export function EditorHeader() {
 
           <Button
             onClick={() => copyImage()}
-            disabled={!hasImage || isExporting}
+            disabled={!hasImage || isExporting || isCopying}
             variant="outline"
             className="h-9 justify-center gap-2 rounded-lg font-medium px-4"
           >
@@ -124,6 +127,8 @@ export function EditorHeader() {
           </a>
         </div>
       </header>
+
+      <CopyProgressDialog open={isCopying} progress={copyProgress} />
 
       <ExportDialog
         open={exportDialogOpen}

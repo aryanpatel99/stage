@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useImageStore, type ImageBorder } from '@/lib/store';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { SectionWrapper } from './SectionWrapper';
 import { cn } from '@/lib/utils';
 
@@ -23,13 +24,16 @@ export function FramesSection() {
   const { imageBorder, setImageBorder } = useImageStore();
 
   const handleSelect = (value: FrameType) => {
+    const wasArc = imageBorder.type === 'arc-light' || imageBorder.type === 'arc-dark';
     const next: Partial<ImageBorder> = {
       type: value,
       enabled: value !== 'none',
     };
-    // Set fixed border width for arc frames (8px, not adjustable)
+    // Set default width and opacity for arc frames
     if (value === 'arc-light' || value === 'arc-dark') {
-      next.width = 8;
+      // Keep current width if already on arc, otherwise default to 8
+      next.width = wasArc ? imageBorder.width : 8;
+      next.opacity = imageBorder.opacity ?? (value === 'arc-light' ? 0.5 : 0.7);
     }
     // Set default title for macOS/Windows frames
     if (value === 'macos-light' || value === 'macos-dark') {
@@ -39,7 +43,7 @@ export function FramesSection() {
   };
 
   const isSelected = (value: FrameType) => imageBorder.type === value;
-  // Arc frames have fixed 8px border - no slider needed
+  const isArcFrame = ['arc-light', 'arc-dark'].includes(imageBorder.type);
   const showTitleInput = ['macos-light', 'macos-dark', 'windows-light', 'windows-dark'].includes(imageBorder.type);
 
   return (
@@ -77,6 +81,35 @@ export function FramesSection() {
           </button>
         ))}
       </div>
+
+      {isArcFrame && (
+        <div className="space-y-3 pt-2">
+          <div className="space-y-2">
+            <label className="text-[10px] text-text-tertiary block">Width</label>
+            <Slider
+              value={[imageBorder.width]}
+              onValueChange={(value) => setImageBorder({ width: value[0], enabled: true })}
+              min={1}
+              max={20}
+              step={1}
+              label="Width"
+              valueDisplay={`${imageBorder.width}px`}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] text-text-tertiary block">Opacity</label>
+            <Slider
+              value={[Math.round((imageBorder.opacity ?? (imageBorder.type === 'arc-light' ? 0.5 : 0.7)) * 100)]}
+              onValueChange={(value) => setImageBorder({ opacity: value[0] / 100, enabled: true })}
+              min={0}
+              max={100}
+              step={1}
+              label="Opacity"
+              valueDisplay={`${Math.round((imageBorder.opacity ?? (imageBorder.type === 'arc-light' ? 0.5 : 0.7)) * 100)}%`}
+            />
+          </div>
+        </div>
+      )}
 
       {showTitleInput && (
         <div className="pt-2">

@@ -24,11 +24,12 @@ A free, browser-based editor for creating stunning screenshots, animated visuals
 - **Drag & Drop Upload** - PNG, JPG, WEBP up to 100MB
 - **Website Screenshots** - Capture any URL via [Screen-Shot.xyz](https://screen-shot.xyz)
 - **50+ Backgrounds** - Gradients, solid colors, images, blur, and noise effects
-- **Device Frames** - macOS, Windows, Arc-style, Polaroid borders
+- **Device Frames** - macOS, Windows, Arc-style (with width & opacity controls), Polaroid borders
 - **3D Transforms** - Perspective rotation with realistic depth
 - **Shadows & Borders** - Customizable blur, spread, offset, and color
 - **Text Overlays** - Multiple layers with custom fonts and shadows
-- **Image Overlays** - Arrows, icons, and decorative elements
+- **Image Overlays** - Arrows, icons, and decorative elements with on-canvas resize handles
+- **Custom Presets** - Save and reuse your own canvas configurations
 - **Aspect Ratios** - Instagram, YouTube, Twitter, LinkedIn, Open Graph
 - **High-Res Export** - PNG/JPG up to 5x scale, fully in-browser
 - **Undo/Redo** - Unlimited history with keyboard shortcuts

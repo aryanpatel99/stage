@@ -49,7 +49,7 @@ export const presets: PresetConfig[] = [
     imageScale: 100,
     imageBorder: {
       enabled: true,
-      width: 2,
+      width: 8,
       color: '#1a1a1a',
       type: 'arc-dark',
     },
@@ -165,7 +165,7 @@ export const presets: PresetConfig[] = [
     imageScale: 100,
     imageBorder: {
       enabled: true,
-      width: 1,
+      width: 8,
       color: 'rgba(255,255,255,0.1)',
       type: 'arc-dark',
     },
@@ -235,7 +235,7 @@ export const presets: PresetConfig[] = [
     imageScale: 100,
     imageBorder: {
       enabled: true,
-      width: 2,
+      width: 8,
       color: '#2a2a2a',
       type: 'arc-dark',
     },
@@ -277,7 +277,7 @@ export const presets: PresetConfig[] = [
     imageScale: 100,
     imageBorder: {
       enabled: true,
-      width: 1,
+      width: 8,
       color: 'rgba(255,255,255,0.2)',
       type: 'arc-dark',
     },
@@ -310,7 +310,7 @@ export const presets: PresetConfig[] = [
     imageScale: 100,
     imageBorder: {
       enabled: true,
-      width: 3,
+      width: 8,
       color: '#ffffff',
       type: 'arc-light',
     },

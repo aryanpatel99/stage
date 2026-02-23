@@ -38,6 +38,35 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    date: "February 23, 2026",
+    version: "2.1.0",
+    title: "Overlay Resize, Custom Presets & Arc Controls",
+    description:
+      "Resize overlays directly on the canvas, save your own presets, and fine-tune Arc frame borders with new width and opacity sliders.",
+    changes: [
+      {
+        type: "added",
+        text: "On-canvas resize handles for arrow and sticker overlays — drag any corner to resize (20–800px)",
+      },
+      {
+        type: "added",
+        text: "Custom presets — save your current canvas configuration and reuse it later, persisted in local storage",
+      },
+      {
+        type: "added",
+        text: "Arc frame width slider (1–20px) and opacity slider (0–100%) in Frames section and Border Controls",
+      },
+      {
+        type: "improved",
+        text: "Arc frame borders now use dynamic width and opacity instead of hardcoded values across all render paths",
+      },
+      {
+        type: "fixed",
+        text: "Arc frame opacity and width changes now reflect immediately on the canvas",
+      },
+    ],
+  },
+  {
     date: "February 20, 2026",
     version: "2.0.0",
     title: "Animation & Video Export",

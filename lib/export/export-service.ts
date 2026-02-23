@@ -351,6 +351,10 @@ async function capture3DTransformWithModernScreenshot(
   const canvas = await domToCanvas(element, {
     scale: scale,
     backgroundColor: null,
+    filter: (node: Node) => {
+      if (node instanceof HTMLElement && node.dataset.resizeHandle === 'true') return false;
+      return true;
+    },
   });
 
   return canvas;
@@ -398,6 +402,10 @@ async function exportHTMLCanvas(
     backgroundColor: null,
     width: originalWidth,
     height: originalHeight,
+    filter: (node: Node) => {
+      if (node instanceof HTMLElement && node.dataset.resizeHandle === 'true') return false;
+      return true;
+    },
   });
 
   // Scale the canvas to match export dimensions

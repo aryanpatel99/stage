@@ -33,8 +33,11 @@ const DEFAULT_SETTINGS: ExportSettings = {
 export function useExport(selectedAspectRatio: string) {
   const [settings, setSettings] = useState<ExportSettings>(DEFAULT_SETTINGS);
   const [isExporting, setIsExporting] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [copyProgress, setCopyProgress] = useState(0);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const copyProgressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const startSimulatedProgress = useCallback(() => {
     setProgress(0);
@@ -61,11 +64,38 @@ export function useExport(selectedAspectRatio: string) {
     }
   }, []);
 
-  // Cleanup interval on unmount
+  const startCopyProgress = useCallback(() => {
+    setCopyProgress(0);
+    let current = 0;
+    copyProgressIntervalRef.current = setInterval(() => {
+      const remaining = 90 - current;
+      const increment = Math.max(0.5, remaining * 0.06);
+      current = Math.min(90, current + increment);
+      setCopyProgress(Math.round(current));
+    }, 100);
+  }, []);
+
+  const stopCopyProgress = useCallback((success: boolean) => {
+    if (copyProgressIntervalRef.current) {
+      clearInterval(copyProgressIntervalRef.current);
+      copyProgressIntervalRef.current = null;
+    }
+    if (success) {
+      setCopyProgress(100);
+      setTimeout(() => setCopyProgress(0), 400);
+    } else {
+      setCopyProgress(0);
+    }
+  }, []);
+
+  // Cleanup intervals on unmount
   useEffect(() => {
     return () => {
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
+      }
+      if (copyProgressIntervalRef.current) {
+        clearInterval(copyProgressIntervalRef.current);
       }
     };
   }, []);
@@ -248,7 +278,8 @@ export function useExport(selectedAspectRatio: string) {
   }, [selectedAspectRatio, settings, backgroundConfig, backgroundBorderRadius, backgroundBlur, backgroundNoise, backgroundOpacity, textOverlays, imageOverlays, perspective3D, screenshot.src, screenshot.radius, startSimulatedProgress, stopSimulatedProgress]);
 
   const copyImage = useCallback(async (): Promise<void> => {
-    setIsExporting(true);
+    setIsCopying(true);
+    startCopyProgress();
 
     try {
       // Get HTML canvas container
@@ -327,6 +358,9 @@ export function useExport(selectedAspectRatio: string) {
         // Track copy success
         trackCopyToClipboard(true);
 
+        // Complete the progress animation
+        stopCopyProgress(true);
+
         // Trigger confetti celebration
         confetti({
           particleCount: 100,
@@ -342,6 +376,7 @@ export function useExport(selectedAspectRatio: string) {
         throw new Error('Clipboard API not supported');
       }
     } catch (error) {
+      stopCopyProgress(false);
       console.error('Copy failed:', error);
       const errorMessage = error instanceof Error
         ? error.message
@@ -357,14 +392,16 @@ export function useExport(selectedAspectRatio: string) {
 
       throw new Error(errorMessage);
     } finally {
-      setIsExporting(false);
+      setIsCopying(false);
     }
-  }, [selectedAspectRatio, backgroundConfig, backgroundBorderRadius, backgroundBlur, backgroundNoise, backgroundOpacity, textOverlays, imageOverlays, perspective3D, screenshot.src, screenshot.radius]);
+  }, [selectedAspectRatio, backgroundConfig, backgroundBorderRadius, backgroundBlur, backgroundNoise, backgroundOpacity, textOverlays, imageOverlays, perspective3D, screenshot.src, screenshot.radius, startCopyProgress, stopCopyProgress]);
 
   return {
     settings,
     isExporting,
+    isCopying,
     progress,
+    copyProgress,
     updateFormat,
     updateQualityPreset,
     updateScale,

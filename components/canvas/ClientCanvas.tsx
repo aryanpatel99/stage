@@ -32,7 +32,7 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     setScreenshot,
     shadow,
     pattern: patternStyle,
-    frame,
+    frame: editorFrame,
     canvas,
     noise,
   } = useEditorStore();
@@ -48,11 +48,24 @@ function CanvasRenderer({ image }: { image: HTMLImageElement }) {
     textOverlays,
     imageOverlays,
     mockups,
+    imageBorder,
     updateTextOverlay,
     updateImageOverlay,
     removeImageOverlay,
     addImageOverlay,
   } = useImageStore();
+
+  // Build frame from imageBorder directly (editorStore sync may be stale)
+  const frame = {
+    ...editorFrame,
+    enabled: imageBorder.enabled,
+    type: imageBorder.type,
+    width: imageBorder.width,
+    color: imageBorder.color,
+    padding: imageBorder.padding,
+    title: imageBorder.title,
+    opacity: imageBorder.opacity,
+  };
 
   const hasMockups = mockups.length > 0 && mockups.some((m) => m.isVisible);
   const responsiveDimensions = useResponsiveCanvasDimensions();
